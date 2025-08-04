@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 env:
+  JAVA_VERSION: '21'
   CACHED_DEPENDENCIES_PATHS: '**/node_modules'
 
 jobs:
@@ -17,12 +18,34 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+
       - name: Set SonarCloud Project Key
         run: |
           REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 2)
           ORG_NAME=$(echo $GITHUB_REPOSITORY | cut -d '/' -f 1)
           SONAR_PROJECT_KEY="${ORG_NAME}_${REPO_NAME}"
           echo "SONAR_PROJECT_KEY=$SONAR_PROJECT_KEY" >> $GITHUB_ENV 
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
+      - name: Build all modules (required for Sonar)
+        run: ./gradlew build -x test
 
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@master
@@ -32,8 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.SECRET_GITHUB_BOT }}
           SONAR_TOKEN: ${{ secrets.SECRET_SONARQUBE }}
         with:
-          args:
+          args: >
             -Dsonar.projectKey=${{ env.SONAR_PROJECT_KEY }}
             -Dsonar.organization=f-lab-edu-1
-            -Dsonar.java.binaries=module-a/build/classes,module-b/build/classes
-
+            -Dsonar.java.binaries=monolith/build/classes/java/main,order-orchestrator/build/classes/java/main,payment-service/build/classes/java/main,materialized-view/build/classes/java/main
