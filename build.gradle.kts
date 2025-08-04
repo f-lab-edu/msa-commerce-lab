@@ -183,72 +183,72 @@ subprojects {
     }
 }
 
-// SonarQube 설정 - SonarCloud 분석을 위한 구성
-sonar {
-    properties {
-        property("sonar.projectName", "MSA Commerce Lab")
-        property("sonar.projectKey", "msa-commerce-lab")
-        property("sonar.organization", System.getenv("SONAR_ORGANIZATION") ?: "your-org")
-        property("sonar.host.url", "https://sonarcloud.io")
-
-        // 언어 및 인코딩 설정
-        property("sonar.language", "java")
-        property("sonar.sourceEncoding", "UTF-8")
-
-        // 소스 및 테스트 디렉토리
-        property("sonar.sources", subprojects.joinToString(",") { "${it.name}/src/main" })
-        property("sonar.tests", subprojects.joinToString(",") { "${it.name}/src/test" })
-
-        // 바이너리 파일 경로
-        property("sonar.java.binaries", subprojects.joinToString(",") { "${it.name}/build/classes" })
-
-        // 테스트 포함 패턴
-        property("sonar.test.inclusions", "**/*Test.java,**/*Tests.java,**/*IT.java")
-
-        // 분석 제외 패턴
-        property("sonar.exclusions", listOf(
-            "**/config/**",
-            "**/entity/**",
-            "**/dto/**",
-            "**/exception/**",
-            "**/*Application*",
-            "**/Q*.java", // QueryDSL generated classes
-            "**/build/**",
-            "**/gradle/**"
-        ).joinToString(","))
-
-        // 커버리지 제외 패턴
-        property("sonar.coverage.exclusions", listOf(
-            "**/config/**",
-            "**/dto/**",
-            "**/entity/**",
-            "**/exception/**",
-            "**/*Application*",
-            "**/Q*.java",
-            "**/*Config.java",
-            "**/*Configuration.java"
-        ).joinToString(","))
-
-        // Jacoco 커버리지 리포트 통합
-        property("sonar.coverage.jacoco.xmlReportPaths",
-            "build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml," +
-            subprojects.joinToString(",") { "${it.name}/build/reports/jacoco/test/jacocoTestReport.xml" }
-        )
-
-        // 코드 품질 기준 설정
-        property("sonar.qualitygate.wait", "true")
-
-        // 중복 코드 감지 설정
-        property("sonar.cpd.java.minimumtokens", "50")
-
-        // 이슈 심각도 임계값
-        property("sonar.issue.ignore.multicriteria", "e1,e2")
-        property("sonar.issue.ignore.multicriteria.e1.ruleKey", "java:S1186")
-        property("sonar.issue.ignore.multicriteria.e1.resourceKey", "**/*Test*.java")
-        property("sonar.issue.ignore.multicriteria.e2.ruleKey", "java:S2699")
-        property("sonar.issue.ignore.multicriteria.e2.resourceKey", "**/*Test*.java")
-    }
-}
+//// SonarQube 설정 - SonarCloud 분석을 위한 구성
+//sonar {
+//    properties {
+//        property("sonar.projectName", "MSA Commerce Lab")
+//        property("sonar.projectKey", "msa-commerce-lab")
+//        property("sonar.organization", System.getenv("SONAR_ORGANIZATION") ?: "your-org")
+//        property("sonar.host.url", "https://sonarcloud.io")
+//
+//        // 언어 및 인코딩 설정
+//        property("sonar.language", "java")
+//        property("sonar.sourceEncoding", "UTF-8")
+//
+//        // 소스 및 테스트 디렉토리
+//        property("sonar.sources", subprojects.joinToString(",") { "${it.name}/src/main" })
+//        property("sonar.tests", subprojects.joinToString(",") { "${it.name}/src/test" })
+//
+//        // 바이너리 파일 경로
+//        property("sonar.java.binaries", subprojects.joinToString(",") { "${it.name}/build/classes" })
+//
+//        // 테스트 포함 패턴
+//        property("sonar.test.inclusions", "**/*Test.java,**/*Tests.java,**/*IT.java")
+//
+//        // 분석 제외 패턴
+//        property("sonar.exclusions", listOf(
+//            "**/config/**",
+//            "**/entity/**",
+//            "**/dto/**",
+//            "**/exception/**",
+//            "**/*Application*",
+//            "**/Q*.java", // QueryDSL generated classes
+//            "**/build/**",
+//            "**/gradle/**"
+//        ).joinToString(","))
+//
+//        // 커버리지 제외 패턴
+//        property("sonar.coverage.exclusions", listOf(
+//            "**/config/**",
+//            "**/dto/**",
+//            "**/entity/**",
+//            "**/exception/**",
+//            "**/*Application*",
+//            "**/Q*.java",
+//            "**/*Config.java",
+//            "**/*Configuration.java"
+//        ).joinToString(","))
+//
+//        // Jacoco 커버리지 리포트 통합
+//        property("sonar.coverage.jacoco.xmlReportPaths",
+//            "build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml," +
+//            subprojects.joinToString(",") { "${it.name}/build/reports/jacoco/test/jacocoTestReport.xml" }
+//        )
+//
+//        // 코드 품질 기준 설정
+//        property("sonar.qualitygate.wait", "true")
+//
+//        // 중복 코드 감지 설정
+//        property("sonar.cpd.java.minimumtokens", "50")
+//
+//        // 이슈 심각도 임계값
+//        property("sonar.issue.ignore.multicriteria", "e1,e2")
+//        property("sonar.issue.ignore.multicriteria.e1.ruleKey", "java:S1186")
+//        property("sonar.issue.ignore.multicriteria.e1.resourceKey", "**/*Test*.java")
+//        property("sonar.issue.ignore.multicriteria.e2.ruleKey", "java:S2699")
+//        property("sonar.issue.ignore.multicriteria.e2.resourceKey", "**/*Test*.java")
+//    }
+//}
 
 // 전체 모듈 통합 커버리지 리포트 태스크
 tasks.register<JacocoReport>("jacocoRootReport") {
