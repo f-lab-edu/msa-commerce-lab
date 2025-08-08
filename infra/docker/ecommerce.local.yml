@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: msa-ecommerce-mysql
+    restart: no
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 1q2w3e4r
+      # 참고: MYSQL_USER/PASSWORD만 지정하면 권한이 거의 없을 수 있음.
+      # 실제 권한/스키마 생성은 initialize.sql에서 처리 권장.
+      MYSQL_DATABASE: db_flyway
+      MYSQL_USER: app_rw
+      MYSQL_PASSWORD: 1q2w3e4r!
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max-connections=200
+    healthcheck:
+      # 기존 -ppassword 오타 교정. 환경변수 참조를 위해 CMD-SHELL 사용.
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD}"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+
+  redis:
+    image: redis:8.0.3
+    container_name: msa-ecommerce-redis
+    restart: no
+    ports:
+      - "6379:6379"
+    environment:
+      REDIS_PASSWORD: 1q2w3e4r!
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    healthcheck:
+      # requirepass 사용 시 인증 후 PING 필요
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "PING"]
+      timeout: 5s
+      retries: 5
+      interval: 10s
+      start_period: 10s
