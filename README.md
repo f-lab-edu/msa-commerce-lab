@@ -1,8 +1,7 @@
 # msa-commerce-lab
 
 ## system architecture
-![system_architecture.png](../../f-lab/system_architecture.png)
+![AWS_infrastructure.png](AWS_infrastructure.png)
 
 ## infrastructure
-![AWS_infrastructure.png](../../f-lab/AWS_infrastructure.png)
-
+![system_architecture.png](system_architecture.png)
