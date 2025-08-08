@@ -38,6 +38,9 @@ subprojects {
         compileOnly("org.projectlombok:lombok")
         annotationProcessor("org.projectlombok:lombok")
         testImplementation("org.springframework.boot:spring-boot-starter-test")
+        
+        // OpenAPI Documentation
+        implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
     }
 
     tasks.withType<Test> {
