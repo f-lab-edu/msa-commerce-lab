@@ -3,7 +3,16 @@ plugins {
     id("org.springframework.boot") version "3.3.4" apply false
     id("io.spring.dependency-management") version "1.1.6" apply false
     id("org.sonarqube") version "6.2.0.5505"
+    id("org.flywaydb.flyway") version "10.21.0"
     jacoco
+}
+
+// Flyway plugin dependencies
+buildscript {
+    dependencies {
+        classpath("mysql:mysql-connector-java:8.0.33")
+        classpath("org.flywaydb:flyway-mysql:10.21.0")
+    }
 }
 
 allprojects {
@@ -440,4 +449,27 @@ tasks.register("verifyCoverage") {
     group = "verification"
 
     dependsOn("jacocoTestCoverageVerification", "jacocoRootCoverageVerification")
+}
+
+// ============================================================================
+// Centralized Flyway Configuration for All Databases
+// ============================================================================
+
+flyway {
+    url = "jdbc:mysql://localhost:3306"
+    user = "app_flyway"
+    password = "1q2w3e4r!@"
+    
+    // Use centralized migration location
+    locations = arrayOf("filesystem:infra/db/migration")
+    
+    // Flyway configuration
+    baselineOnMigrate = true
+    validateOnMigrate = true
+    cleanDisabled = false
+    
+    schemas = arrayOf("db_flyway", "db_platform", "db_order", "db_payment")
+
+    // Placeholder configuration
+    placeholderReplacement = true
 }

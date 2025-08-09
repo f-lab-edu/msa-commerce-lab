@@ -26,6 +26,8 @@ spring:
     baseline-version: 0
     validate-on-migrate: true
     clean-disabled: true
+    out-of-order: false
+    group: true
 
   kafka:
     bootstrap-servers: localhost:9092
