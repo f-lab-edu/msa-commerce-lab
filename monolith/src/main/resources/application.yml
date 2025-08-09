@@ -6,9 +6,9 @@ spring:
     name: monolith-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/db_platforms
-    username: root
-    password: password
+    url: jdbc:mysql://localhost:3306/db_platform
+    username: app_rw
+    password: 1q2w3e4r!
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -28,6 +28,8 @@ spring:
     clean-disabled: true
     out-of-order: false
     group: true
+    schemas: db_platform
+    default-schema: db_platform
 
   data:
     redis:
