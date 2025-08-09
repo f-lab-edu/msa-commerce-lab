@@ -28,10 +28,10 @@ services:
     ports:
       - "6379:6379"
     environment:
-      REDIS_PASSWORD: 1q2w3e4r!
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+      REDIS_PASSWORD: 1q2w3e4r
+    command: [ "sh","-lc","exec redis-server --appendonly yes --requirepass \"$$REDIS_PASSWORD\"" ]
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "--raw", "PING"]
+      test: [ "CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --raw PING" ]
       timeout: 5s
       retries: 5
       interval: 10s

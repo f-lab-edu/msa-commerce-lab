@@ -9,10 +9,8 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-data-jpa")
     api("org.springframework.boot:spring-boot-starter-validation")
 
-    // Database
+     // Database - Common 모듈은 데이터베이스 마이그레이션 도구 제외
     api("mysql:mysql-connector-java:8.0.33")
-    api("org.flywaydb:flyway-core")
-    api("org.flywaydb:flyway-mysql")
 
     // QueryDSL
     api("com.querydsl:querydsl-jpa:5.0.0:jakarta")

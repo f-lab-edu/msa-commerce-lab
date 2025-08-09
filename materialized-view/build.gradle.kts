@@ -9,8 +9,10 @@ dependencies {
     // Kafka
     implementation("org.springframework.kafka:spring-kafka")
 
-    // OpenAPI/Swagger
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    // Database Migration
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.flywaydb:flyway-mysql")
+    runtimeOnly("mysql:mysql-connector-java")
 
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
