@@ -1,0 +1,112 @@
+name: "🐛 Bug Report"
+description: "버그 신고 및 문제 해결 요청"
+labels: ["bug"]
+body:
+  - type: textarea
+    attributes:
+      label: 📋 버그 설명
+      description: 발생한 버그에 대한 명확하고 간결한 설명을 작성해 주세요.
+      placeholder: 무엇이 잘못되었는지 자세히 설명해 주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔄 재현 방법
+      description: 버그를 재현할 수 있는 단계별 방법을 작성해 주세요.
+      placeholder: |
+        1. '...' 페이지로 이동
+        2. '...' 버튼 클릭
+        3. '...' 데이터 입력
+        4. 에러 발생
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✅ 기대했던 동작
+      description: 정상적으로 동작할 때 어떻게 되어야 하는지 설명해 주세요.
+      placeholder: 어떤 결과를 기대했나요?
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ❌ 실제 동작
+      description: 실제로 어떤 일이 일어났는지 설명해 주세요.
+      placeholder: 실제로 어떤 일이 일어났나요?
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: 🎯 버그 심각도
+      description: 버그의 심각도를 선택해 주세요.
+      options:
+        - "🔴 Critical - 시스템 전체 장애, 데이터 손실 위험"
+        - "🟠 High - 주요 기능 동작 불가"
+        - "🟡 Medium - 일부 기능에 영향"
+        - "🟢 Low - 사소한 문제, 우회 방법 존재"
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: 📱 영향 범위
+      description: 버그가 영향을 미치는 범위를 선택해 주세요.
+      options:
+        - "🌐 All Users - 모든 사용자"
+        - "👥 Some Users - 일부 사용자"
+        - "🔧 Specific Conditions - 특정 조건에서만"
+        - "🧪 Development Only - 개발 환경에서만"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🖼️ 스크린샷/로그
+      description: 가능하다면 스크린샷이나 에러 로그를 첨부해 주세요.
+      placeholder: |
+        스크린샷을 드래그 앤 드롭하거나 붙여넣기 해주세요.
+        에러 로그가 있다면 여기에 붙여넣어 주세요.
+
+  - type: textarea
+    attributes:
+      label: 🖥️ 환경 정보
+      description: 버그가 발생한 환경 정보를 작성해 주세요.
+      placeholder: |
+        - OS: [예: Windows 11, macOS Monterey, Ubuntu 22.04]
+        - 브라우저: [예: Chrome 119, Safari 17, Firefox 120]
+        - 애플리케이션 버전: [예: v1.2.3]
+        - Java 버전: [예: Java 17]
+        - 기타 관련 환경:
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 🔍 추가 정보
+      description: 버그와 관련된 추가적인 컨텍스트나 정보가 있다면 작성해 주세요.
+      placeholder: |
+        - 최근 변경사항이 있었나요?
+        - 이전에는 정상 동작했나요?
+        - 특정 시간이나 조건에서만 발생하나요?
+        - 관련된 다른 이슈가 있나요?
+
+  - type: checkboxes
+    attributes:
+      label: 📋 확인 사항
+      description: 버그 신고 전 확인해야 할 사항들
+      options:
+        - label: "기존에 동일한 버그 리포트가 없는지 확인했습니다."
+          required: true
+        - label: "최신 버전에서도 동일한 문제가 발생하는지 확인했습니다."
+          required: true
+        - label: "가능한 한 재현 방법을 단순화했습니다."
+          required: true
+
+  - type: textarea
+    attributes:
+      label: 🛠️ 임시 해결방법
+      description: 임시로 문제를 우회할 수 있는 방법이 있다면 작성해 주세요.
+      placeholder: 현재 사용하고 있는 우회 방법이나 임시 해결책이 있나요?
