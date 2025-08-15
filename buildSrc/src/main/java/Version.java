@@ -2,8 +2,8 @@
  * Centralized version management for Gradle plugins and other build tools
  */
 public enum Version {
-    SPRING_BOOT("3.3.4"),
-    DEPENDENCY_MANAGEMENT("1.1.6"),
+    SPRING_BOOT("3.5.4"),
+    DEPENDENCY_MANAGEMENT("1.1.7"),
     SONARQUBE("6.2.0.5505"),
     FLYWAY("10.21.0"),
     QUERYDSL_PLUGIN("1.0.10"),
