@@ -19,18 +19,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 0
-    validate-on-migrate: true
-    clean-disabled: true
-    out-of-order: false
-    group: true
-    schemas: materialized_view_db
-    default-schema: materialized_view_db
-
   data:
     redis:
       host: redis

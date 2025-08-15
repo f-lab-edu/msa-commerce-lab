@@ -19,18 +19,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-    baseline-on-migrate: true
-    baseline-version: 0
-    validate-on-migrate: true
-    clean-disabled: true
-    out-of-order: false
-    group: true
-    schemas: db_platform
-    default-schema: db_platform
-
   data:
     redis:
       host: redis
