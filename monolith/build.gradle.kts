@@ -11,9 +11,7 @@ dependencies {
     runtimeOnly(BuildDependencies.getJjwtImpl())
     runtimeOnly(BuildDependencies.getJjwtJackson())
 
-    // Database Migration
-    implementation(BuildDependencies.getFlywayCore())
-    implementation(BuildDependencies.getFlywayMysqlDep())
+    // Database connector
     runtimeOnly(BuildDependencies.getMysqlConnectorRuntime())
 
     // Test
