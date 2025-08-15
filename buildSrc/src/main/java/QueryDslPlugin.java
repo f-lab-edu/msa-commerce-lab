@@ -1,11 +1,11 @@
+import java.io.File;
+
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.File;
 
 /**
  * Custom QueryDSL plugin that provides complete QueryDSL configuration
@@ -25,44 +25,60 @@ public class QueryDslPlugin implements Plugin<Project> {
      * Add QueryDSL dependencies
      */
     private void configureDependencies(Project project) {
-        project.getDependencies().add("api", Dependency.QUERYDSL_JPA.getCoordinate());
+        project.getDependencies().add("implementation", Dependency.QUERYDSL_JPA.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.QUERYDSL_APT.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.JAKARTA_ANNOTATION.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.JAKARTA_PERSISTENCE.getCoordinate());
+
+        // Test dependencies
+        project.getDependencies().add("testAnnotationProcessor", Dependency.QUERYDSL_APT.getCoordinate());
+        project.getDependencies().add("testAnnotationProcessor", Dependency.JAKARTA_ANNOTATION.getCoordinate());
+        project.getDependencies().add("testAnnotationProcessor", Dependency.JAKARTA_PERSISTENCE.getCoordinate());
     }
 
     /**
-     * Configure source sets to include generated sources
+     * Configure source sets to include generated sources using standard Gradle paths
      */
     private void configureSourceSets(Project project) {
         JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
-        File generatedDir = new File(project.getProjectDir(), "src/main/generated");
-        
+
+        // Use standard Gradle generated sources path for better IDE support
+        File qdir = new File(project.getLayout().getBuildDirectory().getAsFile().get(),
+            "generated/sources/annotationProcessor/java/main");
+
+        // Add generated directory to main source set
         javaExtension.getSourceSets().getByName(SourceSet.MAIN_SOURCE_SET_NAME).getJava()
-            .srcDir(generatedDir);
+            .srcDir(qdir);
+
+        // Add generated directory to test source set so tests can access Q classes
+        javaExtension.getSourceSets().getByName(SourceSet.TEST_SOURCE_SET_NAME).getJava()
+            .srcDir(qdir);
     }
 
     /**
-     * Configure annotation processing for QueryDSL
+     * Configure annotation processing for QueryDSL using standard Gradle paths
      */
     private void configureAnnotationProcessing(Project project) {
-        File generatedDir = new File(project.getProjectDir(), "src/main/generated");
-        
+        // Use standard Gradle generated sources path for better IDE support
+        File qdir = new File(project.getLayout().getBuildDirectory().getAsFile().get(),
+            "generated/sources/annotationProcessor/java/main");
+
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            javaCompile.getOptions().getGeneratedSourceOutputDirectory().set(generatedDir);
+            javaCompile.getOptions().getGeneratedSourceOutputDirectory().set(qdir);
+            // Remove explicit -processor option to allow automatic processor discovery
+            // This enables both QueryDSL and Lombok processors to work together
         });
     }
 
     /**
-     * Configure clean task to remove generated sources
+     * Configure clean task to remove generated sources from standard Gradle path
      */
     private void configureCleanTask(Project project) {
-        File generatedDir = new File(project.getProjectDir(), "src/main/generated");
-        
-        project.getTasks().named("clean").configure(cleanTask -> {
-            cleanTask.doFirst(task -> {
-                project.delete(generatedDir);
-            });
-        });
+        // Use standard Gradle generated sources path for better IDE support
+        File qdir = new File(project.getLayout().getBuildDirectory().getAsFile().get(),
+            "generated/sources/annotationProcessor/java/main");
+
+        project.getTasks().named("clean").configure(cleanTask -> cleanTask.doFirst(task -> project.delete(qdir)));
     }
+
 }
