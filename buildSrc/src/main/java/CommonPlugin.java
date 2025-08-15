@@ -1,3 +1,11 @@
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.util.Arrays;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
@@ -10,20 +18,12 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification;
 import org.gradle.testing.jacoco.tasks.JacocoReport;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import org.jetbrains.annotations.NotNull;
 
 public class CommonPlugin implements Plugin<Project> {
-    
+
     @Override
-    public void apply(Project project) {
+    public void apply(@NotNull Project project) {
         applyPlugins(project);
         configureJava(project);
         configureDependencies(project);
@@ -39,13 +39,15 @@ public class CommonPlugin implements Plugin<Project> {
     }
 
     private void configureJava(Project project) {
-        project.getExtensions().configure(JavaPluginExtension.class, java -> {
-            java.getToolchain().getLanguageVersion().set(JavaLanguageVersion.of(Version.JAVA_VERSION.getVersionAsInt()));
-        });
+        project.getExtensions()
+            .configure(JavaPluginExtension.class, java -> java.getToolchain()
+                .getLanguageVersion()
+                .set(JavaLanguageVersion.of(Version.JAVA_VERSION.getVersionAsInt())));
 
-        project.getConfigurations().named("compileOnly").configure(compileOnly -> {
-            compileOnly.extendsFrom(project.getConfigurations().named("annotationProcessor").get());
-        });
+        project.getConfigurations()
+            .named("compileOnly")
+            .configure(
+                compileOnly -> compileOnly.extendsFrom(project.getConfigurations().named("annotationProcessor").get()));
     }
 
     private void configureDependencies(Project project) {
@@ -60,12 +62,12 @@ public class CommonPlugin implements Plugin<Project> {
         project.getTasks().withType(Test.class).configureEach(test -> {
             test.useJUnitPlatform();
             test.finalizedBy(project.getTasks().named("jacocoTestReport"));
-            
+
             test.setJvmArgs(Arrays.asList(
                 "-XX:+EnableDynamicAgentLoading",
                 "--add-opens=java.base/java.lang=ALL-UNNAMED"
             ));
-            
+
             test.getTestLogging().events(
                 TestLogEvent.PASSED,
                 TestLogEvent.SKIPPED,
@@ -80,18 +82,18 @@ public class CommonPlugin implements Plugin<Project> {
 
     private void configureJacoco(Project project) {
         TaskProvider<JacocoReport> jacocoTestReport = project.getTasks().named("jacocoTestReport", JacocoReport.class);
-        
+
         jacocoTestReport.configure(report -> {
             report.dependsOn(project.getTasks().named("test"));
-            
+
             report.getReports().getXml().getRequired().set(true);
             report.getReports().getCsv().getRequired().set(true);
             report.getReports().getHtml().getRequired().set(true);
-            
+
             report.getExecutionData().setFrom(
                 project.fileTree(project.getLayout().getBuildDirectory().dir("jacoco")).include("**/*.exec")
             );
-            
+
             report.getClassDirectories().setFrom(
                 report.getClassDirectories().getFiles().stream()
                     .map(file -> project.fileTree(file, tree -> tree.exclude(
@@ -104,38 +106,38 @@ public class CommonPlugin implements Plugin<Project> {
                     )))
                     .toArray()
             );
-            
+
             report.finalizedBy("printCoverageReport");
         });
-        
-        TaskProvider<JacocoCoverageVerification> jacocoCoverageVerification = 
+
+        TaskProvider<JacocoCoverageVerification> jacocoCoverageVerification =
             project.getTasks().named("jacocoTestCoverageVerification", JacocoCoverageVerification.class);
-            
+
         jacocoCoverageVerification.configure(verification -> {
             verification.dependsOn(jacocoTestReport);
-            
+
             verification.getViolationRules().rule(rule -> {
                 rule.setElement("BUNDLE");
-                
+
                 rule.limit(limit -> {
                     limit.setCounter("LINE");
                     limit.setValue("COVEREDRATIO");
                     limit.setMinimum(new BigDecimal("0.70"));
                 });
-                
+
                 rule.limit(limit -> {
                     limit.setCounter("BRANCH");
                     limit.setValue("COVEREDRATIO");
                     limit.setMinimum(new BigDecimal("0.60"));
                 });
-                
+
                 rule.limit(limit -> {
                     limit.setCounter("CLASS");
                     limit.setValue("COVEREDRATIO");
                     limit.setMinimum(new BigDecimal("0.80"));
                 });
             });
-            
+
             verification.getClassDirectories().setFrom(
                 verification.getClassDirectories().getFiles().stream()
                     .map(file -> project.fileTree(file, tree -> tree.exclude(
@@ -149,50 +151,50 @@ public class CommonPlugin implements Plugin<Project> {
                     .toArray()
             );
         });
-        
-        project.getTasks().named("check").configure(check -> {
-            check.dependsOn(jacocoCoverageVerification);
-        });
-        
+
+        project.getTasks().named("check").configure(check -> check.dependsOn(jacocoCoverageVerification));
+
         project.getTasks().register("printCoverageReport", task -> {
             task.dependsOn(jacocoTestReport);
             task.doLast(t -> {
                 File buildDir = project.getLayout().getBuildDirectory().get().getAsFile();
                 File reportFile = new File(buildDir, "reports/jacoco/test/html/index.html");
                 File xmlReportFile = new File(buildDir, "reports/jacoco/test/jacocoTestReport.xml");
-                
+
                 if (reportFile.exists()) {
                     System.out.println("📊 Coverage Report for " + project.getName() + ":");
                     System.out.println("   HTML: file://" + reportFile.getAbsolutePath());
-                    
+
                     if (xmlReportFile.exists()) {
                         System.out.println("   XML:  file://" + xmlReportFile.getAbsolutePath());
-                        
+
                         try {
-                            String xmlContent = new String(Files.readAllBytes(xmlReportFile.toPath()), StandardCharsets.UTF_8);
-                            Pattern linePattern = Pattern.compile("type=\"LINE\".*?covered=\"(\\d+)\".*?missed=\"(\\d+)\"");
-                            Pattern branchPattern = Pattern.compile("type=\"BRANCH\".*?covered=\"(\\d+)\".*?missed=\"(\\d+)\"");
-                            
+                            String xmlContent = Files.readString(xmlReportFile.toPath());
+                            Pattern linePattern = Pattern.compile(
+                                "type=\"LINE\".*?covered=\"(\\d+)\".*?missed=\"(\\d+)\"");
+                            Pattern branchPattern = Pattern.compile(
+                                "type=\"BRANCH\".*?covered=\"(\\d+)\".*?missed=\"(\\d+)\"");
+
                             Matcher lineMatch = linePattern.matcher(xmlContent);
                             Matcher branchMatch = branchPattern.matcher(xmlContent);
-                            
+
                             if (lineMatch.find() && branchMatch.find()) {
                                 int lineCovered = Integer.parseInt(lineMatch.group(1));
                                 int lineMissed = Integer.parseInt(lineMatch.group(2));
                                 int branchCovered = Integer.parseInt(branchMatch.group(1));
                                 int branchMissed = Integer.parseInt(branchMatch.group(2));
-                                
+
                                 int lineTotal = lineCovered + lineMissed;
                                 int branchTotal = branchCovered + branchMissed;
-                                
+
                                 if (lineTotal > 0) {
                                     double lineCoverage = (lineCovered * 100.0) / lineTotal;
-                                    System.out.printf("   Line Coverage: %.2f%% (%d/%d)%n", 
+                                    System.out.printf("   Line Coverage: %.2f%% (%d/%d)%n",
                                         lineCoverage, lineCovered, lineTotal);
                                 }
                                 if (branchTotal > 0) {
                                     double branchCoverage = (branchCovered * 100.0) / branchTotal;
-                                    System.out.printf("   Branch Coverage: %.2f%% (%d/%d)%n", 
+                                    System.out.printf("   Branch Coverage: %.2f%% (%d/%d)%n",
                                         branchCoverage, branchCovered, branchTotal);
                                 }
                             }
@@ -205,4 +207,5 @@ public class CommonPlugin implements Plugin<Project> {
             });
         });
     }
+
 }
