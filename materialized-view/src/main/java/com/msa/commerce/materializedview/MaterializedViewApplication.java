@@ -9,4 +9,5 @@ public class MaterializedViewApplication {
     public static void main(String[] args) {
         SpringApplication.run(MaterializedViewApplication.class, args);
     }
+
 }

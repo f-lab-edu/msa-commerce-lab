@@ -1,211 +1,211 @@
-name: CI/CD Pipeline
-
-on:
-#  push:
-#    branches: [ main, develop ]
-  pull_request:
-    types:
-      - closed
-    branches: [ main ]
-
-env:
-  JAVA_VERSION: '21'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: test_db
-          MYSQL_USER: test_user
-          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Set up JDK ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
-
-    - name: Run tests with coverage
-      run: ./gradlew clean test jacocoTestReport
-      env:
-        SPRING_PROFILES_ACTIVE: test
-        DB_HOST: localhost
-        DB_PORT: 3306
-        DB_NAME: test_db
-        DB_USERNAME: test_user
-        DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-
-    - name: Generate integrated coverage report
-      run: ./gradlew jacocoRootReport
-
-    - name: Verify test coverage
-      run: ./gradlew jacocoTestCoverageVerification
-
-    - name: Upload individual module coverage reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-reports-modules
-        path: |
-          **/build/reports/jacoco/test/jacocoTestReport.xml
-          **/build/reports/jacoco/test/html/**
-        retention-days: 30
-
-    - name: Upload integrated coverage report
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report-integrated
-        path: |
-          build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
-          build/reports/jacoco/jacocoRootReport/html/**
-        retention-days: 30
-
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        files: ./build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: false
-        flags: unittests
-        name: codecov-umbrella
-
-    - name: Comment coverage report on PR
-      if: github.event_name == 'pull_request'
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const fs = require('fs');
-          const path = require('path');
-          
-          // 통합 커버리지 리포트 경로
-          const reportPath = 'build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml';
-          
-          if (fs.existsSync(reportPath)) {
-            const reportContent = fs.readFileSync(reportPath, 'utf8');
-            
-            // XML에서 커버리지 정보 추출 (간단한 정규식 사용)
-            const lineMatch = reportContent.match(/type="LINE".*?covered="(\d+)".*?missed="(\d+)"/);
-            const branchMatch = reportContent.match(/type="BRANCH".*?covered="(\d+)".*?missed="(\d+)"/);
-            
-            if (lineMatch && branchMatch) {
-              const lineCovered = parseInt(lineMatch[1]);
-              const lineMissed = parseInt(lineMatch[2]);
-              const branchCovered = parseInt(branchMatch[1]);
-              const branchMissed = parseInt(branchMatch[2]);
-              
-              const lineTotal = lineCovered + lineMissed;
-              const branchTotal = branchCovered + branchMissed;
-              
-              const lineCoverage = ((lineCovered / lineTotal) * 100).toFixed(2);
-              const branchCoverage = ((branchCovered / branchTotal) * 100).toFixed(2);
-              
-              const comment = `## 📊 Test Coverage Report
-              
-              | Metric | Coverage | Covered | Total |
-              |--------|----------|---------|-------|
-              | Lines | ${lineCoverage}% | ${lineCovered} | ${lineTotal} |
-              | Branches | ${branchCoverage}% | ${branchCovered} | ${branchTotal} |
-              
-              📈 [Detailed Report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-              `;
-              
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: comment
-              });
-            }
-          }
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up JDK ${{ env.JAVA_VERSION }}
-      uses: actions/setup-java@v4
-      with:
-        java-version: ${{ env.JAVA_VERSION }}
-        distribution: 'temurin'
-
-    - name: Cache Gradle packages
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-        restore-keys: |
-          ${{ runner.os }}-gradle-
-
-    - name: Build with Gradle
-      run: ./gradlew build -x test
-
-    - name: Build Docker images
-      run: |
-        docker build -t msa-commerce/monolith:${{ github.sha }} ./monolith
-        docker build -t msa-commerce/order-orchestrator:${{ github.sha }} ./order-orchestrator
-        docker build -t msa-commerce/payment-service:${{ github.sha }} ./payment-service
-        docker build -t msa-commerce/materialized-view:${{ github.sha }} ./materialized-view
-
-  api-docs:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-
-    - name: Install Redocly CLI
-      run: npm install -g @redocly/cli
-
-    - name: Build API Documentation
-      run: |
-        # OpenAPI 스펙 파일들을 수집하고 문서 생성
-        mkdir -p docs/api
-        
-        # 각 서비스의 OpenAPI 스펙을 수집 (서비스 실행 후)
-        # redocly build-docs openapi.yaml --output docs/api/index.html
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs
+#name: CI/CD Pipeline
+#
+#on:
+#  #  push:
+#  #    branches: [ main, develop ]
+#  pull_request:
+#    types:
+#      - closed
+#    branches: [ main ]
+#
+#env:
+#  JAVA_VERSION: '21'
+#  REGISTRY: ghcr.io
+#  IMAGE_NAME: ${{ github.repository }}
+#
+#jobs:
+#  test:
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      mysql:
+#        image: mysql:8.0
+#        env:
+#          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+#          MYSQL_DATABASE: test_db
+#          MYSQL_USER: test_user
+#          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+#        ports:
+#          - 3306:3306
+#        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Set up JDK ${{ env.JAVA_VERSION }}
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: ${{ env.JAVA_VERSION }}
+#          distribution: 'temurin'
+#
+#      - name: Cache Gradle packages
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            ${{ runner.os }}-gradle-
+#
+#      - name: Grant execute permission for gradlew
+#        run: chmod +x gradlew
+#
+#      - name: Run tests with coverage
+#        run: ./gradlew clean test jacocoTestReport
+#        env:
+#          SPRING_PROFILES_ACTIVE: test
+#          DB_HOST: localhost
+#          DB_PORT: 3306
+#          DB_NAME: test_db
+#          DB_USERNAME: test_user
+#          DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+#
+#      - name: Generate integrated coverage report
+#        run: ./gradlew jacocoRootReport
+#
+#      - name: Verify test coverage
+#        run: ./gradlew jacocoTestCoverageVerification
+#
+#      - name: Upload individual module coverage reports
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-reports-modules
+#          path: |
+#            **/build/reports/jacoco/test/jacocoTestReport.xml
+#            **/build/reports/jacoco/test/html/**
+#          retention-days: 30
+#
+#      - name: Upload integrated coverage report
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: coverage-report-integrated
+#          path: |
+#            build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+#            build/reports/jacoco/jacocoRootReport/html/**
+#          retention-days: 30
+#
+#      - name: Upload coverage reports to Codecov
+#        uses: codecov/codecov-action@v4
+#        with:
+#          files: ./build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml
+#          token: ${{ secrets.CODECOV_TOKEN }}
+#          fail_ci_if_error: false
+#          flags: unittests
+#          name: codecov-umbrella
+#
+#      - name: Comment coverage report on PR
+#        if: github.event_name == 'pull_request'
+#        uses: actions/github-script@v7
+#        with:
+#          script: |
+#            const fs = require('fs');
+#            const path = require('path');
+#
+#            // 통합 커버리지 리포트 경로
+#            const reportPath = 'build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml';
+#
+#            if (fs.existsSync(reportPath)) {
+#              const reportContent = fs.readFileSync(reportPath, 'utf8');
+#
+#              // XML에서 커버리지 정보 추출 (간단한 정규식 사용)
+#              const lineMatch = reportContent.match(/type="LINE".*?covered="(\d+)".*?missed="(\d+)"/);
+#              const branchMatch = reportContent.match(/type="BRANCH".*?covered="(\d+)".*?missed="(\d+)"/);
+#
+#              if (lineMatch && branchMatch) {
+#                const lineCovered = parseInt(lineMatch[1]);
+#                const lineMissed = parseInt(lineMatch[2]);
+#                const branchCovered = parseInt(branchMatch[1]);
+#                const branchMissed = parseInt(branchMatch[2]);
+#
+#                const lineTotal = lineCovered + lineMissed;
+#                const branchTotal = branchCovered + branchMissed;
+#
+#                const lineCoverage = ((lineCovered / lineTotal) * 100).toFixed(2);
+#                const branchCoverage = ((branchCovered / branchTotal) * 100).toFixed(2);
+#
+#                const comment = `## 📊 Test Coverage Report
+#
+#                | Metric | Coverage | Covered | Total |
+#                |--------|----------|---------|-------|
+#                | Lines | ${lineCoverage}% | ${lineCovered} | ${lineTotal} |
+#                | Branches | ${branchCoverage}% | ${branchCovered} | ${branchTotal} |
+#
+#                📈 [Detailed Report](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+#                `;
+#
+#                github.rest.issues.createComment({
+#                  issue_number: context.issue.number,
+#                  owner: context.repo.owner,
+#                  repo: context.repo.repo,
+#                  body: comment
+#                });
+#              }
+#            }
+#
+#  build:
+#    needs: test
+#    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/main'
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up JDK ${{ env.JAVA_VERSION }}
+#        uses: actions/setup-java@v4
+#        with:
+#          java-version: ${{ env.JAVA_VERSION }}
+#          distribution: 'temurin'
+#
+#      - name: Cache Gradle packages
+#        uses: actions/cache@v4
+#        with:
+#          path: |
+#            ~/.gradle/caches
+#            ~/.gradle/wrapper
+#          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+#          restore-keys: |
+#            ${{ runner.os }}-gradle-
+#
+#      - name: Build with Gradle
+#        run: ./gradlew build -x test
+#
+#      - name: Build Docker images
+#        run: |
+#          docker build -t msa-commerce/monolith:${{ github.sha }} ./monolith
+#          docker build -t msa-commerce/order-orchestrator:${{ github.sha }} ./order-orchestrator
+#          docker build -t msa-commerce/payment-service:${{ github.sha }} ./payment-service
+#          docker build -t msa-commerce/materialized-view:${{ github.sha }} ./materialized-view
+#
+#  api-docs:
+#    needs: test
+#    runs-on: ubuntu-latest
+#    if: github.ref == 'refs/heads/main'
+#
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      - name: Set up Node.js
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: '18'
+#
+#      - name: Install Redocly CLI
+#        run: npm install -g @redocly/cli
+#
+#      - name: Build API Documentation
+#        run: |
+#          # OpenAPI 스펙 파일들을 수집하고 문서 생성
+#          mkdir -p docs/api
+#
+#          # 각 서비스의 OpenAPI 스펙을 수집 (서비스 실행 후)
+#          # redocly build-docs openapi.yaml --output docs/api/index.html
+#
+#      - name: Deploy to GitHub Pages
+#        uses: peaceiris/actions-gh-pages@v3
+#        if: github.ref == 'refs/heads/main'
+#        with:
+#          github_token: ${{ secrets.GITHUB_TOKEN }}
+#          publish_dir: ./docs

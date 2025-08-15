@@ -1,6 +1,6 @@
 name: "🐛 Bug Report"
 description: "버그 신고 및 문제 해결 요청"
-labels: ["bug"]
+labels: [ "bug" ]
 body:
   - type: textarea
     attributes:
