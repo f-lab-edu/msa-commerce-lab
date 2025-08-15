@@ -4,9 +4,7 @@ dependencies {
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringKafka())
 
-    // Database Migration
-    implementation(BuildDependencies.getFlywayCore())
-    implementation(BuildDependencies.getFlywayMysqlDep())
+    // Database connector
     runtimeOnly(BuildDependencies.getMysqlConnectorRuntime())
 
     // Test
