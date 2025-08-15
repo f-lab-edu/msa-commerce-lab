@@ -30,6 +30,7 @@ public enum Dependency {
 
     // Kafka
     SPRING_KAFKA("org.springframework.kafka", "spring-kafka"),  // Version managed by Spring Boot
+    SPRING_KAFKA_TEST("org.springframework.kafka", "spring-kafka-test"),  // Version managed by Spring Boot
 
     // Documentation
     SPRINGDOC_OPENAPI("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.8.9"),
@@ -40,7 +41,8 @@ public enum Dependency {
     // Testing
     SPRING_SECURITY_TEST("org.springframework.security", "spring-security-test"),
     TESTCONTAINERS_JUNIT("org.testcontainers", "junit-jupiter"),  // Version managed by Spring Boot
-    TESTCONTAINERS_MYSQL("org.testcontainers", "mysql");  // Version managed by Spring Boot
+    TESTCONTAINERS_MYSQL("org.testcontainers", "mysql"),  // Version managed by Spring Boot
+    AWAITILITY("org.awaitility", "awaitility", "4.2.0");
 
     private final String group;
 
