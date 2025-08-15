@@ -11,6 +11,7 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
@@ -36,6 +37,7 @@ public class CommonPlugin implements Plugin<Project> {
         project.getPluginManager().apply(Plugins.SPRING_BOOT.getId());
         project.getPluginManager().apply(Plugins.SPRING_DEPENDENCY_MANAGEMENT.getId());
         project.getPluginManager().apply(JacocoPlugin.class);
+        project.getPluginManager().apply(QueryDslPlugin.class);
     }
 
     private void configureJava(Project project) {
@@ -44,18 +46,36 @@ public class CommonPlugin implements Plugin<Project> {
                 .getLanguageVersion()
                 .set(JavaLanguageVersion.of(Version.JAVA_VERSION.getVersionAsInt())));
 
-        project.getConfigurations()
-            .named("compileOnly")
-            .configure(
-                compileOnly -> compileOnly.extendsFrom(project.getConfigurations().named("annotationProcessor").get()));
+        // Explicitly enable annotation processing for both main and test source sets
+        project.getTasks()
+            .named("compileJava", JavaCompile.class)
+            .configure(task -> task.getOptions().getCompilerArgs().addAll(Arrays.asList(
+                "-parameters",
+                "-Xlint:unchecked"
+            )));
+
+        project.getTasks()
+            .named("compileTestJava", JavaCompile.class)
+            .configure(task -> task.getOptions().getCompilerArgs().addAll(Arrays.asList(
+                "-parameters",
+                "-Xlint:unchecked"
+            )));
     }
 
     private void configureDependencies(Project project) {
         project.getDependencies().add("implementation", Dependency.SPRING_BOOT_STARTER.getCoordinate());
+        project.getDependencies().add("implementation", Dependency.SPRING_BOOT_STARTER_DATA_JPA.getCoordinate());
         project.getDependencies().add("compileOnly", Dependency.LOMBOK.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.LOMBOK.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.SPRING_BOOT_STARTER_TEST.getCoordinate());
         project.getDependencies().add("implementation", Dependency.SPRINGDOC_OPENAPI.getCoordinate());
+
+        // Test database
+        project.getDependencies().add("testRuntimeOnly", Dependency.H2_DATABASE.getCoordinate());
+
+        // Test dependencies for Lombok
+        project.getDependencies().add("testCompileOnly", Dependency.LOMBOK.getCoordinate());
+        project.getDependencies().add("testAnnotationProcessor", Dependency.LOMBOK.getCoordinate());
     }
 
     private void configureTest(Project project) {
