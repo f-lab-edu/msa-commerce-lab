@@ -1,30 +1,13 @@
 plugins {
-    `java-library`
-    id("com.ewerk.gradle.plugins.querydsl") version "1.0.10"
+    id(Plugins.JAVA_LIBRARY_PLUGIN.id)
+    id(Plugins.QUERYDSL_PLUGIN.id)
 }
 
 dependencies {
-    // Spring Boot Starters
-    api("org.springframework.boot:spring-boot-starter-web")
-    api("org.springframework.boot:spring-boot-starter-data-jpa")
-    api("org.springframework.boot:spring-boot-starter-validation")
-
-     // Database - Common 모듈은 데이터베이스 마이그레이션 도구 제외
-    api("mysql:mysql-connector-java:8.0.33")
-
-    // QueryDSL
-    api("com.querydsl:querydsl-jpa:5.0.0:jakarta")
-    annotationProcessor("com.querydsl:querydsl-apt:5.0.0:jakarta")
-    annotationProcessor("jakarta.annotation:jakarta.annotation-api")
-    annotationProcessor("jakarta.persistence:jakarta.persistence-api")
-
-    // Test
-    testImplementation("com.h2database:h2")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:mysql")
+    // Dependencies are now handled by JavaLibraryPlugin and QueryDslPlugin
 }
 
-// QueryDSL 설정
+// QueryDSL configuration
 querydsl {
     jpa = true
     querydslSourcesDir = "src/main/generated"
@@ -44,13 +27,4 @@ tasks.withType<JavaCompile> {
 
 tasks.clean {
     delete(file("src/main/generated"))
-}
-
-tasks.jar {
-    enabled = true
-    archiveClassifier = ""
-}
-
-tasks.bootJar {
-    enabled = false
 }
