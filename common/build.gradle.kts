@@ -22,7 +22,9 @@ sourceSets {
 }
 
 tasks.withType<JavaCompile> {
-    options.annotationProcessorGeneratedSourcesDirectory = file("src/main/generated")
+    options.generatedSourceOutputDirectory.set(
+        layout.buildDirectory.dir("generated/sources/annotationProcessor/java/main")
+    )
 }
 
 tasks.clean {

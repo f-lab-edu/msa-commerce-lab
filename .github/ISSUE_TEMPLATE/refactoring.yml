@@ -1,6 +1,6 @@
 name: "🔧 Refactoring"
 description: "코드 구조 개선 및 리팩토링"
-labels: ["refactoring", "improvement"]
+labels: [ "refactoring", "improvement" ]
 body:
   - type: textarea
     attributes:

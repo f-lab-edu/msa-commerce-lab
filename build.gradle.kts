@@ -130,9 +130,11 @@ tasks.register<JacocoReport>("jacocoRootReport") {
         html.required = true
         csv.required = true
 
-        xml.outputLocation = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
+        xml.outputLocation =
+            file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
         html.outputLocation = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/html")
-        csv.outputLocation = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.csv")
+        csv.outputLocation =
+            file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.csv")
     }
 
     finalizedBy("printRootCoverageReport")
@@ -143,8 +145,10 @@ tasks.register("printRootCoverageReport") {
     group = "verification"
 
     doLast {
-        val htmlReportFile = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/html/index.html")
-        val xmlReportFile = file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
+        val htmlReportFile =
+            file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/html/index.html")
+        val xmlReportFile =
+            file("${layout.buildDirectory.get().asFile}/reports/jacoco/jacocoRootReport/jacocoRootReport.xml")
 
         if (htmlReportFile.exists()) {
             println("=".repeat(50))
@@ -295,15 +299,15 @@ flyway {
     url = "jdbc:mysql://localhost:3306"
     user = "app_flyway"
     password = "1q2w3e4r!@"
-    
+
     // Use centralized migration location
     locations = arrayOf("filesystem:infra/db/migration")
-    
+
     // Flyway configuration
     baselineOnMigrate = true
     validateOnMigrate = true
     cleanDisabled = false
-    
+
     schemas = arrayOf("db_flyway", "db_platform", "db_order", "db_payment")
 
     // Placeholder configuration

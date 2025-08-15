@@ -1,10 +1,11 @@
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.jetbrains.annotations.NotNull;
 
 public class QueryDslPlugin implements Plugin<Project> {
-    
+
     @Override
-    public void apply(Project project) {
+    public void apply(@NotNull Project project) {
         applyPlugins(project);
         configureDependencies(project);
     }
@@ -19,4 +20,5 @@ public class QueryDslPlugin implements Plugin<Project> {
         project.getDependencies().add("annotationProcessor", Dependency.JAKARTA_ANNOTATION.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.JAKARTA_PERSISTENCE.getCoordinate());
     }
+
 }
