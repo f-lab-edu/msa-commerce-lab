@@ -1,6 +1,6 @@
 services:
   mysql:
-    image: mysql:8.4
+    image: mysql:9.4.0
     container_name: msa-ecommerce-mysql
     restart: no
     ports:
@@ -22,7 +22,7 @@ services:
       start_period: 30s
 
   redis:
-    image: redis:8.0.3
+    image: redis:8.2.0
     container_name: msa-ecommerce-redis
     restart: no
     ports:
@@ -38,7 +38,7 @@ services:
       start_period: 10s
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
+    image: confluentinc/cp-zookeeper:7.4.10
     hostname: zookeeper
     container_name: msa-ecommerce-zookeeper
     restart: no
@@ -55,7 +55,7 @@ services:
       start_period: 10s
 
   kafka:
-    image: confluentinc/cp-kafka:7.4.0
+    image: confluentinc/cp-kafka:7.4.10
     hostname: kafka
     container_name: msa-ecommerce-kafka
     restart: no
