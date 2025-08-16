@@ -37,46 +37,66 @@ services:
       interval: 10s
       start_period: 10s
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.10
-    hostname: zookeeper
-    container_name: msa-ecommerce-zookeeper
-    restart: no
-    ports:
-      - "2181:2181"
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    healthcheck:
-      test: [ "CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok" ]
-      timeout: 5s
-      retries: 5
-      interval: 10s
-      start_period: 10s
-
   kafka:
     image: confluentinc/cp-kafka:7.4.10
     hostname: kafka
     container_name: msa-ecommerce-kafka
     restart: no
-    depends_on:
-      zookeeper:
-        condition: service_healthy
     ports:
       - "9092:9092"
+      - "9101:9101"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      # KRaft mode settings (without Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092'
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      CLUSTER_ID: 'N-C0eqtdRpaKACu-0s0NiA'
+    command: 
+      - bash
+      - -c
+      - |
+        echo 'Starting Kafka in KRaft mode...'
+        if [ ! -f /tmp/kraft-combined-logs/meta.properties ]; then
+          echo 'Generating cluster UUID...'
+          KAFKA_CLUSTER_ID=$$(kafka-storage random-uuid)
+          echo 'Formatting storage with cluster ID: '$$KAFKA_CLUSTER_ID
+          kafka-storage format --config /etc/kafka/kraft/server.properties --cluster-id $$KAFKA_CLUSTER_ID
+        fi
+        echo 'Starting Kafka server...'
+        /etc/confluent/docker/run
     healthcheck:
-      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
       timeout: 10s
       retries: 10
-      interval: 10s
-      start_period: 30s
+      interval: 15s
+      start_period: 40s
+    volumes:
+      - kafka-data:/tmp/kraft-combined-logs
+
+volumes:
+  kafka-data:
+    driver: local
+
+networks:
+  default:
+    name: msa-ecommerce-network
+    driver: bridge
