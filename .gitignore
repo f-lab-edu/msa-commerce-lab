@@ -170,14 +170,45 @@ spring.log
 .env.test.local
 .env.production.local
 
-# Node modules (for API documentation tools)
+# Node modules (if temporarily needed)
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
 
 # API Documentation
 docs/generated/
+
+# Prevent Java files in root directory (should be in proper package structure)
+/*.java
+Product*.class
+Product*.java
+
+# Build artifacts (should be rebuilt)
+!gradle/wrapper/
+
+# Generated source files (QueryDSL, etc.)
+**/generated/
+**/target/generated-sources/
+
+# IDE generated files
+**/.idea/
+**/.vscode/
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# OS generated files
+**/.DS_Store
+**/Thumbs.db
+
+# Temporary and backup files
+**/*.tmp
+**/*.bak
+**/*.swp
+**/*.swo
+**/*~
 
 # JaCoCo
 **/jacoco.exec

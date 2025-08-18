@@ -21,10 +21,6 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-/**
- * Integration test for Kafka configuration.
- * Tests basic producer and consumer functionality using embedded Kafka.
- */
 @SpringBootTest(classes = {KafkaConfig.class})
 @Import(EmbeddedKafkaTestConfig.class)
 @EmbeddedKafka(

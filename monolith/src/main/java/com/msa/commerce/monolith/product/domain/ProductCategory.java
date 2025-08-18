@@ -2,52 +2,38 @@ package com.msa.commerce.monolith.product.domain;
 
 import lombok.Getter;
 
-/**
- * 상품 카테고리 열거형
- */
 @Getter
 public enum ProductCategory {
-    
-    ELECTRONICS("전자제품", "ELEC"),
-    CLOTHING("의류", "CLOT"),
-    BOOKS("도서", "BOOK"),
-    HOME_GARDEN("홈&가든", "HOME"),
-    SPORTS("스포츠", "SPOR"),
-    BEAUTY("뷰티", "BEAU"),
-    FOOD("식품", "FOOD"),
-    TOYS("장난감", "TOYS"),
-    AUTOMOTIVE("자동차", "AUTO"),
-    HEALTH("건강", "HEAL");
+
+    ELECTRONICS(1L, "전자제품", "ELEC"),
+    CLOTHING(2L, "의류", "CLOT"),
+    BOOKS(3L, "도서", "BOOK"),
+    HOME_GARDEN(4L, "홈&가든", "HOME"),
+    SPORTS(5L, "스포츠", "SPOR"),
+    BEAUTY(6L, "뷰티", "BEAU"),
+    FOOD(7L, "식품", "FOOD"),
+    TOYS(8L, "장난감", "TOYS"),
+    AUTOMOTIVE(9L, "자동차", "AUTO"),
+    HEALTH(10L, "건강", "HEAL");
+
+    private final Long id;
 
     private final String displayName;
+
     private final String code;
 
-    ProductCategory(String displayName, String code) {
+    ProductCategory(Long id, String displayName, String code) {
+        this.id = id;
         this.displayName = displayName;
         this.code = code;
     }
 
-    /**
-     * 코드로 카테고리 찾기
-     */
-    public static ProductCategory fromCode(String code) {
+    public static ProductCategory fromId(Long id) {
         for (ProductCategory category : values()) {
-            if (category.code.equals(code)) {
+            if (category.id.equals(id)) {
                 return category;
             }
         }
-        throw new IllegalArgumentException("유효하지 않은 카테고리 코드입니다: " + code);
-    }
-
-    /**
-     * 이름으로 카테고리 찾기
-     */
-    public static ProductCategory fromDisplayName(String displayName) {
-        for (ProductCategory category : values()) {
-            if (category.displayName.equals(displayName)) {
-                return category;
-            }
-        }
-        throw new IllegalArgumentException("유효하지 않은 카테고리명입니다: " + displayName);
+        throw new IllegalArgumentException("Invalid category id: " + id);
     }
 }

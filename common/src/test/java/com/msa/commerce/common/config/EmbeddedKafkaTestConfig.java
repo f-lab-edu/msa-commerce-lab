@@ -18,16 +18,9 @@ import org.springframework.kafka.test.utils.KafkaTestUtils;
 
 import java.util.Map;
 
-/**
- * Test configuration for embedded Kafka testing.
- * Provides Kafka configuration that works with EmbeddedKafkaBroker.
- */
 @TestConfiguration
 public class EmbeddedKafkaTestConfig {
 
-    /**
-     * Producer factory for embedded Kafka testing
-     */
     @Bean
     @Primary
     public ProducerFactory<String, Object> embeddedKafkaProducerFactory(EmbeddedKafkaBroker embeddedKafka) {
@@ -38,18 +31,12 @@ public class EmbeddedKafkaTestConfig {
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
-    /**
-     * Kafka template for embedded Kafka testing
-     */
     @Bean
     @Primary
     public KafkaTemplate<String, Object> embeddedKafkaTemplate(ProducerFactory<String, Object> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
-    /**
-     * Consumer factory for embedded Kafka testing
-     */
     @Bean
     @Primary
     public ConsumerFactory<String, Object> embeddedKafkaConsumerFactory(EmbeddedKafkaBroker embeddedKafka,
@@ -63,9 +50,6 @@ public class EmbeddedKafkaTestConfig {
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
-    /**
-     * Listener container factory for embedded Kafka testing
-     */
     @Bean
     @Primary
     public ConcurrentKafkaListenerContainerFactory<String, Object> embeddedKafkaListenerContainerFactory(

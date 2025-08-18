@@ -7,9 +7,6 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.*;
 
-/**
- * Product 도메인 엔티티 테스트
- */
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
 
@@ -20,28 +17,27 @@ class ProductTest {
         String name = "테스트 상품";
         String description = "테스트 상품 설명";
         BigDecimal price = new BigDecimal("10000");
-        Integer stockQuantity = 100;
-        ProductCategory category = ProductCategory.ELECTRONICS;
-        String imageUrl = "http://example.com/image.jpg";
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when
         Product product = Product.builder()
                 .name(name)
                 .description(description)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
-                .imageUrl(imageUrl)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build();
 
         // then
         assertThat(product.getName()).isEqualTo(name);
         assertThat(product.getDescription()).isEqualTo(description);
         assertThat(product.getPrice()).isEqualTo(price);
-        assertThat(product.getStockQuantity()).isEqualTo(stockQuantity);
-        assertThat(product.getCategory()).isEqualTo(category);
-        assertThat(product.getImageUrl()).isEqualTo(imageUrl);
-        assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+        assertThat(product.getCategoryId()).isEqualTo(categoryId);
+        assertThat(product.getSku()).isEqualTo(sku);
+        assertThat(product.getStatus()).isEqualTo(ProductStatus.DRAFT);
+        assertThat(product.getVisibility()).isEqualTo("PUBLIC");
+        assertThat(product.getIsFeatured()).isFalse();
     }
 
     @Test
@@ -50,18 +46,18 @@ class ProductTest {
         // given
         String name = null;
         BigDecimal price = new BigDecimal("10000");
-        Integer stockQuantity = 100;
-        ProductCategory category = ProductCategory.ELECTRONICS;
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("상품명은 필수입니다.");
+                .hasMessage("Product name is required.");
     }
 
     @Test
@@ -70,18 +66,38 @@ class ProductTest {
         // given
         String name = "";
         BigDecimal price = new BigDecimal("10000");
-        Integer stockQuantity = 100;
-        ProductCategory category = ProductCategory.ELECTRONICS;
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("상품명은 필수입니다.");
+                .hasMessage("Product name is required.");
+    }
+
+    @Test
+    @DisplayName("SKU가 null인 경우 예외 발생")
+    void createProduct_SkuIsNull_ThrowsException() {
+        // given
+        String name = "테스트 상품";
+        BigDecimal price = new BigDecimal("10000");
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = null;
+
+        // when & then
+        assertThatThrownBy(() -> Product.builder()
+                .name(name)
+                .price(price)
+                .categoryId(categoryId)
+                .sku(sku)
+                .build())
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("SKU is required.");
     }
 
     @Test
@@ -90,119 +106,78 @@ class ProductTest {
         // given
         String name = "테스트 상품";
         BigDecimal price = BigDecimal.ZERO;
-        Integer stockQuantity = 100;
-        ProductCategory category = ProductCategory.ELECTRONICS;
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("가격은 0보다 커야 합니다.");
+                .hasMessage("Price must be greater than 0.");
     }
 
     @Test
-    @DisplayName("가격이 1000만원 초과인 경우 예외 발생")
+    @DisplayName("가격이 99,999,999.99 초과인 경우 예외 발생")
     void createProduct_PriceExceedsLimit_ThrowsException() {
         // given
         String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("10000001");
-        Integer stockQuantity = 100;
-        ProductCategory category = ProductCategory.ELECTRONICS;
+        BigDecimal price = new BigDecimal("100000000.00");
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("가격은 1000만원을 초과할 수 없습니다.");
+                .hasMessage("Price cannot exceed 99,999,999.99.");
     }
 
     @Test
-    @DisplayName("재고 수량이 음수인 경우 예외 발생")
-    void createProduct_StockQuantityIsNegative_ThrowsException() {
+    @DisplayName("카테고리 ID가 null인 경우 예외 발생")
+    void createProduct_CategoryIdIsNull_ThrowsException() {
         // given
         String name = "테스트 상품";
         BigDecimal price = new BigDecimal("10000");
-        Integer stockQuantity = -1;
-        ProductCategory category = ProductCategory.ELECTRONICS;
+        Long categoryId = null;
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("재고 수량은 0 이상이어야 합니다.");
+                .hasMessage("Category ID is required.");
     }
 
     @Test
-    @DisplayName("카테고리가 null인 경우 예외 발생")
-    void createProduct_CategoryIsNull_ThrowsException() {
+    @DisplayName("상품명이 255자 초과인 경우 예외 발생")
+    void createProduct_NameExceedsMaxLength_ThrowsException() {
         // given
-        String name = "테스트 상품";
+        String name = "a".repeat(256); // 256자
         BigDecimal price = new BigDecimal("10000");
-        Integer stockQuantity = 100;
-        ProductCategory category = null;
+        Long categoryId = ProductCategory.ELECTRONICS.getId();
+        String sku = "TEST1234";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
                 .name(name)
                 .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
+                .categoryId(categoryId)
+                .sku(sku)
                 .build())
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("카테고리는 필수입니다.");
-    }
-
-    @Test
-    @DisplayName("재고 차감 성공")
-    void decreaseStock_Success() {
-        // given
-        Product product = createValidProduct();
-        int decreaseQuantity = 10;
-
-        // when
-        product.decreaseStock(decreaseQuantity);
-
-        // then
-        assertThat(product.getStockQuantity()).isEqualTo(90);
-    }
-
-    @Test
-    @DisplayName("재고 부족시 차감 실패")
-    void decreaseStock_InsufficientStock_ThrowsException() {
-        // given
-        Product product = createValidProduct();
-        int decreaseQuantity = 200;
-
-        // when & then
-        assertThatThrownBy(() -> product.decreaseStock(decreaseQuantity))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessage("재고가 부족합니다.");
-    }
-
-    @Test
-    @DisplayName("재고 증가 성공")
-    void increaseStock_Success() {
-        // given
-        Product product = createValidProduct();
-        int increaseQuantity = 50;
-
-        // when
-        product.increaseStock(increaseQuantity);
-
-        // then
-        assertThat(product.getStockQuantity()).isEqualTo(150);
+                .hasMessage("Product name cannot exceed 255 characters.");
     }
 
     @Test
@@ -232,14 +207,44 @@ class ProductTest {
         assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
     }
 
+    @Test
+    @DisplayName("상품 아카이브")
+    void archive_Success() {
+        // given
+        Product product = createValidProduct();
+
+        // when
+        product.archive();
+
+        // then
+        assertThat(product.getStatus()).isEqualTo(ProductStatus.ARCHIVED);
+    }
+
+    @Test
+    @DisplayName("상품 정보 업데이트")
+    void updateProductInfo_Success() {
+        // given
+        Product product = createValidProduct();
+        String newName = "업데이트된 상품명";
+        String newDescription = "업데이트된 설명";
+        BigDecimal newPrice = new BigDecimal("20000");
+
+        // when
+        product.updateProductInfo(newName, newDescription, newPrice);
+
+        // then
+        assertThat(product.getName()).isEqualTo(newName);
+        assertThat(product.getDescription()).isEqualTo(newDescription);
+        assertThat(product.getPrice()).isEqualTo(newPrice);
+    }
+
     private Product createValidProduct() {
         return Product.builder()
                 .name("테스트 상품")
                 .description("테스트 상품 설명")
                 .price(new BigDecimal("10000"))
-                .stockQuantity(100)
-                .category(ProductCategory.ELECTRONICS)
-                .imageUrl("http://example.com/image.jpg")
+                .categoryId(ProductCategory.ELECTRONICS.getId())
+                .sku("TEST1234")
                 .build();
     }
 }
