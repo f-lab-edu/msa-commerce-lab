@@ -1,55 +1,80 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
-/**
- * 상품 생성 요청 DTO
- * 헥사고날 아키텍처의 인바운드 어댑터
- */
 @Getter
 @NoArgsConstructor
 public class ProductCreateRequest {
 
-    @NotBlank(message = "상품명은 필수입니다.")
-    @Size(max = 100, message = "상품명은 100자를 초과할 수 없습니다.")
+    @NotNull(message = "Category ID is required.")
+    @Positive(message = "Category ID must be positive.")
+    private Long categoryId;
+
+    @NotBlank(message = "Product name is required.")
+    @Size(max = 255, message = "Product name cannot exceed 255 characters.")
     private String name;
 
-    @Size(max = 2000, message = "상품 설명은 2000자를 초과할 수 없습니다.")
+    @Size(max = 5000, message = "Product description cannot exceed 5000 characters.")
     private String description;
 
-    @NotNull(message = "가격은 필수입니다.")
-    @DecimalMin(value = "0.01", message = "가격은 0보다 커야 합니다.")
-    @DecimalMax(value = "10000000", message = "가격은 1000만원을 초과할 수 없습니다.")
-    @Digits(integer = 8, fraction = 2, message = "가격 형식이 올바르지 않습니다.")
+    @Size(max = 500, message = "Short description cannot exceed 500 characters.")
+    private String shortDescription;
+
+    @Size(max = 100, message = "Brand cannot exceed 100 characters.")
+    private String brand;
+
+    @Size(max = 100, message = "Model cannot exceed 100 characters.")
+    private String model;
+
+    @NotNull(message = "Price is required.")
+    @DecimalMin(value = "0.01", message = "Price must be greater than 0.")
+    @DecimalMax(value = "99999999.99", message = "Price cannot exceed 99,999,999.99.")
+    @Digits(integer = 8, fraction = 2, message = "Invalid price format.")
     private BigDecimal price;
 
-    @NotNull(message = "재고 수량은 필수입니다.")
-    @Min(value = 0, message = "재고 수량은 0 이상이어야 합니다.")
-    private Integer stockQuantity;
+    @DecimalMin(value = "0.01", message = "Compare price must be greater than 0.")
+    @Digits(integer = 8, fraction = 2, message = "Invalid compare price format.")
+    private BigDecimal comparePrice;
 
-    @NotNull(message = "카테고리는 필수입니다.")
-    private ProductCategory category;
+    @DecimalMin(value = "0.01", message = "Cost price must be greater than 0.")
+    @Digits(integer = 8, fraction = 2, message = "Invalid cost price format.")
+    private BigDecimal costPrice;
 
-    @Size(max = 500, message = "이미지 URL은 500자를 초과할 수 없습니다.")
-    private String imageUrl;
+    @DecimalMin(value = "0.01", message = "Weight must be greater than 0.")
+    @Digits(integer = 8, fraction = 2, message = "Invalid weight format.")
+    private BigDecimal weight;
 
-    /**
-     * 요청 DTO를 명령 객체로 변환
-     */
-    public ProductCreateCommand toCommand() {
-        return ProductCreateCommand.builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .stockQuantity(stockQuantity)
-                .category(category)
-                .imageUrl(imageUrl)
-                .build();
-    }
+    private String productAttributes;
+
+    @Size(max = 20, message = "Visibility cannot exceed 20 characters.")
+    private String visibility;
+
+    @Size(max = 50, message = "Tax class cannot exceed 50 characters.")
+    private String taxClass;
+
+    @Size(max = 255, message = "Meta title cannot exceed 255 characters.")
+    private String metaTitle;
+
+    @Size(max = 500, message = "Meta description cannot exceed 500 characters.")
+    private String metaDescription;
+
+    @Size(max = 1000, message = "Search keywords cannot exceed 1000 characters.")
+    private String searchKeywords;
+
+    private Boolean isFeatured;
+
+    // 재고 관련 필드 (별도 도메인으로 관리)
+    @Min(value = 0, message = "Initial stock cannot be negative.")
+    private Integer initialStock;
+
+    @Min(value = 0, message = "Low stock threshold cannot be negative.")
+    private Integer lowStockThreshold;
+
+    private Boolean isTrackingEnabled;
+
+    private Boolean isBackorderAllowed;
 }

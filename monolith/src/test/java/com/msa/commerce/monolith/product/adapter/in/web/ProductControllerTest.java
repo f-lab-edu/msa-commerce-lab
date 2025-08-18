@@ -1,47 +1,58 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
-import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
-import com.msa.commerce.monolith.product.domain.ProductStatus;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-/**
- * ProductController 테스트
- */
-@WebMvcTest(ProductController.class)
+import com.msa.commerce.common.exception.DuplicateResourceException;
+import com.msa.commerce.common.exception.ErrorCode;
+import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
+
+@ExtendWith(MockitoExtension.class)
 @DisplayName("ProductController 테스트")
 class ProductControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private ProductCreateUseCase productCreateUseCase;
+
+    @BeforeEach
+    void setUp() {
+        ProductWebMapper productWebMapper = new ProductWebMapper();
+        mockMvc = MockMvcBuilders.standaloneSetup(new ProductController(productCreateUseCase, productWebMapper))
+            .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
+            .build();
+    }
 
     @Test
     @DisplayName("정상적인 상품 생성 요청")
     void createProduct_Success() throws Exception {
         // given
-        ProductCreateRequest request = createValidRequest();
+        String requestJson = """
+            {
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": 10000,
+                "categoryId": 1
+            }
+            """;
         ProductResponse response = createProductResponse();
 
         given(productCreateUseCase.createProduct(any())).willReturn(response);
@@ -49,39 +60,33 @@ class ProductControllerTest {
         // when & then
         mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("테스트 상품"))
-                .andExpect(jsonPath("$.description").value("테스트 상품 설명"))
-                .andExpect(jsonPath("$.price").value(10000))
-                .andExpect(jsonPath("$.stockQuantity").value(100))
-                .andExpect(jsonPath("$.category").value("ELECTRONICS"))
-                .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.imageUrl").value("http://example.com/image.jpg"));
+                .content(requestJson))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.id").value(1L))
+            .andExpect(jsonPath("$.name").value("테스트 상품"))
+            .andExpect(jsonPath("$.description").value("테스트 상품 설명"))
+            .andExpect(jsonPath("$.price").value(10000))
+            .andExpect(jsonPath("$.categoryId").value(1))
+            .andExpect(jsonPath("$.status").value("DRAFT"));
     }
 
     @Test
     @DisplayName("상품명이 없는 요청 - 400 Bad Request")
     void createProduct_EmptyName_BadRequest() throws Exception {
         // given
-        ProductCreateRequest request = createValidRequest();
-        // name을 null로 설정하기 위해 JSON 직접 작성
         String requestJson = """
-                {
-                    "description": "테스트 상품 설명",
-                    "price": 10000,
-                    "stockQuantity": 100,
-                    "category": "ELECTRONICS",
-                    "imageUrl": "http://example.com/image.jpg"
-                }
-                """;
+            {
+                "description": "테스트 상품 설명",
+                "price": 10000,
+                "categoryId": 1
+            }
+            """;
 
         // when & then
         mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -89,101 +94,108 @@ class ProductControllerTest {
     void createProduct_NegativePrice_BadRequest() throws Exception {
         // given
         String requestJson = """
-                {
-                    "name": "테스트 상품",
-                    "description": "테스트 상품 설명",
-                    "price": -1000,
-                    "stockQuantity": 100,
-                    "category": "ELECTRONICS",
-                    "imageUrl": "http://example.com/image.jpg"
-                }
-                """;
+            {
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": -1000,
+                "categoryId": 1
+            }
+            """;
 
         // when & then
         mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-                .andExpect(status().isBadRequest());
+            .andExpect(status().isBadRequest());
     }
 
     @Test
-    @DisplayName("재고 수량이 음수인 요청 - 400 Bad Request")
-    void createProduct_NegativeStockQuantity_BadRequest() throws Exception {
+    @DisplayName("카테고리 ID가 유효하지 않은 요청 - 400 Bad Request")
+    void createProduct_InvalidCategoryId_BadRequest() throws Exception {
         // given
         String requestJson = """
-                {
-                    "name": "테스트 상품",
-                    "description": "테스트 상품 설명",
-                    "price": 10000,
-                    "stockQuantity": -1,
-                    "category": "ELECTRONICS",
-                    "imageUrl": "http://example.com/image.jpg"
-                }
-                """;
+            {
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": 10000,
+                "categoryId": 999
+            }
+            """;
 
-        // when & then
-        mockMvc.perform(post("/api/v1/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("카테고리가 없는 요청 - 400 Bad Request")
-    void createProduct_NoCategory_BadRequest() throws Exception {
-        // given
-        String requestJson = """
-                {
-                    "name": "테스트 상품",
-                    "description": "테스트 상품 설명",
-                    "price": 10000,
-                    "stockQuantity": 100,
-                    "imageUrl": "http://example.com/image.jpg"
-                }
-                """;
-
-        // when & then
-        mockMvc.perform(post("/api/v1/products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("중복된 상품명으로 생성 시 예외 처리")
-    void createProduct_DuplicateName_ThrowsException() throws Exception {
-        // given
-        ProductCreateRequest request = createValidRequest();
-        
         given(productCreateUseCase.createProduct(any()))
-                .willThrow(new IllegalArgumentException("이미 존재하는 상품명입니다: 테스트 상품"));
+            .willThrow(new IllegalArgumentException("Invalid category ID: 999"));
 
         // when & then
         mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .content(requestJson))
+            .andExpect(status().isBadRequest());
     }
 
-    private ProductCreateRequest createValidRequest() {
-        ProductCreateRequest request = new ProductCreateRequest();
-        // 리플렉션이나 테스트 전용 생성자를 사용하여 필드 설정
-        // 여기서는 간단히 JSON 문자열로 테스트하는 방식을 선택
-        return request;
+    @Test
+    @DisplayName("카테고리 ID가 없는 요청 - 400 Bad Request")
+    void createProduct_NoCategoryId_BadRequest() throws Exception {
+        // given
+        String requestJson = """
+            {
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": 10000
+            }
+            """;
+
+        // when & then
+        mockMvc.perform(post("/api/v1/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("중복된 SKU로 생성 시 예외 처리")
+    void createProduct_DuplicateSku_ThrowsException() throws Exception {
+        // given
+        String requestJson = """
+            {
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": 10000,
+                "categoryId": 1
+            }
+            """;
+
+        given(productCreateUseCase.createProduct(any()))
+            .willThrow(new DuplicateResourceException(
+                "Product SKU already exists: TEST-12345678",
+                ErrorCode.PRODUCT_SKU_DUPLICATE.getCode()
+            ));
+
+        // when & then
+        mockMvc.perform(post("/api/v1/products")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.message").value("Product SKU already exists: TEST-12345678"))
+            .andExpect(jsonPath("$.code").value(ErrorCode.PRODUCT_SKU_DUPLICATE.getCode()))
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.timestamp").exists())
+            .andExpect(jsonPath("$.path").value("/api/v1/products"));
     }
 
     private ProductResponse createProductResponse() {
         return ProductResponse.builder()
-                .id(1L)
-                .name("테스트 상품")
-                .description("테스트 상품 설명")
-                .price(new BigDecimal("10000"))
-                .stockQuantity(100)
-                .category(ProductCategory.ELECTRONICS)
-                .status(ProductStatus.ACTIVE)
-                .imageUrl("http://example.com/image.jpg")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+            .id(1L)
+            .categoryId(1L)
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .description("테스트 상품 설명")
+            .price(new BigDecimal("10000"))
+            .status(ProductStatus.DRAFT)
+            .visibility("PUBLIC")
+            .isFeatured(false)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
     }
+
 }

@@ -5,12 +5,10 @@ import com.msa.commerce.monolith.product.domain.Product;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-/**
- * 상품 저장소 구현체
- * 헥사고날 아키텍처의 아웃바운드 어댑터
- */
 @Repository
 @RequiredArgsConstructor
 public class ProductRepositoryImpl implements ProductRepository {
@@ -19,16 +17,55 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Product save(Product product) {
-        return productJpaRepository.save(product);
+        ProductJpaEntity jpaEntity;
+        
+        if (product.getId() == null) {
+            // 새로운 엔티티 생성
+            jpaEntity = ProductJpaEntity.fromDomainEntityForCreation(product);
+        } else {
+            // 기존 엔티티 업데이트
+            jpaEntity = ProductJpaEntity.fromDomainEntity(product);
+        }
+        
+        ProductJpaEntity savedEntity = productJpaRepository.save(jpaEntity);
+        return savedEntity.toDomainEntity();
     }
 
     @Override
     public Optional<Product> findById(Long id) {
-        return productJpaRepository.findById(id);
+        return productJpaRepository.findById(id)
+                .map(ProductJpaEntity::toDomainEntity);
     }
 
     @Override
     public boolean existsByName(String name) {
         return productJpaRepository.existsByName(name);
+    }
+
+    @Override
+    public boolean existsBySku(String sku) {
+        return productJpaRepository.existsBySku(sku);
+    }
+
+    @Override
+    public Optional<Product> findBySku(String sku) {
+        return productJpaRepository.findBySku(sku)
+                .map(ProductJpaEntity::toDomainEntity);
+    }
+
+    @Override
+    public List<Product> findByCategoryId(Long categoryId) {
+        return productJpaRepository.findByCategoryId(categoryId)
+                .stream()
+                .map(ProductJpaEntity::toDomainEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Product> findFeaturedProducts() {
+        return productJpaRepository.findByIsFeaturedTrue()
+                .stream()
+                .map(ProductJpaEntity::toDomainEntity)
+                .collect(Collectors.toList());
     }
 }

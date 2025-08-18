@@ -38,6 +38,10 @@ public enum Dependency {
     // Lombok
     LOMBOK("org.projectlombok", "lombok"),  // Version managed by Spring Boot
 
+    // MapStruct
+    MAPSTRUCT("org.mapstruct", "mapstruct", "1.5.5.Final"),
+    MAPSTRUCT_PROCESSOR("org.mapstruct", "mapstruct-processor", "1.5.5.Final"),
+
     // Testing
     SPRING_SECURITY_TEST("org.springframework.security", "spring-security-test"),
     TESTCONTAINERS_JUNIT("org.testcontainers", "junit-jupiter"),  // Version managed by Spring Boot

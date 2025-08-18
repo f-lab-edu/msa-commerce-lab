@@ -1,6 +1,3 @@
-/**
- * Utility class to provide easy access to dependencies in build.gradle.kts files
- */
 public final class BuildDependencies {
 
     // Prevent instantiation
@@ -19,14 +16,6 @@ public final class BuildDependencies {
     // Common service dependencies
     public static String getSpringKafka() {
         return Dependency.SPRING_KAFKA.getCoordinate();
-    }
-
-    public static String getFlywayCore() {
-        return Dependency.FLYWAY_CORE.getCoordinate();
-    }
-
-    public static String getFlywayMysqlDep() {
-        return Dependency.FLYWAY_MYSQL.getCoordinate();
     }
 
     public static String getMysqlConnectorRuntime() {
@@ -66,6 +55,15 @@ public final class BuildDependencies {
 
     public static String getTestcontainersMysql() {
         return Dependency.TESTCONTAINERS_MYSQL.getCoordinate();
+    }
+
+    // MapStruct dependencies
+    public static String getMapstruct() {
+        return Dependency.MAPSTRUCT.getCoordinate();
+    }
+
+    public static String getMapstructProcessor() {
+        return Dependency.MAPSTRUCT_PROCESSOR.getCoordinate();
     }
 
 }

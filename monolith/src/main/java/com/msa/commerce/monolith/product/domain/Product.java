@@ -1,139 +1,167 @@
 package com.msa.commerce.monolith.product.domain;
 
-import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Product 도메인 엔티티
- * 헥사고날 아키텍처의 도메인 레이어
- */
-@Entity
-@Table(name = "products")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
 public class Product {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, length = 100)
+    private Long categoryId;              // DB 스키마와 일치
+    private String sku;                   // 필수 필드 추가
     private String name;
-
-    @Column(columnDefinition = "TEXT")
     private String description;
-
-    @Column(nullable = false, precision = 10, scale = 2)
+    private String shortDescription;      // 추가
+    private String brand;                 // 추가
+    private String model;                 // 추가
     private BigDecimal price;
-
-    @Column(nullable = false)
-    private Integer stockQuantity;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 50)
-    private ProductCategory category;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    private BigDecimal comparePrice;      // 할인 전 원가
+    private BigDecimal costPrice;         // 원가
+    private BigDecimal weight;            // 추가
+    private String productAttributes;     // JSON 속성 (단순화)
     private ProductStatus status;
-
-    @Column(length = 500)
-    private String imageUrl;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
+    private String visibility;            // 공개/비공개
+    private String taxClass;              // 세금 분류
+    private String metaTitle;             // SEO 제목
+    private String metaDescription;       // SEO 설명
+    private String searchKeywords;        // 검색 키워드
+    private Boolean isFeatured;           // 추천 상품 여부
     private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(nullable = false)
     private LocalDateTime updatedAt;
 
     @Builder
-    public Product(String name, String description, BigDecimal price, 
-                   Integer stockQuantity, ProductCategory category, String imageUrl) {
-        validateProduct(name, price, stockQuantity, category);
+    public Product(Long categoryId, String sku, String name, String description, 
+                   String shortDescription, String brand, String model, BigDecimal price,
+                   BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
+                   String productAttributes, String visibility, String taxClass,
+                   String metaTitle, String metaDescription, String searchKeywords,
+                   Boolean isFeatured) {
+        validateProduct(categoryId, sku, name, price);
         
+        this.categoryId = categoryId;
+        this.sku = sku;
         this.name = name;
         this.description = description;
+        this.shortDescription = shortDescription;
+        this.brand = brand;
+        this.model = model;
         this.price = price;
-        this.stockQuantity = stockQuantity;
-        this.category = category;
-        this.imageUrl = imageUrl;
-        this.status = ProductStatus.ACTIVE;
+        this.comparePrice = comparePrice;
+        this.costPrice = costPrice;
+        this.weight = weight;
+        this.productAttributes = productAttributes;
+        this.status = ProductStatus.DRAFT; // DB 스키마 기본값과 일치
+        this.visibility = visibility != null ? visibility : "PUBLIC";
+        this.taxClass = taxClass;
+        this.metaTitle = metaTitle;
+        this.metaDescription = metaDescription;
+        this.searchKeywords = searchKeywords;
+        this.isFeatured = isFeatured != null ? isFeatured : false;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * 도메인 비즈니스 로직: 상품 생성 유효성 검증
-     */
-    private void validateProduct(String name, BigDecimal price, Integer stockQuantity, ProductCategory category) {
+    private void validateProduct(Long categoryId, String sku, String name, BigDecimal price) {
+        if (categoryId == null) {
+            throw new IllegalArgumentException("Category ID is required.");
+        }
+        
+        if (sku == null || sku.trim().isEmpty()) {
+            throw new IllegalArgumentException("SKU is required.");
+        }
+        
         if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("상품명은 필수입니다.");
+            throw new IllegalArgumentException("Product name is required.");
+        }
+        
+        if (name.length() > 255) {
+            throw new IllegalArgumentException("Product name cannot exceed 255 characters.");
         }
         
         if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("가격은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("Price must be greater than 0.");
         }
         
-        if (price.compareTo(new BigDecimal("10000000")) > 0) {
-            throw new IllegalArgumentException("가격은 1000만원을 초과할 수 없습니다.");
-        }
-        
-        if (stockQuantity == null || stockQuantity < 0) {
-            throw new IllegalArgumentException("재고 수량은 0 이상이어야 합니다.");
-        }
-        
-        if (category == null) {
-            throw new IllegalArgumentException("카테고리는 필수입니다.");
+        if (price.compareTo(new BigDecimal("99999999.99")) > 0) {
+            throw new IllegalArgumentException("Price cannot exceed 99,999,999.99.");
         }
     }
 
-    /**
-     * 도메인 비즈니스 로직: 재고 차감
-     */
-    public void decreaseStock(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("차감할 수량은 0보다 커야 합니다.");
-        }
-        
-        if (this.stockQuantity < quantity) {
-            throw new IllegalStateException("재고가 부족합니다.");
-        }
-        
-        this.stockQuantity -= quantity;
+    public void archive() {
+        this.status = ProductStatus.ARCHIVED;
+        this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * 도메인 비즈니스 로직: 재고 증가
-     */
-    public void increaseStock(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("추가할 수량은 0보다 커야 합니다.");
+    public void updateProductInfo(String name, String description, BigDecimal price) {
+        if (name != null && !name.trim().isEmpty()) {
+            this.name = name;
         }
-        
-        this.stockQuantity += quantity;
+        if (description != null) {
+            this.description = description;
+        }
+        if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
+            this.price = price;
+        }
+        this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * 도메인 비즈니스 로직: 상품 비활성화
-     */
     public void deactivate() {
         this.status = ProductStatus.INACTIVE;
+        this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * 도메인 비즈니스 로직: 상품 활성화
-     */
     public void activate() {
         this.status = ProductStatus.ACTIVE;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public static Product reconstitute(Long id, Long categoryId, String sku, String name, String description,
+                                     String shortDescription, String brand, String model, BigDecimal price,
+                                     BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
+                                     String productAttributes, ProductStatus status, String visibility,
+                                     String taxClass, String metaTitle, String metaDescription,
+                                     String searchKeywords, Boolean isFeatured, 
+                                     LocalDateTime createdAt, LocalDateTime updatedAt) {
+        Product product = new Product();
+        product.id = id;
+        product.categoryId = categoryId;
+        product.sku = sku;
+        product.name = name;
+        product.description = description;
+        product.shortDescription = shortDescription;
+        product.brand = brand;
+        product.model = model;
+        product.price = price;
+        product.comparePrice = comparePrice;
+        product.costPrice = costPrice;
+        product.weight = weight;
+        product.productAttributes = productAttributes;
+        product.status = status;
+        product.visibility = visibility;
+        product.taxClass = taxClass;
+        product.metaTitle = metaTitle;
+        product.metaDescription = metaDescription;
+        product.searchKeywords = searchKeywords;
+        product.isFeatured = isFeatured;
+        product.createdAt = createdAt;
+        product.updatedAt = updatedAt;
+        return product;
+    }
+
+    public Product withId(Long id) {
+        this.id = id;
+        return this;
+    }
+
+    public Product withTimestamps(LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        return this;
     }
 }
