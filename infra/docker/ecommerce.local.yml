@@ -4,7 +4,7 @@ services:
     container_name: msa-ecommerce-mysql
     restart: no
     ports:
-      - "3306:3306"
+      - "3315:3306"
     environment:
       MYSQL_ROOT_PASSWORD: 1q2w3e4r
       MYSQL_DATABASE: db_flyway
