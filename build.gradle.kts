@@ -296,7 +296,7 @@ tasks.register("verifyCoverage") {
 // ============================================================================
 
 flyway {
-    url = "jdbc:mysql://localhost:3306"
+    url = "jdbc:mysql://localhost:3315"
     user = "app_flyway"
     password = "1q2w3e4r!@"
 
