@@ -29,6 +29,19 @@ public class ProductInventory {
 
     private Boolean isBackorderAllowed;   // 품절 시 주문 허용 여부
 
+    // Enhanced inventory management fields
+    private Integer minOrderQuantity;     // 최소 주문 수량
+
+    private Integer maxOrderQuantity;     // 최대 주문 수량 (nullable)
+
+    private Integer reorderPoint;         // 재주문 임계점
+
+    private Integer reorderQuantity;      // 재주문 수량
+
+    private String locationCode;          // 창고 위치 코드
+
+    private Long versionNumber;           // 낙관적 잠금용 버전 번호
+
     private LocalDateTime lastUpdatedAt;
 
     private LocalDateTime createdAt;
@@ -36,8 +49,11 @@ public class ProductInventory {
     @Builder
     public ProductInventory(Long productId, Long productVariantId, Integer availableQuantity,
         Integer reservedQuantity, Integer totalQuantity, Integer lowStockThreshold,
-        Boolean isTrackingEnabled, Boolean isBackorderAllowed) {
+        Boolean isTrackingEnabled, Boolean isBackorderAllowed,
+        Integer minOrderQuantity, Integer maxOrderQuantity, Integer reorderPoint,
+        Integer reorderQuantity, String locationCode) {
         validateInventory(productId, availableQuantity, reservedQuantity, totalQuantity);
+        validateEnhancedFields(minOrderQuantity, maxOrderQuantity, reorderPoint, reorderQuantity, locationCode);
 
         this.productId = productId;
         this.productVariantId = productVariantId;
@@ -47,6 +63,15 @@ public class ProductInventory {
         this.lowStockThreshold = lowStockThreshold != null ? lowStockThreshold : 10;
         this.isTrackingEnabled = isTrackingEnabled != null ? isTrackingEnabled : true;
         this.isBackorderAllowed = isBackorderAllowed != null ? isBackorderAllowed : false;
+        
+        // Enhanced inventory management fields
+        this.minOrderQuantity = minOrderQuantity != null ? minOrderQuantity : 1;
+        this.maxOrderQuantity = maxOrderQuantity;
+        this.reorderPoint = reorderPoint != null ? reorderPoint : 0;
+        this.reorderQuantity = reorderQuantity != null ? reorderQuantity : 0;
+        this.locationCode = locationCode != null ? locationCode : "MAIN";
+        this.versionNumber = 0L;
+        
         this.lastUpdatedAt = LocalDateTime.now();
         this.createdAt = LocalDateTime.now();
     }
@@ -67,6 +92,29 @@ public class ProductInventory {
 
         if (available + reserved > total) {
             throw new IllegalArgumentException("Available + Reserved cannot exceed Total quantity");
+        }
+    }
+
+    private void validateEnhancedFields(Integer minOrderQuantity, Integer maxOrderQuantity,
+        Integer reorderPoint, Integer reorderQuantity, String locationCode) {
+        if (minOrderQuantity != null && minOrderQuantity <= 0) {
+            throw new IllegalArgumentException("Minimum order quantity must be positive");
+        }
+
+        if (maxOrderQuantity != null && minOrderQuantity != null && maxOrderQuantity < minOrderQuantity) {
+            throw new IllegalArgumentException("Maximum order quantity cannot be less than minimum order quantity");
+        }
+
+        if (reorderPoint != null && reorderPoint < 0) {
+            throw new IllegalArgumentException("Reorder point cannot be negative");
+        }
+
+        if (reorderQuantity != null && reorderQuantity < 0) {
+            throw new IllegalArgumentException("Reorder quantity cannot be negative");
+        }
+
+        if (locationCode != null && locationCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Location code cannot be empty");
         }
     }
 
@@ -129,9 +177,51 @@ public class ProductInventory {
         return availableQuantity == 0;
     }
 
+    public boolean isReorderNeeded() {
+        return isTrackingEnabled && reorderPoint > 0 && availableQuantity <= reorderPoint;
+    }
+
+    public boolean canFulfillOrder(int requestedQuantity) {
+        return canOrder(requestedQuantity) && (availableQuantity >= requestedQuantity || isBackorderAllowed);
+    }
+
+    public void adjustStock(int adjustment, String reason) {
+        if (adjustment == 0) {
+            return;
+        }
+
+        if (adjustment > 0) {
+            increaseStock(adjustment);
+        } else {
+            decreaseStock(Math.abs(adjustment));
+        }
+    }
+
+    public void updateVersionNumber() {
+        this.versionNumber++;
+        this.lastUpdatedAt = LocalDateTime.now();
+    }
+
+    public int getAvailableToReserve() {
+        return Math.max(0, availableQuantity);
+    }
+
+    public int getUncommittedQuantity() {
+        return totalQuantity - availableQuantity - reservedQuantity;
+    }
+
     public boolean canOrder(int quantity) {
         if (!isTrackingEnabled) {
             return true; // 재고 추적하지 않으면 항상 주문 가능
+        }
+
+        // 최소/최대 주문 수량 검증
+        if (quantity < minOrderQuantity) {
+            return false;
+        }
+
+        if (maxOrderQuantity != null && quantity > maxOrderQuantity) {
+            return false;
         }
 
         if (availableQuantity >= quantity) {
@@ -142,9 +232,10 @@ public class ProductInventory {
     }
 
     public static ProductInventory reconstitute(Long id, Long productId, Long productVariantId,
-        Integer availableQuantity, Integer reservedQuantity,
-        Integer totalQuantity, Integer lowStockThreshold,
+        Integer availableQuantity, Integer reservedQuantity, Integer totalQuantity, Integer lowStockThreshold,
         Boolean isTrackingEnabled, Boolean isBackorderAllowed,
+        Integer minOrderQuantity, Integer maxOrderQuantity, Integer reorderPoint,
+        Integer reorderQuantity, String locationCode, Long versionNumber,
         LocalDateTime lastUpdatedAt, LocalDateTime createdAt) {
         ProductInventory inventory = new ProductInventory();
         inventory.id = id;
@@ -156,6 +247,12 @@ public class ProductInventory {
         inventory.lowStockThreshold = lowStockThreshold;
         inventory.isTrackingEnabled = isTrackingEnabled;
         inventory.isBackorderAllowed = isBackorderAllowed;
+        inventory.minOrderQuantity = minOrderQuantity;
+        inventory.maxOrderQuantity = maxOrderQuantity;
+        inventory.reorderPoint = reorderPoint;
+        inventory.reorderQuantity = reorderQuantity;
+        inventory.locationCode = locationCode;
+        inventory.versionNumber = versionNumber;
         inventory.lastUpdatedAt = lastUpdatedAt;
         inventory.createdAt = createdAt;
         return inventory;
