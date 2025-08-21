@@ -57,6 +57,7 @@ paths:
                 summary: 전자제품 예시
                 description: MacBook Pro 상품 생성 예시
                 value:
+                  sku: "MACB-16-M3MAX"
                   name: "MacBook Pro 16"
                   description: "Apple MacBook Pro 16인치 M3 Max"
                   shortDescription: "고성능 16인치 맥북 프로"
@@ -66,6 +67,11 @@ paths:
                   comparePrice: 3790000
                   categoryId: 1
                   initialStock: 50
+                  minOrderQuantity: 1
+                  maxOrderQuantity: 5
+                  reorderPoint: 5
+                  reorderQuantity: 20
+                  locationCode: "MAIN"
                   visibility: "PUBLIC"
                   isFeatured: true
                   metaTitle: "MacBook Pro 16인치 M3 Max"
@@ -75,6 +81,7 @@ paths:
                 summary: 의류 예시
                 description: 티셔츠 상품 생성 예시
                 value:
+                  sku: "BW-001-BASIC"
                   name: "Basic Cotton T-Shirt"
                   description: "100% 면소재 베이직 티셔츠"
                   shortDescription: "편안한 베이직 티셔츠"
@@ -83,6 +90,11 @@ paths:
                   price: 29900
                   categoryId: 2
                   initialStock: 100
+                  minOrderQuantity: 1
+                  maxOrderQuantity: 50
+                  reorderPoint: 10
+                  reorderQuantity: 50
+                  locationCode: "MAIN"
                   visibility: "PUBLIC"
                   isFeatured: false
       responses:
@@ -109,7 +121,18 @@ paths:
                     status: "DRAFT"
                     visibility: "PUBLIC"
                     isFeatured: true
-                    initialStock: 50
+                    availableQuantity: 50
+                    reservedQuantity: 0
+                    totalQuantity: 50
+                    lowStockThreshold: 5
+                    isTrackingEnabled: true
+                    isBackorderAllowed: false
+                    minOrderQuantity: 1
+                    maxOrderQuantity: 5
+                    reorderPoint: 5
+                    reorderQuantity: 20
+                    locationCode: "MAIN"
+                    versionNumber: 0
                     metaTitle: "MacBook Pro 16인치 M3 Max"
                     metaDescription: "Apple 최신 MacBook Pro 16인치 모델"
                     searchKeywords: "맥북,프로,애플,노트북"
@@ -178,6 +201,7 @@ components:
         - name
         - price
         - categoryId
+        - sku
       properties:
         categoryId:
           type: integer
@@ -186,6 +210,11 @@ components:
           maximum: 10
           description: 카테고리 ID (1-10)
           example: 1
+        sku:
+          type: string
+          maxLength: 100
+          description: 상품 SKU (Stock Keeping Unit)
+          example: "MACB-12AB34CD"
         name:
           type: string
           maxLength: 255
@@ -292,6 +321,35 @@ components:
           description: 품절 시 주문 허용 여부
           default: false
           example: false
+        minOrderQuantity:
+          type: integer
+          minimum: 1
+          description: 최소 주문 수량
+          default: 1
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          minimum: 1
+          description: 최대 주문 수량 (null이면 제한 없음)
+          example: 100
+        reorderPoint:
+          type: integer
+          minimum: 0
+          description: 재주문 임계점
+          default: 0
+          example: 20
+        reorderQuantity:
+          type: integer
+          minimum: 0
+          description: 재주문 수량
+          default: 0
+          example: 100
+        locationCode:
+          type: string
+          maxLength: 50
+          description: 창고/위치 코드
+          default: "MAIN"
+          example: "MAIN"
 
     ProductResponse:
       type: object
@@ -381,10 +439,19 @@ components:
           type: boolean
           description: 추천 상품 여부
           example: true
-        initialStock:
+        # 재고 정보
+        availableQuantity:
           type: integer
-          description: 초기 재고 수량
-          example: 50
+          description: 판매 가능 재고 수량
+          example: 90
+        reservedQuantity:
+          type: integer
+          description: 예약된 재고 수량
+          example: 10
+        totalQuantity:
+          type: integer
+          description: 전체 재고 수량
+          example: 100
         lowStockThreshold:
           type: integer
           description: 재고 부족 임계값
@@ -397,6 +464,32 @@ components:
           type: boolean
           description: 품절 시 주문 허용 여부
           example: false
+        # 확장된 재고 관리 필드
+        minOrderQuantity:
+          type: integer
+          description: 최소 주문 수량
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          description: 최대 주문 수량
+          example: 100
+        reorderPoint:
+          type: integer
+          description: 재주문 임계점
+          example: 20
+        reorderQuantity:
+          type: integer
+          description: 재주문 수량
+          example: 100
+        locationCode:
+          type: string
+          description: 창고/위치 코드
+          example: "MAIN"
+        versionNumber:
+          type: integer
+          format: int64
+          description: 낙관적 잠금을 위한 버전 번호
+          example: 1
         createdAt:
           type: string
           format: date-time

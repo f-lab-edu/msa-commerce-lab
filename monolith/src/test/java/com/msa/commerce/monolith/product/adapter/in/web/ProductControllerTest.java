@@ -47,6 +47,7 @@ class ProductControllerTest {
         // given
         String requestJson = """
             {
+                "sku": "TEST-SKU-001",
                 "name": "테스트 상품",
                 "description": "테스트 상품 설명",
                 "price": 10000,
@@ -95,6 +96,7 @@ class ProductControllerTest {
         // given
         String requestJson = """
             {
+                "sku": "TEST-SKU-002",
                 "name": "테스트 상품",
                 "description": "테스트 상품 설명",
                 "price": -1000,
@@ -115,6 +117,7 @@ class ProductControllerTest {
         // given
         String requestJson = """
             {
+                "sku": "TEST-SKU-003",
                 "name": "테스트 상품",
                 "description": "테스트 상품 설명",
                 "price": 10000,
@@ -138,6 +141,7 @@ class ProductControllerTest {
         // given
         String requestJson = """
             {
+                "sku": "TEST-SKU-004",
                 "name": "테스트 상품",
                 "description": "테스트 상품 설명",
                 "price": 10000
@@ -157,6 +161,7 @@ class ProductControllerTest {
         // given
         String requestJson = """
             {
+                "sku": "TEST-SKU-005",
                 "name": "테스트 상품",
                 "description": "테스트 상품 설명",
                 "price": 10000,

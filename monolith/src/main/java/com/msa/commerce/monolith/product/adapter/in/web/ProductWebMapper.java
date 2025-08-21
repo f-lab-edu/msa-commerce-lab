@@ -16,7 +16,7 @@ public class ProductWebMapper {
 
         return ProductCreateCommand.builder()
             .categoryId(request.getCategoryId())
-            .sku(generateSku(request.getName()))
+            .sku(request.getSku() != null ? request.getSku() : generateSku(request.getName()))
             .name(request.getName())
             .description(request.getDescription())
             .shortDescription(request.getShortDescription())
@@ -37,6 +37,11 @@ public class ProductWebMapper {
             .lowStockThreshold(request.getLowStockThreshold())
             .isTrackingEnabled(request.getIsTrackingEnabled())
             .isBackorderAllowed(request.getIsBackorderAllowed())
+            .minOrderQuantity(request.getMinOrderQuantity())
+            .maxOrderQuantity(request.getMaxOrderQuantity())
+            .reorderPoint(request.getReorderPoint())
+            .reorderQuantity(request.getReorderQuantity())
+            .locationCode(request.getLocationCode())
             .build();
     }
 
