@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductController {
 
     private final ProductCreateUseCase productCreateUseCase;
+
     private final ProductUpdateUseCase productUpdateUseCase;
 
     private final ProductWebMapper productWebMapper;
@@ -38,38 +39,15 @@ public class ProductController {
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable("id") Long productId,
             @Valid @RequestBody ProductUpdateRequest request) {
-        
-        log.info("Received product update request for ID: {} with fields: {}", 
+
+        log.info("Received product update request for ID: {} with fields: {}",
                 productId, request.hasFieldToUpdate());
-        
-        // 요청 검증
-        if (!request.hasFieldToUpdate()) {
-            log.warn("No fields to update provided for product ID: {}", productId);
-            return ResponseEntity.badRequest().build();
-        }
-        
-        try {
-            ProductResponse response = productUpdateUseCase.updateProduct(
-                    productWebMapper.toUpdateCommand(productId, request));
-            
-            log.info("Product updated successfully for ID: {}", productId);
-            return ResponseEntity.ok(response);
-            
-        } catch (IllegalArgumentException e) {
-            log.warn("Invalid update request for product ID: {} - {}", productId, e.getMessage());
-            return ResponseEntity.badRequest().build();
-            
-        } catch (RuntimeException e) {
-            log.error("Failed to update product ID: {} - {}", productId, e.getMessage());
-            
-            // 상품을 찾을 수 없는 경우
-            if (e.getMessage().contains("not found")) {
-                return ResponseEntity.notFound().build();
-            }
-            
-            // 기타 서버 에러
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+
+        ProductResponse response = productUpdateUseCase.updateProduct(
+                productWebMapper.toUpdateCommand(productId, request));
+
+        log.info("Product updated successfully for ID: {}", productId);
+        return ResponseEntity.ok(response);
     }
 
 }

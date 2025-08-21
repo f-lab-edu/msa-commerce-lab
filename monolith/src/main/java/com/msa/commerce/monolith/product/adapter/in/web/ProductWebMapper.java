@@ -67,6 +67,11 @@ public class ProductWebMapper {
             return null;
         }
 
+        // Validate that at least one field is provided for update
+        if (!request.hasFieldToUpdate()) {
+            throw new IllegalArgumentException("No fields to update provided.");
+        }
+
         return ProductUpdateCommand.builder()
             .productId(productId)
             .categoryId(request.getCategoryId())
