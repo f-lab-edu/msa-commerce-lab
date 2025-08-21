@@ -231,6 +231,46 @@ public class ProductInventory {
         return isBackorderAllowed; // 재고 부족 시 백오더 허용 여부에 따라
     }
 
+    // 부분 업데이트를 위한 메소드
+    public void updatePartially(Integer currentStock, Integer lowStockThreshold, Boolean isTrackingEnabled, 
+                               Boolean isBackorderAllowed, Integer minOrderQuantity, Integer maxOrderQuantity,
+                               Integer reorderPoint, Integer reorderQuantity, String locationCode) {
+        
+        // null이 아닌 필드들만 업데이트
+        if (currentStock != null) {
+            // 현재 재고 업데이트 시 사용 가능 재고와 전체 재고 모두 업데이트
+            this.availableQuantity = currentStock;
+            this.totalQuantity = currentStock + this.reservedQuantity;
+        }
+        if (lowStockThreshold != null) {
+            this.lowStockThreshold = lowStockThreshold;
+        }
+        if (isTrackingEnabled != null) {
+            this.isTrackingEnabled = isTrackingEnabled;
+        }
+        if (isBackorderAllowed != null) {
+            this.isBackorderAllowed = isBackorderAllowed;
+        }
+        if (minOrderQuantity != null) {
+            this.minOrderQuantity = minOrderQuantity;
+        }
+        if (maxOrderQuantity != null) {
+            this.maxOrderQuantity = maxOrderQuantity;
+        }
+        if (reorderPoint != null) {
+            this.reorderPoint = reorderPoint;
+        }
+        if (reorderQuantity != null) {
+            this.reorderQuantity = reorderQuantity;
+        }
+        if (locationCode != null) {
+            this.locationCode = locationCode;
+        }
+        
+        this.lastUpdatedAt = LocalDateTime.now();
+        this.versionNumber++;
+    }
+
     public static ProductInventory reconstitute(Long id, Long productId, Long productVariantId,
         Integer availableQuantity, Integer reservedQuantity, Integer totalQuantity, Integer lowStockThreshold,
         Boolean isTrackingEnabled, Boolean isBackorderAllowed,

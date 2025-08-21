@@ -139,6 +139,85 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
+    // 부분 업데이트를 위한 새로운 메소드
+    public void updatePartially(Long categoryId, String sku, String name, String description,
+                              String shortDescription, String brand, String model, BigDecimal price,
+                              BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
+                              String productAttributes, String visibility, String taxClass,
+                              String metaTitle, String metaDescription, String searchKeywords,
+                              Boolean isFeatured) {
+        
+        // null이 아닌 필드들만 업데이트
+        if (categoryId != null) {
+            this.categoryId = categoryId;
+        }
+        if (sku != null) {
+            this.sku = sku;
+        }
+        if (name != null) {
+            this.name = name;
+        }
+        if (description != null) {
+            this.description = description;
+        }
+        if (shortDescription != null) {
+            this.shortDescription = shortDescription;
+        }
+        if (brand != null) {
+            this.brand = brand;
+        }
+        if (model != null) {
+            this.model = model;
+        }
+        if (price != null) {
+            this.price = price;
+        }
+        if (comparePrice != null) {
+            this.comparePrice = comparePrice;
+        }
+        if (costPrice != null) {
+            this.costPrice = costPrice;
+        }
+        if (weight != null) {
+            this.weight = weight;
+        }
+        if (productAttributes != null) {
+            this.productAttributes = productAttributes;
+        }
+        if (visibility != null) {
+            this.visibility = visibility;
+        }
+        if (taxClass != null) {
+            this.taxClass = taxClass;
+        }
+        if (metaTitle != null) {
+            this.metaTitle = metaTitle;
+        }
+        if (metaDescription != null) {
+            this.metaDescription = metaDescription;
+        }
+        if (searchKeywords != null) {
+            this.searchKeywords = searchKeywords;
+        }
+        if (isFeatured != null) {
+            this.isFeatured = isFeatured;
+        }
+        
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // 상품이 업데이트 가능한 상태인지 확인
+    public boolean isUpdatable() {
+        return this.status != ProductStatus.ARCHIVED;
+    }
+
+    // 상품의 상태 변경 권한이 있는지 확인 (추후 확장 가능)
+    public boolean canBeUpdatedBy(String userId) {
+        // 현재는 단순히 상품이 업데이트 가능한 상태인지만 확인
+        // 추후 권한 체계가 구축되면 사용자별 권한 검증 로직 추가
+        return isUpdatable();
+    }
+
     public void deactivate() {
         this.status = ProductStatus.INACTIVE;
         this.updatedAt = LocalDateTime.now();
