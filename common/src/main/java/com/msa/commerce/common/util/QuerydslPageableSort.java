@@ -26,10 +26,6 @@ public final class QuerydslPageableSort {
             .toArray(OrderSpecifier[]::new);
     }
 
-    /**
-     * 정렬 대상 프로퍼티를 ComparableExpression으로 변환.
-     * 타입을 모를 때는 getComparable을 사용하면 컴파일/런타임 모두 안전하다.
-     */
     private static ComparableExpressionBase<?> toComparableExpression(PathBuilder<?> entityPath, String property) {
         // 필요하면 여기서 화이트리스트 검사/매핑 추가
         return entityPath.getComparable(property, Comparable.class);
