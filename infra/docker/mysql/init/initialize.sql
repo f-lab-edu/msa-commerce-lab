@@ -20,6 +20,10 @@ GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON `db_payment`.* TO 'app_rw' @'%'
 
 GRANT SELECT ON `db_payment`.* TO 'app_ro' @'%';
 
+GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE ON `db_materialized_view`.* TO 'app_rw' @'%';
+
+GRANT SELECT ON `db_materialized_view`.* TO 'app_ro' @'%';
+
 -- Flyway (DDL 전용)
 GRANT ALL PRIVILEGES ON *.* TO 'app_flyway' @'%';
 

@@ -24,7 +24,7 @@ CREATE DATABASE IF NOT EXISTS db_materialized_view CHARACTER SET utf8mb4 COLLATE
 USE db_platform;
 
 -- 사용자 계정
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_uuid           CHAR(36) UNIQUE NOT NULL DEFAULT (UUID()),
     username            VARCHAR(50) UNIQUE NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 사용자 주소
-CREATE TABLE user_addresses (
+CREATE TABLE IF NOT EXISTS user_addresses (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id         BIGINT NOT NULL,
     address_type    ENUM('HOME', 'WORK', 'BILLING', 'SHIPPING', 'OTHER') NOT NULL DEFAULT 'HOME',
@@ -75,7 +75,7 @@ CREATE TABLE user_addresses (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 상품 카테고리
-CREATE TABLE product_categories (
+CREATE TABLE IF NOT EXISTS product_categories (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
     parent_id           BIGINT NULL,
     name                VARCHAR(100) NOT NULL,
@@ -93,11 +93,13 @@ CREATE TABLE product_categories (
     INDEX idx_categories_active (is_active, is_featured),
     CONSTRAINT chk_categories_slug_format CHECK (slug REGEXP '^[a-z0-9]+(-[a-z0-9]+)*$' AND CHAR_LENGTH(slug) > 0),
     CONSTRAINT chk_categories_display_order CHECK (display_order >= 0),
+    CONSTRAINT uk_categories_parent_name UNIQUE (parent_id, name),
+    CONSTRAINT uk_categories_parent_slug UNIQUE (parent_id, slug),
     FOREIGN KEY (parent_id) REFERENCES product_categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 상품
-CREATE TABLE products (
+CREATE TABLE IF NOT EXISTS products (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     sku                     VARCHAR(100) UNIQUE NOT NULL,
     name                    VARCHAR(255) NOT NULL,
@@ -135,6 +137,8 @@ CREATE TABLE products (
     INDEX idx_products_category (category_id, status),
     INDEX idx_products_brand (brand, status),
     INDEX idx_products_featured (is_featured, status),
+    INDEX idx_products_status_created (status, created_at DESC),
+    INDEX idx_products_featured_created (is_featured, status, created_at DESC),
     FULLTEXT(name, short_description, description, search_tags),
     CONSTRAINT chk_products_sale_price CHECK (sale_price IS NULL OR sale_price <= base_price),
     CONSTRAINT chk_products_slug_format CHECK (slug REGEXP '^[a-z0-9]+(-[a-z0-9]+)*$' AND CHAR_LENGTH(slug) > 0),
@@ -142,7 +146,7 @@ CREATE TABLE products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 상품 변형
-CREATE TABLE product_variants (
+CREATE TABLE IF NOT EXISTS product_variants (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id              BIGINT NOT NULL,
     variant_sku             VARCHAR(100) UNIQUE NOT NULL,
@@ -153,17 +157,20 @@ CREATE TABLE product_variants (
     
     -- 옵션 정보 (JSON)
     options                 JSON, -- {"color": "red", "size": "XL"}
-    
+    color                   VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options->'$.color')) STORED,
+    size                    VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options->'$.size'))  STORED,
     created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     INDEX idx_variants_product (product_id, status),
     INDEX idx_variants_sku (variant_sku),
+    INDEX idx_variants_color (color),
+    INDEX idx_variants_size  (size),
     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 재고 스냅샷
-CREATE TABLE inventory_snapshots (
+CREATE TABLE IF NOT EXISTS inventory_snapshots (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     product_id              BIGINT NOT NULL,
     variant_id              BIGINT NULL,
@@ -190,7 +197,7 @@ CREATE TABLE inventory_snapshots (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 재고 이벤트 (Event Sourcing)
-CREATE TABLE inventory_events (
+CREATE TABLE IF NOT EXISTS inventory_events (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     event_type              VARCHAR(50) NOT NULL,
     aggregate_id            VARCHAR(255) NOT NULL,
@@ -211,13 +218,16 @@ CREATE TABLE inventory_events (
     INDEX idx_inventory_events_occurred_at (occurred_at),
     INDEX idx_inventory_events_product (product_id, occurred_at),
     INDEX idx_inventory_events_aggregate (aggregate_id, aggregate_version),
+    INDEX idx_inventory_events_product_time (product_id, occurred_at),
     CONSTRAINT chk_inventory_events_quantities CHECK (
         quantity_after = quantity_before + quantity_change
-    )
+    ),
+    CONSTRAINT UNIQUE uk_inventory_agg (aggregate_id, aggregate_version),
+    CONSTRAINT UNIQUE uk_inventory_corr (correlation_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 장바구니
-CREATE TABLE shopping_carts (
+CREATE TABLE IF NOT EXISTS shopping_carts (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id       BIGINT NULL,
     session_id    VARCHAR(255),
@@ -233,7 +243,7 @@ CREATE TABLE shopping_carts (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 장바구니 아이템
-CREATE TABLE shopping_cart_items (
+CREATE TABLE IF NOT EXISTS shopping_cart_items (
     id                  BIGINT AUTO_INCREMENT PRIMARY KEY,
     cart_id             BIGINT NOT NULL,
     product_id          BIGINT NOT NULL,
@@ -251,7 +261,7 @@ CREATE TABLE shopping_cart_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 알림
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id       BIGINT NOT NULL,
     type          VARCHAR(50) NOT NULL,
@@ -273,7 +283,7 @@ CREATE TABLE notifications (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 플랫폼 도메인 이벤트 저장소
-CREATE TABLE event_store (
+CREATE TABLE IF NOT EXISTS event_store (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
     aggregate_id      VARCHAR(255) NOT NULL,
     aggregate_type    VARCHAR(100) NOT NULL,
@@ -291,7 +301,7 @@ CREATE TABLE event_store (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 크로스 도메인 이벤트 매핑
-CREATE TABLE cross_domain_events (
+CREATE TABLE IF NOT EXISTS cross_domain_events (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     event_uuid              CHAR(36) UNIQUE NOT NULL DEFAULT (UUID()),
     event_type              VARCHAR(100) NOT NULL,
@@ -334,7 +344,7 @@ INSERT INTO product_categories (name, description, slug, display_order, is_activ
 USE db_order;
 
 -- 주문
-CREATE TABLE orders (
+CREATE TABLE IF NOT EXISTS orders (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_uuid              CHAR(36) UNIQUE NOT NULL DEFAULT (UUID()),
     order_number            VARCHAR(100) UNIQUE NOT NULL,
@@ -374,7 +384,7 @@ CREATE TABLE orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 주문 항목
-CREATE TABLE order_items (
+CREATE TABLE IF NOT EXISTS order_items (
     id                      BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_id                BIGINT NOT NULL,
     product_id              BIGINT NOT NULL,  -- Cross-domain reference
@@ -398,7 +408,7 @@ CREATE TABLE order_items (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 주문 도메인 이벤트 저장소
-CREATE TABLE event_store (
+CREATE TABLE IF NOT EXISTS event_store (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
     aggregate_id      VARCHAR(255) NOT NULL,
     aggregate_type    VARCHAR(100) NOT NULL,
@@ -422,7 +432,7 @@ CREATE TABLE event_store (
 USE db_payment;
 
 -- 결제
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
     id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
     payment_uuid           CHAR(36) UNIQUE NOT NULL DEFAULT (UUID()),
     order_id               VARCHAR(100) NOT NULL,  -- Cross-domain reference
@@ -475,7 +485,7 @@ CREATE TABLE payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 결제 도메인 이벤트 저장소
-CREATE TABLE event_store (
+CREATE TABLE IF NOT EXISTS event_store (
     id                BIGINT AUTO_INCREMENT PRIMARY KEY,
     aggregate_id      VARCHAR(255) NOT NULL,
     aggregate_type    VARCHAR(100) NOT NULL,
@@ -499,7 +509,7 @@ CREATE TABLE event_store (
 USE db_materialized_view;
 
 -- 사용자 통합 뷰
-CREATE TABLE mv_users (
+CREATE TABLE IF NOT EXISTS mv_users (
     id                  BIGINT PRIMARY KEY,
     user_uuid           CHAR(36) UNIQUE NOT NULL,
     username            VARCHAR(50) NOT NULL,
@@ -515,7 +525,7 @@ CREATE TABLE mv_users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 상품 통합 뷰
-CREATE TABLE mv_products (
+CREATE TABLE IF NOT EXISTS mv_products (
     id                      BIGINT PRIMARY KEY,
     sku                     VARCHAR(100) UNIQUE NOT NULL,
     name                    VARCHAR(255) NOT NULL,
@@ -539,7 +549,7 @@ CREATE TABLE mv_products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 주문 통합 뷰
-CREATE TABLE mv_orders (
+CREATE TABLE IF NOT EXISTS mv_orders (
     id                      BIGINT PRIMARY KEY,
     order_uuid              CHAR(36) UNIQUE NOT NULL,
     order_number            VARCHAR(100) UNIQUE NOT NULL,
@@ -555,7 +565,7 @@ CREATE TABLE mv_orders (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 결제 통합 뷰
-CREATE TABLE mv_payments (
+CREATE TABLE IF NOT EXISTS mv_payments (
     id                     BIGINT PRIMARY KEY,
     payment_uuid           CHAR(36) UNIQUE NOT NULL,
     order_id               VARCHAR(100) NOT NULL,
@@ -571,7 +581,7 @@ CREATE TABLE mv_payments (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 일별 매출 통계
-CREATE TABLE mv_daily_sales (
+CREATE TABLE IF NOT EXISTS mv_daily_sales (
     date                    DATE PRIMARY KEY,
     total_orders            BIGINT NOT NULL DEFAULT 0,
     completed_orders        BIGINT NOT NULL DEFAULT 0,
@@ -583,11 +593,3 @@ CREATE TABLE mv_daily_sales (
 -- 오늘 날짜의 일별 통계 초기화
 INSERT IGNORE INTO mv_daily_sales (date) 
 VALUES (CURRENT_DATE);
-
--- ============================================================================
--- 스키마 정보
--- ============================================================================
-
-SELECT '✅ MSA Commerce Lab - 분리된 MySQL 9.0 데이터베이스 스키마 생성 완료' as status,
-       'Databases: db_platform, db_order, db_payment, db_materialized_view' as database_list,
-       'Features: Event Sourcing per Database, Cross-Domain Events, Embedded Indexes' as features;

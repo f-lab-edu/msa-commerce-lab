@@ -35,8 +35,18 @@ public class ProductResponse {
     private final LocalDateTime updatedAt;
     
     // 재고 정보 (별도 조회 또는 포함)
-    private final Integer initialStock;
+    private final Integer availableQuantity;
+    private final Integer reservedQuantity;
+    private final Integer totalQuantity;
     private final Integer lowStockThreshold;
     private final Boolean isTrackingEnabled;
     private final Boolean isBackorderAllowed;
+    
+    // 확장된 재고 관리 필드
+    private final Integer minOrderQuantity;
+    private final Integer maxOrderQuantity;
+    private final Integer reorderPoint;
+    private final Integer reorderQuantity;
+    private final String locationCode;
+    private final Long versionNumber;
 }
