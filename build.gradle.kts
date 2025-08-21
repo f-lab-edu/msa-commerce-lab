@@ -296,7 +296,7 @@ tasks.register("verifyCoverage") {
 // ============================================================================
 
 flyway {
-    url = "jdbc:mysql://localhost:3306"
+    url = "jdbc:mysql://localhost:3315/db_flyway"
     user = "app_flyway"
     password = "1q2w3e4r!@"
 
@@ -308,7 +308,7 @@ flyway {
     validateOnMigrate = true
     cleanDisabled = false
 
-    schemas = arrayOf("db_flyway", "db_platform", "db_order", "db_payment")
+    schemas = arrayOf("db_flyway", "db_platform", "db_order", "db_payment", "db_materialized_view")
 
     // Placeholder configuration
     placeholderReplacement = true

@@ -1,6 +1,3 @@
-/**
- * Centralized version management for Gradle plugins and other build tools
- */
 public enum Version {
     SPRING_BOOT("3.5.4"),
     DEPENDENCY_MANAGEMENT("1.1.7"),
