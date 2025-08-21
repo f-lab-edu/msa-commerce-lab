@@ -35,6 +35,13 @@ public class ProductCreateCommand {
     private final Integer lowStockThreshold;    // 재고 부족 임계값
     private final Boolean isTrackingEnabled;   // 재고 추적 여부
     private final Boolean isBackorderAllowed;  // 품절 시 주문 허용 여부
+    
+    // 확장된 재고 관리 필드
+    private final Integer minOrderQuantity;     // 최소 주문 수량
+    private final Integer maxOrderQuantity;     // 최대 주문 수량
+    private final Integer reorderPoint;         // 재주문 임계점
+    private final Integer reorderQuantity;      // 재주문 수량
+    private final String locationCode;          // 창고 위치 코드
 
     public void validate() {
         if (categoryId == null) {
@@ -98,6 +105,27 @@ public class ProductCreateCommand {
         
         if (lowStockThreshold != null && lowStockThreshold < 0) {
             throw new IllegalArgumentException("Low stock threshold cannot be negative.");
+        }
+        
+        // 확장된 재고 필드 유효성 검증
+        if (minOrderQuantity != null && minOrderQuantity <= 0) {
+            throw new IllegalArgumentException("Minimum order quantity must be positive.");
+        }
+        
+        if (maxOrderQuantity != null && minOrderQuantity != null && maxOrderQuantity < minOrderQuantity) {
+            throw new IllegalArgumentException("Maximum order quantity cannot be less than minimum order quantity.");
+        }
+        
+        if (reorderPoint != null && reorderPoint < 0) {
+            throw new IllegalArgumentException("Reorder point cannot be negative.");
+        }
+        
+        if (reorderQuantity != null && reorderQuantity < 0) {
+            throw new IllegalArgumentException("Reorder quantity cannot be negative.");
+        }
+        
+        if (locationCode != null && locationCode.trim().isEmpty()) {
+            throw new IllegalArgumentException("Location code cannot be empty.");
         }
     }
 }

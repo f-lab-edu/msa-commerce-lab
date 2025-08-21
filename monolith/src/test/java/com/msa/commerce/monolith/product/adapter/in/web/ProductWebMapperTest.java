@@ -19,6 +19,7 @@ class ProductWebMapperTest {
     void setUp() {
         productWebMapper = new ProductWebMapper();
         createRequest = new ProductCreateRequest();
+        setField(createRequest, "sku", "TEST-SKU-001");
         setField(createRequest, "name", "Test Product");
         setField(createRequest, "description", "Test Description");
         setField(createRequest, "price", new BigDecimal("29.99"));
@@ -26,6 +27,11 @@ class ProductWebMapperTest {
         setField(createRequest, "shortDescription", "Short desc");
         setField(createRequest, "brand", "Test Brand");
         setField(createRequest, "initialStock", 100);
+        setField(createRequest, "minOrderQuantity", 1);
+        setField(createRequest, "maxOrderQuantity", 50);
+        setField(createRequest, "reorderPoint", 10);
+        setField(createRequest, "reorderQuantity", 20);
+        setField(createRequest, "locationCode", "MAIN");
     }
 
     @Test
@@ -36,6 +42,7 @@ class ProductWebMapperTest {
 
         // then
         assertThat(command).isNotNull();
+        assertThat(command.getSku()).isEqualTo("TEST-SKU-001");
         assertThat(command.getName()).isEqualTo("Test Product");
         assertThat(command.getDescription()).isEqualTo("Test Description");
         assertThat(command.getPrice()).isEqualTo(new BigDecimal("29.99"));
@@ -43,10 +50,15 @@ class ProductWebMapperTest {
         assertThat(command.getShortDescription()).isEqualTo("Short desc");
         assertThat(command.getBrand()).isEqualTo("Test Brand");
         assertThat(command.getInitialStock()).isEqualTo(100);
-        assertThat(command.getSku()).isNotNull();
-        assertThat(command.getSku()).startsWith("TEST");
         assertThat(command.getVisibility()).isEqualTo("PUBLIC");
         assertThat(command.getIsFeatured()).isFalse();
+        
+        // 확장된 재고 필드 검증
+        assertThat(command.getMinOrderQuantity()).isEqualTo(1);
+        assertThat(command.getMaxOrderQuantity()).isEqualTo(50);
+        assertThat(command.getReorderPoint()).isEqualTo(10);
+        assertThat(command.getReorderQuantity()).isEqualTo(20);
+        assertThat(command.getLocationCode()).isEqualTo("MAIN");
     }
 
     @Test
@@ -54,6 +66,7 @@ class ProductWebMapperTest {
     void toCommand_ShouldHandleNullValues() {
         // given
         ProductCreateRequest requestWithNulls = new ProductCreateRequest();
+        setField(requestWithNulls, "sku", "TEST-NULL-001");
         setField(requestWithNulls, "name", "Test Product");
         setField(requestWithNulls, "price", new BigDecimal("19.99"));
         setField(requestWithNulls, "categoryId", 2L);
@@ -64,13 +77,19 @@ class ProductWebMapperTest {
 
         // then
         assertThat(command).isNotNull();
+        assertThat(command.getSku()).isEqualTo("TEST-NULL-001");
         assertThat(command.getName()).isEqualTo("Test Product");
         assertThat(command.getDescription()).isNull();
         assertThat(command.getPrice()).isEqualTo(new BigDecimal("19.99"));
         assertThat(command.getCategoryId()).isEqualTo(2L);
         assertThat(command.getInitialStock()).isEqualTo(50);
-        assertThat(command.getSku()).isNotNull();
-        assertThat(command.getSku()).startsWith("TEST");
+        
+        // 확장된 재고 필드는 null이어야 함 (기본값은 서비스에서 처리)
+        assertThat(command.getMinOrderQuantity()).isNull();
+        assertThat(command.getMaxOrderQuantity()).isNull();
+        assertThat(command.getReorderPoint()).isNull();
+        assertThat(command.getReorderQuantity()).isNull();
+        assertThat(command.getLocationCode()).isNull();
     }
 
     private void setField(Object target, String fieldName, Object value) {

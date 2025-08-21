@@ -14,6 +14,10 @@ public class ProductCreateRequest {
     @Positive(message = "Category ID must be positive.")
     private Long categoryId;
 
+    @NotBlank(message = "SKU is required.")
+    @Size(max = 100, message = "SKU cannot exceed 100 characters.")
+    private String sku;
+
     @NotBlank(message = "Product name is required.")
     @Size(max = 255, message = "Product name cannot exceed 255 characters.")
     private String name;
@@ -77,4 +81,20 @@ public class ProductCreateRequest {
     private Boolean isTrackingEnabled;
 
     private Boolean isBackorderAllowed;
+
+    // 확장된 재고 관리 필드
+    @Min(value = 1, message = "Minimum order quantity must be at least 1.")
+    private Integer minOrderQuantity;
+
+    @Min(value = 1, message = "Maximum order quantity must be at least 1.")
+    private Integer maxOrderQuantity;
+
+    @Min(value = 0, message = "Reorder point cannot be negative.")
+    private Integer reorderPoint;
+
+    @Min(value = 0, message = "Reorder quantity cannot be negative.")
+    private Integer reorderQuantity;
+
+    @Size(max = 50, message = "Location code cannot exceed 50 characters.")
+    private String locationCode;
 }
