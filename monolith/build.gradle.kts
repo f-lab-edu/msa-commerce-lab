@@ -11,6 +11,10 @@ dependencies {
     runtimeOnly(BuildDependencies.getJjwtImpl())
     runtimeOnly(BuildDependencies.getJjwtJackson())
 
+    // MapStruct
+    implementation(BuildDependencies.getMapstruct())
+    annotationProcessor(BuildDependencies.getMapstructProcessor())
+
     // Database connector
     runtimeOnly(BuildDependencies.getMysqlConnectorRuntime())
 

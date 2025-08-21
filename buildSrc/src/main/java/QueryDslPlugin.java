@@ -7,10 +7,6 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.jetbrains.annotations.NotNull;
 
-/**
- * Custom QueryDSL plugin that provides complete QueryDSL configuration
- * without relying on external plugins
- */
 public class QueryDslPlugin implements Plugin<Project> {
 
     @Override
@@ -21,9 +17,6 @@ public class QueryDslPlugin implements Plugin<Project> {
         configureCleanTask(project);
     }
 
-    /**
-     * Add QueryDSL dependencies
-     */
     private void configureDependencies(Project project) {
         project.getDependencies().add("implementation", Dependency.QUERYDSL_JPA.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.QUERYDSL_APT.getCoordinate());
@@ -36,9 +29,6 @@ public class QueryDslPlugin implements Plugin<Project> {
         project.getDependencies().add("testAnnotationProcessor", Dependency.JAKARTA_PERSISTENCE.getCoordinate());
     }
 
-    /**
-     * Configure source sets to include generated sources using standard Gradle paths
-     */
     private void configureSourceSets(Project project) {
         JavaPluginExtension javaExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 
@@ -55,9 +45,6 @@ public class QueryDslPlugin implements Plugin<Project> {
             .srcDir(qdir);
     }
 
-    /**
-     * Configure annotation processing for QueryDSL using standard Gradle paths
-     */
     private void configureAnnotationProcessing(Project project) {
         // Use standard Gradle generated sources path for better IDE support
         File qdir = new File(project.getLayout().getBuildDirectory().getAsFile().get(),
@@ -70,9 +57,6 @@ public class QueryDslPlugin implements Plugin<Project> {
         });
     }
 
-    /**
-     * Configure clean task to remove generated sources from standard Gradle path
-     */
     private void configureCleanTask(Project project) {
         // Use standard Gradle generated sources path for better IDE support
         File qdir = new File(project.getLayout().getBuildDirectory().getAsFile().get(),

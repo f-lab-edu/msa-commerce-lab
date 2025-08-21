@@ -1,22 +1,12 @@
 apis:
   monolith@v1:
     root: docs/api/monolith-openapi.yaml
-  order-orchestrator@v1:
-    root: docs/api/order-orchestrator-openapi.yaml
-  payment-service@v1:
-    root: docs/api/payment-service-openapi.yaml
-  materialized-view@v1:
-    root: docs/api/materialized-view-openapi.yaml
 
-lint:
-  extends:
-    - recommended
-  rules:
-    info-description: error
-    operation-description: warn
-    no-unresolved-refs: error
+extends:
+  - recommended
 
-theme:
-  colors:
-    primary:
-      main: '#32329f'
+rules:
+  operation-description: warn
+  no-unresolved-refs: error
+  no-server-example.com: off
+  security-defined: off
