@@ -1,5 +1,10 @@
 package com.msa.commerce.monolith.product.application.service;
 
+import com.msa.commerce.common.exception.DuplicateResourceException;
+import com.msa.commerce.common.exception.ErrorCode;
+import com.msa.commerce.common.exception.NoChangesProvidedException;
+import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
+import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
@@ -30,17 +35,16 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         // 1. 명령 유효성 검증
         command.validate();
         
-        if (!command.hasChanges()) {
-            throw new IllegalArgumentException("No fields to update provided.");
-        }
-        
         // 2. 기존 상품 조회
         Product existingProduct = productRepository.findById(command.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found with ID: " + command.getProductId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product not found with ID: " + command.getProductId(), 
+                        ErrorCode.PRODUCT_NOT_FOUND.getCode()));
         
         // 3. 상품 수정 가능 상태 검증
         if (!existingProduct.isUpdatable()) {
-            throw new RuntimeException("Product cannot be updated. Current status: " + existingProduct.getStatus());
+            throw ProductUpdateNotAllowedException.productNotUpdatable(
+                    command.getProductId(), existingProduct.getStatus().toString());
         }
         
         // 4. SKU 중복 검증 (SKU가 변경되는 경우)
@@ -48,7 +52,9 @@ public class ProductUpdateService implements ProductUpdateUseCase {
             String newSku = command.getSkuOptional().get();
             if (!existingProduct.getSku().equals(newSku)) {
                 if (productRepository.existsBySku(newSku)) {
-                    throw new RuntimeException("SKU already exists: " + newSku);
+                    throw new DuplicateResourceException(
+                            "SKU already exists: " + newSku,
+                            ErrorCode.PRODUCT_SKU_DUPLICATE.getCode());
                 }
             }
         }
@@ -58,7 +64,9 @@ public class ProductUpdateService implements ProductUpdateUseCase {
             String newName = command.getNameOptional().get();
             if (!existingProduct.getName().equals(newName)) {
                 if (productRepository.existsByName(newName)) {
-                    throw new RuntimeException("Product name already exists: " + newName);
+                    throw new DuplicateResourceException(
+                            "Product name already exists: " + newName,
+                            ErrorCode.PRODUCT_NAME_DUPLICATE.getCode());
                 }
             }
         }
