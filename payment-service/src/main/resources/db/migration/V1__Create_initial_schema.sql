@@ -4,8 +4,7 @@
 -- ============================================================================
 
 -- Switch to payment database context
-USE
-db_payment;
+USE db_payment;
 
 -- Payments
 CREATE TABLE IF NOT EXISTS payments
