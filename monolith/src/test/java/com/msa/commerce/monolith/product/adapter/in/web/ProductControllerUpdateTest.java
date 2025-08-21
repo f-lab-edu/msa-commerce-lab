@@ -1,6 +1,8 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.msa.commerce.common.exception.ResourceNotFoundException;
+import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -74,6 +77,10 @@ class ProductControllerUpdateTest {
         Long productId = 1L;
         ProductUpdateRequest emptyRequest = new ProductUpdateRequest();
 
+        // mapper가 IllegalArgumentException을 던짐
+        when(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class)))
+                .thenThrow(new IllegalArgumentException("No fields to update provided."));
+
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +119,7 @@ class ProductControllerUpdateTest {
 
         given(productWebMapper.toUpdateCommand(productId, request)).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
-                .willThrow(new RuntimeException("Product not found with ID: 999"));
+                .willThrow(new ResourceNotFoundException("Product not found with ID: 999", ErrorCode.PRODUCT_NOT_FOUND.getCode()));
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)

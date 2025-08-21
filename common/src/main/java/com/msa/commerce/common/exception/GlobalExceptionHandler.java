@@ -82,6 +82,42 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
     }
 
+    @ExceptionHandler(ProductUpdateNotAllowedException.class)
+    public ResponseEntity<ErrorResponse> handleProductUpdateNotAllowedException(
+        ProductUpdateNotAllowedException ex, HttpServletRequest request) {
+
+        log.warn("Product update not allowed exception: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .code(ex.getErrorCode())
+            .timestamp(LocalDateTime.now())
+            .path(request.getRequestURI())
+            .status(HttpStatus.FORBIDDEN.value())
+            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
+            .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
+    }
+
+    @ExceptionHandler(NoChangesProvidedException.class)
+    public ResponseEntity<ErrorResponse> handleNoChangesProvidedException(
+        NoChangesProvidedException ex, HttpServletRequest request) {
+
+        log.warn("No changes provided exception: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .code(ex.getErrorCode())
+            .timestamp(LocalDateTime.now())
+            .path(request.getRequestURI())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
+            .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
         MethodArgumentNotValidException ex, HttpServletRequest request) {
