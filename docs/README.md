@@ -20,13 +20,19 @@ docs/
 
 ```bash
 # 1. OpenAPI 문서 검증
-npx @redocly/cli lint
+npm run docs:lint
+# 또는: redocly lint
 
 # 2. HTML 문서 생성
-npx @redocly/cli build-docs monolith@v1 --output docs/html/monolith.html
+npm run docs:build
+# 또는: redocly build-docs --output dist/index.html
 
-# 3. 브라우저에서 확인
-open docs/html/monolith.html
+# 3. 로컬 서버로 문서 서빙
+npm run docs:serve
+# 또는: cd dist && python3 -m http.server 8080
+
+# 4. 브라우저에서 확인
+open http://localhost:8080
 ```
 
 ## 🚀 Usage
@@ -35,31 +41,34 @@ open docs/html/monolith.html
 
 ```bash
 # OpenAPI 문서 검증
-npx @redocly/cli lint
+npm run docs:lint
 
-# HTML 문서 생성
-npx @redocly/cli build-docs monolith@v1 --output docs/html/monolith.html
+# HTML 문서 생성 (dist/index.html로 출력)
+npm run docs:build
 
-# 로컬 서버로 문서 서빙 (포트 8083)
-npx http-server docs/html -p 8083
+# 실시간 미리보기 (개발 서버)
+npm run docs:preview
+
+# 로컬 서버로 문서 서빙 (포트 8080)
+npm run docs:serve
 ```
 
 ### 문서 보기
 
-1. **HTML 파일 직접 열기**
-   ```
-   open docs/html/monolith.html
+1. **빌드된 HTML 파일 직접 열기**
+   ```bash
+   open dist/index.html
    ```
 
 2. **로컬 서버로 보기**
    ```bash
-   npx http-server docs/html -p 8083
-   # http://localhost:8083 에서 확인
+   npm run docs:serve
+   # http://localhost:8080 에서 확인
    ```
 
-3. **실시간 미리보기**
+3. **실시간 미리보기 (개발용)**
    ```bash
-   npx @redocly/cli preview
+   npm run docs:preview
    # Redocly 개발 서버 실행 (실시간 리로드)
    ```
 
