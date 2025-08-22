@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 
 @Component
 public class ProductWebMapper {
@@ -59,6 +60,48 @@ public class ProductWebMapper {
         }
 
         return cleanName + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    public ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        // Validate that at least one field is provided for update
+        if (!request.hasFieldToUpdate()) {
+            throw new IllegalArgumentException("No fields to update provided.");
+        }
+
+        return ProductUpdateCommand.builder()
+            .productId(productId)
+            .categoryId(request.getCategoryId())
+            .sku(request.getSku())
+            .name(request.getName())
+            .description(request.getDescription())
+            .shortDescription(request.getShortDescription())
+            .brand(request.getBrand())
+            .model(request.getModel())
+            .price(request.getPrice())
+            .comparePrice(request.getComparePrice())
+            .costPrice(request.getCostPrice())
+            .weight(request.getWeight())
+            .productAttributes(request.getProductAttributes())
+            .visibility(request.getVisibility())
+            .taxClass(request.getTaxClass())
+            .metaTitle(request.getMetaTitle())
+            .metaDescription(request.getMetaDescription())
+            .searchKeywords(request.getSearchKeywords())
+            .isFeatured(request.getIsFeatured())
+            .initialStock(request.getInitialStock())
+            .lowStockThreshold(request.getLowStockThreshold())
+            .isTrackingEnabled(request.getIsTrackingEnabled())
+            .isBackorderAllowed(request.getIsBackorderAllowed())
+            .minOrderQuantity(request.getMinOrderQuantity())
+            .maxOrderQuantity(request.getMaxOrderQuantity())
+            .reorderPoint(request.getReorderPoint())
+            .reorderQuantity(request.getReorderQuantity())
+            .locationCode(request.getLocationCode())
+            .build();
     }
 
 }

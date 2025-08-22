@@ -1,11 +1,11 @@
 package com.msa.commerce.monolith.product.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
@@ -22,12 +22,12 @@ class ProductTest {
 
         // when
         Product product = Product.builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build();
+            .name(name)
+            .description(description)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build();
 
         // then
         assertThat(product.getName()).isEqualTo(name);
@@ -51,13 +51,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name is required.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name is required.");
     }
 
     @Test
@@ -71,13 +71,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name is required.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name is required.");
     }
 
     @Test
@@ -91,13 +91,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("SKU is required.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("SKU is required.");
     }
 
     @Test
@@ -111,13 +111,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price must be greater than 0.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Price must be greater than 0.");
     }
 
     @Test
@@ -131,13 +131,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price cannot exceed 99,999,999.99.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Price cannot exceed 99,999,999.99.");
     }
 
     @Test
@@ -151,13 +151,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Category ID is required.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Category ID is required.");
     }
 
     @Test
@@ -171,13 +171,13 @@ class ProductTest {
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name cannot exceed 255 characters.");
+            .name(name)
+            .price(price)
+            .categoryId(categoryId)
+            .sku(sku)
+            .build())
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name cannot exceed 255 characters.");
     }
 
     @Test
@@ -240,11 +240,12 @@ class ProductTest {
 
     private Product createValidProduct() {
         return Product.builder()
-                .name("테스트 상품")
-                .description("테스트 상품 설명")
-                .price(new BigDecimal("10000"))
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST1234")
-                .build();
+            .name("테스트 상품")
+            .description("테스트 상품 설명")
+            .price(new BigDecimal("10000"))
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST1234")
+            .build();
     }
+
 }

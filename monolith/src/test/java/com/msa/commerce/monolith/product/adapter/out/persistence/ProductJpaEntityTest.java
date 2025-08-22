@@ -1,14 +1,15 @@
 package com.msa.commerce.monolith.product.adapter.out.persistence;
 
-import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductStatus;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 class ProductJpaEntityTest {
 
@@ -18,28 +19,28 @@ class ProductJpaEntityTest {
         // given
         LocalDateTime now = LocalDateTime.now();
         Product domainProduct = Product.reconstitute(
-                1L,
-                10L,                                    // categoryId
-                "TEST-SKU-001",                        // sku
-                "Test Product",                        // name
-                "Test Description",                    // description
-                "Short description",                   // shortDescription
-                "TestBrand",                          // brand
-                "TestModel",                          // model
-                new BigDecimal("29.99"),              // price
-                new BigDecimal("39.99"),              // comparePrice
-                new BigDecimal("19.99"),              // costPrice
-                new BigDecimal("1.5"),                // weight
-                "{\"color\": \"red\"}",               // productAttributes
-                ProductStatus.ACTIVE,                 // status
-                "PUBLIC",                             // visibility
-                "STANDARD",                           // taxClass
-                "Test Meta Title",                    // metaTitle
-                "Test meta description",              // metaDescription
-                "test, product, electronics",        // searchKeywords
-                true,                                 // isFeatured
-                now,                                  // createdAt
-                now                                   // updatedAt
+            1L,
+            10L,                                    // categoryId
+            "TEST-SKU-001",                        // sku
+            "Test Product",                        // name
+            "Test Description",                    // description
+            "Short description",                   // shortDescription
+            "TestBrand",                          // brand
+            "TestModel",                          // model
+            new BigDecimal("29.99"),              // price
+            new BigDecimal("39.99"),              // comparePrice
+            new BigDecimal("19.99"),              // costPrice
+            new BigDecimal("1.5"),                // weight
+            "{\"color\": \"red\"}",               // productAttributes
+            ProductStatus.ACTIVE,                 // status
+            "PUBLIC",                             // visibility
+            "STANDARD",                           // taxClass
+            "Test Meta Title",                    // metaTitle
+            "Test meta description",              // metaDescription
+            "test, product, electronics",        // searchKeywords
+            true,                                 // isFeatured
+            now,                                  // createdAt
+            now                                   // updatedAt
         );
 
         // when
@@ -75,25 +76,25 @@ class ProductJpaEntityTest {
     void fromDomainEntityForCreation_ShouldMapCorrectly() {
         // given
         Product domainProduct = Product.builder()
-                .categoryId(5L)
-                .sku("NEW-SKU-001")
-                .name("New Product")
-                .description("New Description")
-                .shortDescription("New short description")
-                .brand("NewBrand")
-                .model("NewModel")
-                .price(new BigDecimal("19.99"))
-                .comparePrice(new BigDecimal("24.99"))
-                .costPrice(new BigDecimal("12.99"))
-                .weight(new BigDecimal("0.8"))
-                .productAttributes("{\"size\": \"M\"}")
-                .visibility("PUBLIC")
-                .taxClass("STANDARD")
-                .metaTitle("New Meta Title")
-                .metaDescription("New meta description")
-                .searchKeywords("new, product, test")
-                .isFeatured(false)
-                .build();
+            .categoryId(5L)
+            .sku("NEW-SKU-001")
+            .name("New Product")
+            .description("New Description")
+            .shortDescription("New short description")
+            .brand("NewBrand")
+            .model("NewModel")
+            .price(new BigDecimal("19.99"))
+            .comparePrice(new BigDecimal("24.99"))
+            .costPrice(new BigDecimal("12.99"))
+            .weight(new BigDecimal("0.8"))
+            .productAttributes("{\"size\": \"M\"}")
+            .visibility("PUBLIC")
+            .taxClass("STANDARD")
+            .metaTitle("New Meta Title")
+            .metaDescription("New meta description")
+            .searchKeywords("new, product, test")
+            .isFeatured(false)
+            .build();
 
         // when
         ProductJpaEntity jpaEntity = ProductJpaEntity.fromDomainEntityForCreation(domainProduct);
@@ -187,4 +188,5 @@ class ProductJpaEntityTest {
             throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
     }
+
 }
