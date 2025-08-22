@@ -22,6 +22,7 @@ import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,10 +34,14 @@ class ProductControllerTest {
     @Mock
     private ProductCreateUseCase productCreateUseCase;
 
+    @Mock
+    private ProductUpdateUseCase productUpdateUseCase;
+
     @BeforeEach
     void setUp() {
         ProductWebMapper productWebMapper = new ProductWebMapper();
-        mockMvc = MockMvcBuilders.standaloneSetup(new ProductController(productCreateUseCase, productWebMapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }

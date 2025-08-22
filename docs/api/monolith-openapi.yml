@@ -1,0 +1,841 @@
+openapi: 3.0.3
+info:
+  title: MSA Commerce Lab - Monolith API
+  version: 1.0.0
+  description: |
+    API specification for MSA Commerce Lab monolithic service.
+    Implemented based on hexagonal architecture.
+  contact:
+    name: MSA Commerce Lab Team
+    email: dev@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api-dev.msa-commerce-lab.com
+    description: Development environment
+  - url: https://api.msa-commerce-lab.com
+    description: Production environment
+
+  # Security configuration (for future expansion)
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Product
+    description: Product management API
+    externalDocs:
+      description: Product API Guide
+      url: https://docs.example.com/product-api
+
+paths:
+  /api/v1/products:
+    post:
+      tags: [Product]
+      summary: Create Product
+      description: |
+        Creates a new product.
+        
+        ### Business Rules
+        - SKU cannot be duplicated (automatically generated)
+        - Price must be between 0.01 and 99,999,999.99 KRW
+        - Initial stock quantity must be 0 or greater
+        - Category ID must be one of the defined values (1-10)
+        
+        ### Architecture
+        This API is implemented through inbound adapters of hexagonal architecture.
+      operationId: createProduct
+      requestBody:
+        description: Product information to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+            examples:
+              electronics:
+                summary: Electronics Example
+                description: MacBook Pro product creation example
+                value:
+                  sku: "MACB-16-M3MAX"
+                  name: "MacBook Pro 16"
+                  description: "Apple MacBook Pro 16-inch M3 Max"
+                  shortDescription: "High-performance 16-inch MacBook Pro"
+                  brand: "Apple"
+                  model: "MacBook Pro M3 Max"
+                  price: 3490000
+                  comparePrice: 3790000
+                  categoryId: 1
+                  initialStock: 50
+                  minOrderQuantity: 1
+                  maxOrderQuantity: 5
+                  reorderPoint: 5
+                  reorderQuantity: 20
+                  locationCode: "MAIN"
+                  visibility: "PUBLIC"
+                  isFeatured: true
+                  metaTitle: "MacBook Pro 16-inch M3 Max"
+                  metaDescription: "Apple latest MacBook Pro 16-inch model"
+                  searchKeywords: "macbook,pro,apple,laptop"
+              clothing:
+                summary: Clothing Example
+                description: T-shirt product creation example
+                value:
+                  sku: "BW-001-BASIC"
+                  name: "Basic Cotton T-Shirt"
+                  description: "100% cotton basic t-shirt"
+                  shortDescription: "Comfortable basic t-shirt"
+                  brand: "BasicWear"
+                  model: "BW-001"
+                  price: 29900
+                  categoryId: 2
+                  initialStock: 100
+                  minOrderQuantity: 1
+                  maxOrderQuantity: 50
+                  reorderPoint: 10
+                  reorderQuantity: 50
+                  locationCode: "MAIN"
+                  visibility: "PUBLIC"
+                  isFeatured: false
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              examples:
+                success:
+                  summary: Success response example
+                  value:
+                    id: 1
+                    categoryId: 1
+                    sku: "MACB-12AB34CD"
+                    name: "MacBook Pro 16"
+                    description: "Apple MacBook Pro 16-inch M3 Max"
+                    shortDescription: "High-performance 16-inch MacBook Pro"
+                    brand: "Apple"
+                    model: "MacBook Pro M3 Max"
+                    price: 3490000
+                    comparePrice: 3790000
+                    status: "DRAFT"
+                    visibility: "PUBLIC"
+                    isFeatured: true
+                    availableQuantity: 50
+                    reservedQuantity: 0
+                    totalQuantity: 50
+                    lowStockThreshold: 5
+                    isTrackingEnabled: true
+                    isBackorderAllowed: false
+                    minOrderQuantity: 1
+                    maxOrderQuantity: 5
+                    reorderPoint: 5
+                    reorderQuantity: 20
+                    locationCode: "MAIN"
+                    versionNumber: 0
+                    metaTitle: "MacBook Pro 16-inch M3 Max"
+                    metaDescription: "Apple latest MacBook Pro 16-inch model"
+                    searchKeywords: "macbook,pro,apple,laptop"
+                    createdAt: "2024-01-15T10:30:00"
+                    updatedAt: "2024-01-15T10:30:00"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation failed
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2024-01-15T10:30:00"
+                    path: "/api/v1/products"
+                    status: 400
+                    validationErrors:
+                      - field: "name"
+                        rejectedValue: ""
+                        message: "Product name is required."
+                invalid_price:
+                  summary: Price range error
+                  value:
+                    message: "Price must be greater than 0."
+                    timestamp: "2024-01-15T10:30:00"
+                    path: "/api/v1/products"
+                    status: 400
+        '409':
+          description: Duplicate SKU
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate_sku:
+                  summary: Duplicate SKU
+                  value:
+                    message: "Product SKU already exists: MACB-12AB34CD"
+                    code: "PRODUCT_SKU_DUPLICATE"
+                    timestamp: "2024-01-15T10:30:00"
+                    path: "/api/v1/products"
+                    status: 409
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internal_error:
+                  summary: Internal server error
+                  value:
+                    message: "An internal server error occurred."
+                    timestamp: "2024-01-15T10:30:00"
+                    path: "/api/v1/products"
+                    status: 500
+
+  /api/v1/products/{id}:
+    put:
+      tags: [Product]
+      summary: Update Product
+      description: |
+        Updates existing product information.
+        
+        ### Business Rules
+        - Product ID must exist
+        - SKU cannot be modified (unique identifier)
+        - Price must be between 0.01 and 99,999,999.99 KRW
+        - Stock quantity must be 0 or greater
+        - Category ID must be one of the defined values (1-10)
+        - Some fields may be restricted based on product status
+        
+        ### Architecture
+        This API is implemented through inbound adapters of hexagonal architecture.
+        Domain services validate business rules and publish events.
+      operationId: updateProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Unique ID of the product to update
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 1
+      requestBody:
+        description: Product information to update
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+            examples:
+              electronics_update:
+                summary: Electronics Update Example
+                description: MacBook Pro product information update example
+                value:
+                  name: "MacBook Pro 16 (2024)"
+                  description: "Apple MacBook Pro 16-inch M3 Max (2024 model)"
+                  shortDescription: "Latest 16-inch MacBook Pro"
+                  brand: "Apple"
+                  model: "MacBook Pro M3 Max 2024"
+                  price: 3290000
+                  comparePrice: 3590000
+                  categoryId: 1
+                  visibility: "PUBLIC"
+                  isFeatured: true
+                  metaTitle: "MacBook Pro 16-inch M3 Max 2024"
+                  metaDescription: "Apple latest MacBook Pro 16-inch 2024 model"
+                  searchKeywords: "macbook,pro,apple,laptop,2024"
+              price_update:
+                summary: Price Update Example
+                description: Product price only update example
+                value:
+                  price: 2990000
+                  comparePrice: 3290000
+              stock_update:
+                summary: Stock Management Update Example
+                description: Stock-related settings update example
+                value:
+                  minOrderQuantity: 1
+                  maxOrderQuantity: 3
+                  reorderPoint: 10
+                  reorderQuantity: 30
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              examples:
+                success:
+                  summary: Success response example
+                  value:
+                    id: 1
+                    categoryId: 1
+                    sku: "MACB-12AB34CD"
+                    name: "MacBook Pro 16 (2024)"
+                    description: "Apple MacBook Pro 16-inch M3 Max (2024 model)"
+                    shortDescription: "Latest 16-inch MacBook Pro"
+                    brand: "Apple"
+                    model: "MacBook Pro M3 Max 2024"
+                    price: 3290000
+                    comparePrice: 3590000
+                    status: "ACTIVE"
+                    visibility: "PUBLIC"
+                    isFeatured: true
+                    availableQuantity: 45
+                    reservedQuantity: 5
+                    totalQuantity: 50
+                    lowStockThreshold: 10
+                    isTrackingEnabled: true
+                    isBackorderAllowed: false
+                    minOrderQuantity: 1
+                    maxOrderQuantity: 3
+                    reorderPoint: 10
+                    reorderQuantity: 30
+                    locationCode: "MAIN"
+                    versionNumber: 1
+                    metaTitle: "MacBook Pro 16-inch M3 Max 2024"
+                    metaDescription: "Apple latest MacBook Pro 16-inch 2024 model"
+                    searchKeywords: "macbook,pro,apple,laptop,2024"
+                    createdAt: "2024-01-15T10:30:00"
+                    updatedAt: "2024-01-15T14:25:00"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: Validation failed
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+                    validationErrors:
+                      - field: "price"
+                        rejectedValue: "-1000"
+                        message: "Price must be greater than 0."
+                invalid_category:
+                  summary: Invalid category
+                  value:
+                    message: "Invalid category ID: 99"
+                    code: "INVALID_CATEGORY"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Product not found
+                  value:
+                    message: "Product not found with id: 999"
+                    code: "PRODUCT_NOT_FOUND"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/999"
+                    status: 404
+        '409':
+          description: Business rule violation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                status_conflict:
+                  summary: Product status conflict
+                  value:
+                    message: "Cannot modify product in DELETED status"
+                    code: "PRODUCT_STATUS_CONFLICT"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 409
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                server_error:
+                  summary: Server error
+                  value:
+                    message: "Internal server error occurred"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 500
+
+components:
+  schemas:
+    ProductCreateRequest:
+      type: object
+      required:
+        - name
+        - price
+        - categoryId
+        - sku
+      properties:
+        categoryId:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 10
+          description: Category ID (1-10)
+          example: 1
+        sku:
+          type: string
+          maxLength: 100
+          description: Product SKU (Stock Keeping Unit)
+          example: "MACB-12AB34CD"
+        name:
+          type: string
+          maxLength: 255
+          description: Product name
+          example: "MacBook Pro 16"
+        description:
+          type: string
+          maxLength: 5000
+          description: Product description
+          example: "Apple MacBook Pro 16-inch M3 Max"
+        shortDescription:
+          type: string
+          maxLength: 500
+          description: Short description
+          example: "High-performance 16-inch MacBook Pro"
+        brand:
+          type: string
+          maxLength: 100
+          description: Brand name
+          example: "Apple"
+        model:
+          type: string
+          maxLength: 100
+          description: Model name
+          example: "MacBook Pro M3 Max"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 99999999.99
+          description: Price (KRW)
+          example: 3490000
+        comparePrice:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Compare price (original price before discount)
+          example: 3790000
+        costPrice:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Cost price
+          example: 2500000
+        weight:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: Weight (kg)
+          example: 2.14
+        productAttributes:
+          type: string
+          description: Product attributes (JSON format)
+          example: '{"color": "Space Gray", "storage": "1TB"}'
+        visibility:
+          type: string
+          maxLength: 20
+          description: Visibility status
+          enum: [PUBLIC, PRIVATE, HIDDEN]
+          default: "PUBLIC"
+          example: "PUBLIC"
+        taxClass:
+          type: string
+          maxLength: 50
+          description: Tax classification
+          example: "STANDARD"
+        metaTitle:
+          type: string
+          maxLength: 255
+          description: SEO title
+          example: "MacBook Pro 16-inch M3 Max"
+        metaDescription:
+          type: string
+          maxLength: 500
+          description: SEO description
+          example: "Apple latest MacBook Pro 16-inch model"
+        searchKeywords:
+          type: string
+          maxLength: 1000
+          description: Search keywords
+          example: "macbook,pro,apple,laptop"
+        isFeatured:
+          type: boolean
+          description: Featured product flag
+          default: false
+          example: true
+        initialStock:
+          type: integer
+          minimum: 0
+          description: Initial stock quantity
+          example: 50
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+          description: Low stock threshold
+          example: 5
+        isTrackingEnabled:
+          type: boolean
+          description: Stock tracking enabled
+          default: true
+          example: true
+        isBackorderAllowed:
+          type: boolean
+          description: Allow backorder when out of stock
+          default: false
+          example: false
+        minOrderQuantity:
+          type: integer
+          minimum: 1
+          description: Minimum order quantity
+          default: 1
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          minimum: 1
+          description: Maximum order quantity (null means no limit)
+          example: 100
+        reorderPoint:
+          type: integer
+          minimum: 0
+          description: Reorder threshold
+          default: 0
+          example: 20
+        reorderQuantity:
+          type: integer
+          minimum: 0
+          description: Reorder quantity
+          default: 0
+          example: 100
+        locationCode:
+          type: string
+          maxLength: 50
+          description: Warehouse/location code
+          default: "MAIN"
+          example: "MAIN"
+
+    ProductUpdateRequest:
+      type: object
+      description: Product update request schema (all fields are optional)
+      properties:
+        categoryId:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 10
+          description: Category ID (1-10)
+          example: 1
+        name:
+          type: string
+          maxLength: 255
+          description: Product name
+          example: "MacBook Pro 16 (2024)"
+        description:
+          type: string
+          maxLength: 5000
+          description: Product description
+          example: "Apple MacBook Pro 16-inch M3 Max (2024 model)"
+        shortDescription:
+          type: string
+          maxLength: 500
+          description: Short description
+          example: "Latest 16-inch MacBook Pro"
+        brand:
+          type: string
+          maxLength: 100
+          description: Brand name
+          example: "Apple"
+        model:
+          type: string
+          maxLength: 100
+          description: Model name
+          example: "MacBook Pro M3 Max 2024"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 99999999.99
+          description: Price (KRW)
+          example: 3290000
+        comparePrice:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 99999999.99
+          description: Compare price (KRW)
+          example: 3590000
+        visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE, HIDDEN]
+          description: Product visibility status
+          example: "PUBLIC"
+        isFeatured:
+          type: boolean
+          description: Featured product flag
+          example: true
+        minOrderQuantity:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          description: Minimum order quantity
+          default: 1
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          description: Maximum order quantity
+          default: 999
+          example: 3
+        reorderPoint:
+          type: integer
+          minimum: 0
+          maximum: 99999
+          description: Reorder threshold
+          default: 0
+          example: 10
+        reorderQuantity:
+          type: integer
+          minimum: 0
+          maximum: 99999
+          description: Reorder quantity
+          default: 0
+          example: 30
+        metaTitle:
+          type: string
+          maxLength: 255
+          description: SEO meta title
+          example: "MacBook Pro 16-inch M3 Max 2024"
+        metaDescription:
+          type: string
+          maxLength: 500
+          description: SEO meta description
+          example: "Apple latest MacBook Pro 16-inch 2024 model"
+        searchKeywords:
+          type: string
+          maxLength: 1000
+          description: Search keywords (comma separated)
+          example: "macbook,pro,apple,laptop,2024"
+
+    ProductResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Product ID
+          example: 1
+        categoryId:
+          type: integer
+          format: int64
+          description: Category ID
+          example: 1
+        sku:
+          type: string
+          description: Product SKU (auto-generated)
+          example: "MACB-12AB34CD"
+        name:
+          type: string
+          description: Product name
+          example: "MacBook Pro 16"
+        description:
+          type: string
+          description: Product description
+          example: "Apple MacBook Pro 16-inch M3 Max"
+        shortDescription:
+          type: string
+          description: Short description
+          example: "High-performance 16-inch MacBook Pro"
+        brand:
+          type: string
+          description: Brand name
+          example: "Apple"
+        model:
+          type: string
+          description: Model name
+          example: "MacBook Pro M3 Max"
+        price:
+          type: number
+          format: decimal
+          description: Price (KRW)
+          example: 3490000
+        comparePrice:
+          type: number
+          format: decimal
+          description: Compare price (original price before discount)
+          example: 3790000
+        costPrice:
+          type: number
+          format: decimal
+          description: Cost price
+          example: 2500000
+        weight:
+          type: number
+          format: decimal
+          description: Weight (kg)
+          example: 2.14
+        productAttributes:
+          type: string
+          description: Product attributes (JSON format)
+          example: '{"color": "Space Gray", "storage": "1TB"}'
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        visibility:
+          type: string
+          description: Visibility status
+          example: "PUBLIC"
+        isFeatured:
+          type: boolean
+          description: Featured product flag
+          example: true
+        availableQuantity:
+          type: integer
+          description: Available quantity
+          example: 50
+        reservedQuantity:
+          type: integer
+          description: Reserved quantity
+          example: 0
+        totalQuantity:
+          type: integer
+          description: Total quantity
+          example: 50
+        lowStockThreshold:
+          type: integer
+          description: Low stock threshold
+          example: 5
+        isTrackingEnabled:
+          type: boolean
+          description: Stock tracking enabled
+          example: true
+        isBackorderAllowed:
+          type: boolean
+          description: Allow backorder when out of stock
+          example: false
+        minOrderQuantity:
+          type: integer
+          description: Minimum order quantity
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          description: Maximum order quantity
+          example: 5
+        reorderPoint:
+          type: integer
+          description: Reorder threshold
+          example: 5
+        reorderQuantity:
+          type: integer
+          description: Reorder quantity
+          example: 20
+        locationCode:
+          type: string
+          description: Warehouse/location code
+          example: "MAIN"
+        versionNumber:
+          type: integer
+          format: int64
+          description: Version number
+          example: 0
+        metaTitle:
+          type: string
+          description: SEO meta title
+          example: "MacBook Pro 16-inch M3 Max"
+        metaDescription:
+          type: string
+          description: SEO meta description
+          example: "Apple latest MacBook Pro 16-inch model"
+        searchKeywords:
+          type: string
+          description: Search keywords
+          example: "macbook,pro,apple,laptop"
+        createdAt:
+          type: string
+          format: date-time
+          description: Created timestamp
+          example: "2024-01-15T10:30:00"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Updated timestamp
+          example: "2024-01-15T10:30:00"
+
+    ProductStatus:
+      type: string
+      enum: [DRAFT, ACTIVE, INACTIVE, DELETED]
+      description: Product status
+      example: "ACTIVE"
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Validation failed"
+        code:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2024-01-15T10:30:00"
+        path:
+          type: string
+          description: Request path
+          example: "/api/v1/products"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        validationErrors:
+          type: array
+          description: Validation error details
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name with error
+          example: "name"
+        rejectedValue:
+          type: string
+          description: Rejected field value
+          example: ""
+        message:
+          type: string
+          description: Field-specific error message
+          example: "Product name is required."
+      required:
+        - field
+        - message
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

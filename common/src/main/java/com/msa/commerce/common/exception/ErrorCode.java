@@ -19,6 +19,8 @@ public enum ErrorCode {
     PRODUCT_NAME_DUPLICATE("P1007", "Product name already exists"),
     PRODUCT_SKU_DUPLICATE("P1008", "Product SKU already exists"),
     INSUFFICIENT_STOCK("P1009", "Insufficient stock available"),
+    PRODUCT_UPDATE_NOT_ALLOWED("P1010", "Product cannot be updated"),
+    PRODUCT_NO_CHANGES_PROVIDED("P1011", "No changes provided for update"),
 
     // 사용자 관련 에러
     USER_NOT_FOUND("U1001", "User not found"),
