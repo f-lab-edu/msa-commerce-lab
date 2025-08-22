@@ -1,13 +1,14 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
+import static org.assertj.core.api.Assertions.*;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 
 class ProductWebMapperTest {
 
@@ -52,7 +53,7 @@ class ProductWebMapperTest {
         assertThat(command.getInitialStock()).isEqualTo(100);
         assertThat(command.getVisibility()).isEqualTo("PUBLIC");
         assertThat(command.getIsFeatured()).isFalse();
-        
+
         // 확장된 재고 필드 검증
         assertThat(command.getMinOrderQuantity()).isEqualTo(1);
         assertThat(command.getMaxOrderQuantity()).isEqualTo(50);
@@ -83,7 +84,7 @@ class ProductWebMapperTest {
         assertThat(command.getPrice()).isEqualTo(new BigDecimal("19.99"));
         assertThat(command.getCategoryId()).isEqualTo(2L);
         assertThat(command.getInitialStock()).isEqualTo(50);
-        
+
         // 확장된 재고 필드는 null이어야 함 (기본값은 서비스에서 처리)
         assertThat(command.getMinOrderQuantity()).isNull();
         assertThat(command.getMaxOrderQuantity()).isNull();
@@ -101,4 +102,5 @@ class ProductWebMapperTest {
             throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
     }
+
 }

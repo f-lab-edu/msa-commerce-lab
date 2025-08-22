@@ -141,12 +141,12 @@ public class Product {
 
     // 부분 업데이트를 위한 새로운 메소드
     public void updatePartially(Long categoryId, String sku, String name, String description,
-                              String shortDescription, String brand, String model, BigDecimal price,
-                              BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
-                              String productAttributes, String visibility, String taxClass,
-                              String metaTitle, String metaDescription, String searchKeywords,
-                              Boolean isFeatured) {
-        
+        String shortDescription, String brand, String model, BigDecimal price,
+        BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
+        String productAttributes, String visibility, String taxClass,
+        String metaTitle, String metaDescription, String searchKeywords,
+        Boolean isFeatured) {
+
         // null이 아닌 필드들만 업데이트
         if (categoryId != null) {
             this.categoryId = categoryId;
@@ -202,7 +202,7 @@ public class Product {
         if (isFeatured != null) {
             this.isFeatured = isFeatured;
         }
-        
+
         this.updatedAt = LocalDateTime.now();
     }
 

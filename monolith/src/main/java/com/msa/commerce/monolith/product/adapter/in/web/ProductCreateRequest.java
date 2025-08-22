@@ -1,10 +1,17 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
@@ -97,4 +104,5 @@ public class ProductCreateRequest {
 
     @Size(max = 50, message = "Location code cannot exceed 50 characters.")
     private String locationCode;
+
 }

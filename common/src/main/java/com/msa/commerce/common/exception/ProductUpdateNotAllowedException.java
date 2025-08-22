@@ -11,7 +11,8 @@ public class ProductUpdateNotAllowedException extends BusinessException {
     }
 
     public static ProductUpdateNotAllowedException productNotUpdatable(Long productId, String currentStatus) {
-        String message = String.format("Product with ID %d cannot be updated. Current status: %s", productId, currentStatus);
+        String message = String.format("Product with ID %d cannot be updated. Current status: %s", productId,
+            currentStatus);
         return new ProductUpdateNotAllowedException(message);
     }
 
