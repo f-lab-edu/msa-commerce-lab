@@ -1,72 +1,84 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.msa.commerce.common.exception.ResourceNotFoundException;
-import com.msa.commerce.common.exception.ErrorCode;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
-import com.msa.commerce.monolith.product.domain.ProductStatus;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import com.msa.commerce.common.exception.ErrorCode;
+import com.msa.commerce.common.exception.ResourceNotFoundException;
+import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.domain.ProductCategory;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
 
-@WebMvcTest(controllers = ProductController.class)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("ProductController 업데이트 API 테스트")
 class ProductControllerUpdateTest {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Mock
+    private ProductCreateUseCase productCreateUseCase;
 
-    @MockBean
+    @Mock
     private ProductUpdateUseCase productUpdateUseCase;
 
-    @MockBean
+    @Mock
     private ProductWebMapper productWebMapper;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
+            .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
+            .build();
+    }
 
     @Test
     @DisplayName("정상적인 상품 업데이트")
     void updateProduct_Success() throws Exception {
         // given
         Long productId = 1L;
-        ProductUpdateRequest request = createUpdateRequest();
         ProductUpdateCommand command = createUpdateCommand(productId);
         ProductResponse response = createProductResponse();
 
-        given(productWebMapper.toUpdateCommand(productId, request)).willReturn(command);
+        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command)).willReturn(response);
+
+        String requestJson = """
+            {
+                "name": "업데이트된 상품명",
+                "description": "업데이트된 설명",
+                "price": 15000
+            }
+            """;
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.name").value("업데이트된 상품명"))
-                .andExpect(jsonPath("$.price").value(15000))
-                .andExpect(jsonPath("$.status").value("ACTIVE"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(1L))
+            .andExpect(jsonPath("$.name").value("업데이트된 상품명"))
+            .andExpect(jsonPath("$.price").value(15000))
+            .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        verify(productWebMapper).toUpdateCommand(productId, request);
+        verify(productWebMapper).toUpdateCommand(eq(productId), any(ProductUpdateRequest.class));
         verify(productUpdateUseCase).updateProduct(command);
     }
 
@@ -75,17 +87,18 @@ class ProductControllerUpdateTest {
     void updateProduct_NoFields_ReturnsBadRequest() throws Exception {
         // given
         Long productId = 1L;
-        ProductUpdateRequest emptyRequest = new ProductUpdateRequest();
 
         // mapper가 IllegalArgumentException을 던짐
         when(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class)))
-                .thenThrow(new IllegalArgumentException("No fields to update provided."));
+            .thenThrow(new IllegalArgumentException("No fields to update provided."));
+
+        String emptyRequestJson = "{}";
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(emptyRequest)))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(emptyRequestJson))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -93,18 +106,25 @@ class ProductControllerUpdateTest {
     void updateProduct_InvalidRequest_ReturnsBadRequest() throws Exception {
         // given
         Long productId = 1L;
-        ProductUpdateRequest request = createUpdateRequest();
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(productId, request)).willReturn(command);
+        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
-                .willThrow(new IllegalArgumentException("Invalid input"));
+            .willThrow(new IllegalArgumentException("Invalid input"));
+
+        String requestJson = """
+            {
+                "name": "업데이트된 상품명",
+                "description": "업데이트된 설명",
+                "price": 15000
+            }
+            """;
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isBadRequest());
 
         verify(productUpdateUseCase).updateProduct(command);
     }
@@ -114,18 +134,26 @@ class ProductControllerUpdateTest {
     void updateProduct_ProductNotFound_ReturnsNotFound() throws Exception {
         // given
         Long productId = 999L;
-        ProductUpdateRequest request = createUpdateRequest();
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(productId, request)).willReturn(command);
+        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
-                .willThrow(new ResourceNotFoundException("Product not found with ID: 999", ErrorCode.PRODUCT_NOT_FOUND.getCode()));
+            .willThrow(
+                new ResourceNotFoundException("Product not found with ID: 999", ErrorCode.PRODUCT_NOT_FOUND.getCode()));
+
+        String requestJson = """
+            {
+                "name": "업데이트된 상품명",
+                "description": "업데이트된 설명",
+                "price": 15000
+            }
+            """;
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isNotFound());
 
         verify(productUpdateUseCase).updateProduct(command);
     }
@@ -135,18 +163,25 @@ class ProductControllerUpdateTest {
     void updateProduct_ServerError_ReturnsInternalServerError() throws Exception {
         // given
         Long productId = 1L;
-        ProductUpdateRequest request = createUpdateRequest();
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(productId, request)).willReturn(command);
+        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
-                .willThrow(new RuntimeException("Database connection error"));
+            .willThrow(new RuntimeException("Database connection error"));
+
+        String requestJson = """
+            {
+                "name": "업데이트된 상품명",
+                "description": "업데이트된 설명",
+                "price": 15000
+            }
+            """;
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isInternalServerError());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isInternalServerError());
 
         verify(productUpdateUseCase).updateProduct(command);
     }
@@ -157,12 +192,12 @@ class ProductControllerUpdateTest {
         // given
         Long productId = 1L;
         String requestJson = "{ \"name\": \"새로운 상품명\" }";
-        
+
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(productId)
-                .name("새로운 상품명")
-                .build();
-        
+            .productId(productId)
+            .name("새로운 상품명")
+            .build();
+
         ProductResponse response = createProductResponse();
 
         given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
@@ -170,10 +205,10 @@ class ProductControllerUpdateTest {
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("업데이트된 상품명"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("업데이트된 상품명"));
 
         verify(productUpdateUseCase).updateProduct(any(ProductUpdateCommand.class));
     }
@@ -187,9 +222,9 @@ class ProductControllerUpdateTest {
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidJson))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+            .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -201,9 +236,9 @@ class ProductControllerUpdateTest {
 
         // when & then
         mockMvc.perform(put("/api/v1/products/{id}", productId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpect(status().isBadRequest());
     }
 
     private ProductUpdateRequest createUpdateRequest() {
@@ -215,26 +250,27 @@ class ProductControllerUpdateTest {
 
     private ProductUpdateCommand createUpdateCommand(Long productId) {
         return ProductUpdateCommand.builder()
-                .productId(productId)
-                .name("업데이트된 상품명")
-                .description("업데이트된 설명")
-                .price(new BigDecimal("15000"))
-                .build();
+            .productId(productId)
+            .name("업데이트된 상품명")
+            .description("업데이트된 설명")
+            .price(new BigDecimal("15000"))
+            .build();
     }
 
     private ProductResponse createProductResponse() {
         return ProductResponse.builder()
-                .id(1L)
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST-SKU")
-                .name("업데이트된 상품명")
-                .description("업데이트된 설명")
-                .price(new BigDecimal("15000"))
-                .status(ProductStatus.ACTIVE)
-                .visibility("PUBLIC")
-                .isFeatured(false)
-                .createdAt(LocalDateTime.now().minusDays(1))
-                .updatedAt(LocalDateTime.now())
-                .build();
+            .id(1L)
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST-SKU")
+            .name("업데이트된 상품명")
+            .description("업데이트된 설명")
+            .price(new BigDecimal("15000"))
+            .status(ProductStatus.ACTIVE)
+            .visibility("PUBLIC")
+            .isFeatured(false)
+            .createdAt(LocalDateTime.now().minusDays(1))
+            .updatedAt(LocalDateTime.now())
+            .build();
     }
+
 }
