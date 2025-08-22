@@ -1,17 +1,19 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
+import static org.assertj.core.api.Assertions.*;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 
 class ProductWebMapperUnitTest {
 
     private ProductWebMapper productWebMapper;
+
     private ProductCreateRequest createRequest;
 
     @BeforeEach
@@ -91,4 +93,5 @@ class ProductWebMapperUnitTest {
             throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
     }
+
 }
