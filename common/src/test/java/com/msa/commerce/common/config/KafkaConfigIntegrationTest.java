@@ -1,6 +1,14 @@
 package com.msa.commerce.common.config;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import static org.assertj.core.api.Assertions.*;
+import static org.awaitility.Awaitility.*;
+
+import java.time.Duration;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,15 +19,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @SpringBootTest(classes = {KafkaConfig.class})
 @Import(EmbeddedKafkaTestConfig.class)
@@ -57,16 +56,16 @@ class KafkaConfigIntegrationTest {
 
         // Create consumer before sending message
         var consumerProps = KafkaTestUtils.consumerProps("test-group-1", "true", embeddedKafka);
-        consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, 
-                         org.apache.kafka.common.serialization.StringDeserializer.class);
+        consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            org.apache.kafka.common.serialization.StringDeserializer.class);
         consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                         org.springframework.kafka.support.serializer.JsonDeserializer.class);
+            org.springframework.kafka.support.serializer.JsonDeserializer.class);
         consumerProps.put(org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES, "*");
         consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        
+
         var consumer = new org.apache.kafka.clients.consumer.KafkaConsumer<String, Object>(consumerProps);
         consumer.subscribe(Collections.singleton(topicName));
-        
+
         // Wait for consumer to be ready
         Thread.sleep(1000);
 
@@ -76,20 +75,20 @@ class KafkaConfigIntegrationTest {
 
         // Then - Verify message is received
         await().atMost(Duration.ofSeconds(10))
-                .untilAsserted(() -> {
-                    var records = consumer.poll(Duration.ofMillis(1000));
-                    assertThat(records.isEmpty()).isFalse();
-                    
-                    var record = records.iterator().next();
-                    assertThat(record.key()).isEqualTo(testKey);
-                    assertThat(record.value()).isInstanceOf(Map.class);
-                    
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> receivedMessage = (Map<String, Object>) record.value();
-                    assertThat(receivedMessage.get("id")).isEqualTo("123");
-                    assertThat(receivedMessage.get("message")).isEqualTo("Hello Kafka!");
-                    assertThat(receivedMessage.get("timestamp")).isNotNull();
-                });
+            .untilAsserted(() -> {
+                var records = consumer.poll(Duration.ofMillis(1000));
+                assertThat(records.isEmpty()).isFalse();
+
+                var record = records.iterator().next();
+                assertThat(record.key()).isEqualTo(testKey);
+                assertThat(record.value()).isInstanceOf(Map.class);
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> receivedMessage = (Map<String, Object>)record.value();
+                assertThat(receivedMessage.get("id")).isEqualTo("123");
+                assertThat(receivedMessage.get("message")).isEqualTo("Hello Kafka!");
+                assertThat(receivedMessage.get("timestamp")).isNotNull();
+            });
 
         consumer.close();
     }
@@ -104,12 +103,12 @@ class KafkaConfigIntegrationTest {
 
         // Create a test consumer
         var consumerProps = KafkaTestUtils.consumerProps("test-consumer-group-2", "true", embeddedKafka);
-        consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, 
-                         org.apache.kafka.common.serialization.StringDeserializer.class);
+        consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,
+            org.apache.kafka.common.serialization.StringDeserializer.class);
         consumerProps.put(org.apache.kafka.clients.consumer.ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                         org.springframework.kafka.support.serializer.JsonDeserializer.class);
+            org.springframework.kafka.support.serializer.JsonDeserializer.class);
         consumerProps.put(org.springframework.kafka.support.serializer.JsonDeserializer.TRUSTED_PACKAGES, "*");
-        
+
         var consumer = new org.apache.kafka.clients.consumer.KafkaConsumer<String, Object>(consumerProps);
         consumer.subscribe(Collections.singleton(topicName));
 
@@ -118,19 +117,19 @@ class KafkaConfigIntegrationTest {
 
         // Then - Verify message is received
         await().atMost(Duration.ofSeconds(10))
-                .untilAsserted(() -> {
-                    var records = consumer.poll(Duration.ofMillis(100));
-                    assertThat(records.isEmpty()).isFalse();
-                    
-                    var record = records.iterator().next();
-                    assertThat(record.key()).isNull();
-                    assertThat(record.value()).isInstanceOf(Map.class);
-                    
-                    @SuppressWarnings("unchecked")
-                    Map<String, Object> receivedMessage = (Map<String, Object>) record.value();
-                    assertThat(receivedMessage.get("id")).isEqualTo("456");
-                    assertThat(receivedMessage.get("message")).isEqualTo("Message without key");
-                });
+            .untilAsserted(() -> {
+                var records = consumer.poll(Duration.ofMillis(100));
+                assertThat(records.isEmpty()).isFalse();
+
+                var record = records.iterator().next();
+                assertThat(record.key()).isNull();
+                assertThat(record.value()).isInstanceOf(Map.class);
+
+                @SuppressWarnings("unchecked")
+                Map<String, Object> receivedMessage = (Map<String, Object>)record.value();
+                assertThat(receivedMessage.get("id")).isEqualTo("456");
+                assertThat(receivedMessage.get("message")).isEqualTo("Message without key");
+            });
 
         consumer.close();
     }
@@ -140,9 +139,10 @@ class KafkaConfigIntegrationTest {
         // Verify that KafkaTemplate is properly configured
         assertThat(kafkaTemplate).isNotNull();
         assertThat(kafkaTemplate.getProducerFactory()).isNotNull();
-        
+
         // Verify that we can access the producer configuration
         var producerFactory = kafkaTemplate.getProducerFactory();
         assertThat(producerFactory).isNotNull();
     }
+
 }

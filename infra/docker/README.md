@@ -19,6 +19,7 @@ docker-compose -f infra/docker/ecommerce.local.yml up -d
 ```
 
 **장점:**
+
 - ✅ 단순한 아키텍처 (Kafka 단일 서비스)
 - ✅ 빠른 시작 시간 (~30초)
 - ✅ 적은 메모리 사용량 (~1.5GB)
@@ -27,6 +28,7 @@ docker-compose -f infra/docker/ecommerce.local.yml up -d
 - ✅ 운영 복잡성 감소
 
 **왜 KRaft만 사용하나요?**
+
 - 🔮 **미래 지향적**: Kafka 4.0에서 Zookeeper 지원 완전 제거 예정
 - 🎯 **Apache 권장**: 새로운 프로젝트는 KRaft 모드 사용 권장
 - ⚡ **성능 향상**: 더 빠른 메타데이터 처리
@@ -35,35 +37,38 @@ docker-compose -f infra/docker/ecommerce.local.yml up -d
 ## 🔧 서비스 구성
 
 ### 공통 서비스
+
 - **MySQL 9.4.0**: 메인 데이터베이스
-  - Port: 3306
-  - Database: db_flyway
-  - User: app_rw / Password: 1q2w3e4r!
+    - Port: 3306
+    - Database: db_flyway
+    - User: app_rw / Password: 1q2w3e4r!
 
 - **Redis 8.2.0**: 캐시 및 세션 스토어
-  - Port: 6379
-  - Password: 1q2w3e4r
+    - Port: 6379
+    - Password: 1q2w3e4r
 
 ### Kafka KRaft 설정
 
-| 구성요소 | 설정값 |
-|----------|--------|
-| **Kafka Container** | msa-ecommerce-kafka |
-| **총 컨테이너 수** | 3개 (MySQL, Redis, Kafka) |
-| **Kafka 설정** | KAFKA_PROCESS_ROLES: broker,controller |
-| **메타데이터 저장** | 자체 로그 디렉토리 (/tmp/kraft-combined-logs) |
-| **시작 의존성** | 없음 (독립적 시작) |
-| **포트** | 9092 (클라이언트), 9101 (JMX) |
+| 구성요소                | 설정값                                    |
+|---------------------|----------------------------------------|
+| **Kafka Container** | msa-ecommerce-kafka                    |
+| **총 컨테이너 수**        | 3개 (MySQL, Redis, Kafka)               |
+| **Kafka 설정**        | KAFKA_PROCESS_ROLES: broker,controller |
+| **메타데이터 저장**        | 자체 로그 디렉토리 (/tmp/kraft-combined-logs)  |
+| **시작 의존성**          | 없음 (독립적 시작)                            |
+| **포트**              | 9092 (클라이언트), 9101 (JMX)               |
 
 ## 📋 사용법
 
 ### 서비스 시작
+
 ```bash
 # KRaft 모드 Kafka 시작
 docker-compose -f infra/docker/ecommerce.local.yml up -d
 ```
 
 ### 서비스 상태 확인
+
 ```bash
 # 컨테이너 상태 확인
 docker ps
@@ -73,6 +78,7 @@ docker-compose -f infra/docker/ecommerce.local.yml ps
 ```
 
 ### Kafka 기능 테스트
+
 ```bash
 # 토픽 생성
 docker exec msa-ecommerce-kafka kafka-topics \
@@ -94,6 +100,7 @@ docker exec msa-ecommerce-kafka kafka-console-consumer \
 ```
 
 ### 서비스 중지 및 정리
+
 ```bash
 # 서비스 중지
 docker-compose -f infra/docker/ecommerce.local.yml down
@@ -105,16 +112,19 @@ docker-compose -f infra/docker/ecommerce.local.yml down -v
 ## 🎯 KRaft 모드 장점
 
 ### 개발 환경
+
 - **리소스 효율적**: 적은 메모리와 CPU 사용
 - **빠른 시작**: 30초 내 완전 구동
 - **단순 구조**: 관리할 서비스 감소
 
 ### 운영 준비
+
 - **미래 지향**: Kafka 4.0+ 표준
 - **성능 향상**: 더 빠른 메타데이터 처리
 - **안정성**: 단일 장애점 감소
 
 ### 학습/연구
+
 - **최신 기술**: Apache Kafka 최신 아키텍처 학습
 - **업계 트렌드**: 현대적 스트리밍 플랫폼 표준
 - **실무 적용**: 실제 프로덕션 환경과 동일
@@ -122,6 +132,7 @@ docker-compose -f infra/docker/ecommerce.local.yml down -v
 ## 🔍 트러블슈팅
 
 ### 일반적인 문제
+
 1. **포트 충돌**: 기존 서비스와 포트 겹침
    ```bash
    # 포트 사용 확인
@@ -161,6 +172,7 @@ docker-compose -f infra/docker/ecommerce.local.yml down -v
 ## 🔮 미래 전망
 
 **Kafka 4.0 주요 변경사항 (예정)**:
+
 - ❌ Zookeeper 지원 완전 제거
 - ✅ KRaft 모드가 유일한 클러스터 모드
 - ⚡ 성능 및 안정성 개선
