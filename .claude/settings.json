@@ -1,7 +1,0 @@
-{
-  "hooks": {
-    "PrePrompt": [{
-      "command": ".claude/hooks/auto-agent-setup.sh"
-    }]
-  }
-}
