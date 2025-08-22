@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 
 import jakarta.validation.Valid;
@@ -37,17 +38,12 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ProductResponse> updateProduct(
-            @PathVariable("id") Long productId,
-            @Valid @RequestBody ProductUpdateRequest request) {
+        @PathVariable("id") Long productId,
+        @Valid @RequestBody ProductUpdateRequest request) {
 
-        log.info("Received product update request for ID: {} with fields: {}",
-                productId, request.hasFieldToUpdate());
+        ProductUpdateCommand updateCommand = productWebMapper.toUpdateCommand(productId, request);
 
-        ProductResponse response = productUpdateUseCase.updateProduct(
-                productWebMapper.toUpdateCommand(productId, request));
-
-        log.info("Product updated successfully for ID: {}", productId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(productUpdateUseCase.updateProduct(updateCommand));
     }
 
 }
