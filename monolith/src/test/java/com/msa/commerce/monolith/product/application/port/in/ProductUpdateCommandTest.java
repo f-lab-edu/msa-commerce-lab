@@ -1,11 +1,11 @@
 package com.msa.commerce.monolith.product.application.port.in;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("ProductUpdateCommand 테스트")
 class ProductUpdateCommandTest {
@@ -15,16 +15,16 @@ class ProductUpdateCommandTest {
     void validate_ValidCommand_Success() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .name("유효한 상품명")
-                .description("유효한 설명")
-                .price(new BigDecimal("10000"))
-                .sku("VALID-SKU")
-                .build();
+            .productId(1L)
+            .name("유효한 상품명")
+            .description("유효한 설명")
+            .price(new BigDecimal("10000"))
+            .sku("VALID-SKU")
+            .build();
 
         // when & then
         assertThatCode(command::validate)
-                .doesNotThrowAnyException();
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -32,14 +32,14 @@ class ProductUpdateCommandTest {
     void validate_NullProductId_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(null)
-                .name("상품명")
-                .build();
+            .productId(null)
+            .name("상품명")
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product ID is required for update.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product ID is required for update.");
     }
 
     @Test
@@ -47,14 +47,14 @@ class ProductUpdateCommandTest {
     void validate_EmptySku_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .sku("") // 빈 문자열
-                .build();
+            .productId(1L)
+            .sku("") // 빈 문자열
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("SKU must not be empty and cannot exceed 100 characters.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("SKU must not be empty and cannot exceed 100 characters.");
     }
 
     @Test
@@ -63,14 +63,14 @@ class ProductUpdateCommandTest {
         // given
         String longSku = "A".repeat(101); // 101자
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .sku(longSku)
-                .build();
+            .productId(1L)
+            .sku(longSku)
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("SKU must not be empty and cannot exceed 100 characters.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("SKU must not be empty and cannot exceed 100 characters.");
     }
 
     @Test
@@ -78,14 +78,14 @@ class ProductUpdateCommandTest {
     void validate_EmptyName_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .name("") // 빈 문자열
-                .build();
+            .productId(1L)
+            .name("") // 빈 문자열
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name must not be empty and cannot exceed 255 characters.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name must not be empty and cannot exceed 255 characters.");
     }
 
     @Test
@@ -94,14 +94,14 @@ class ProductUpdateCommandTest {
         // given
         String longName = "A".repeat(256); // 256자
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .name(longName)
-                .build();
+            .productId(1L)
+            .name(longName)
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name must not be empty and cannot exceed 255 characters.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name must not be empty and cannot exceed 255 characters.");
     }
 
     @Test
@@ -109,14 +109,14 @@ class ProductUpdateCommandTest {
     void validate_ZeroPrice_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .price(BigDecimal.ZERO)
-                .build();
+            .productId(1L)
+            .price(BigDecimal.ZERO)
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price must be between 0.01 and 99,999,999.99.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Price must be between 0.01 and 99,999,999.99.");
     }
 
     @Test
@@ -124,14 +124,14 @@ class ProductUpdateCommandTest {
     void validate_TooHighPrice_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .price(new BigDecimal("100000000")) // 1억
-                .build();
+            .productId(1L)
+            .price(new BigDecimal("100000000")) // 1억
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price must be between 0.01 and 99,999,999.99.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Price must be between 0.01 and 99,999,999.99.");
     }
 
     @Test
@@ -140,14 +140,14 @@ class ProductUpdateCommandTest {
         // given
         String longDescription = "A".repeat(5001); // 5001자
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .description(longDescription)
-                .build();
+            .productId(1L)
+            .description(longDescription)
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product description cannot exceed 5000 characters.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product description cannot exceed 5000 characters.");
     }
 
     @Test
@@ -155,14 +155,14 @@ class ProductUpdateCommandTest {
     void validate_NegativeStock_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .initialStock(-1)
-                .build();
+            .productId(1L)
+            .initialStock(-1)
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Initial stock cannot be negative.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Initial stock cannot be negative.");
     }
 
     @Test
@@ -170,15 +170,15 @@ class ProductUpdateCommandTest {
     void validate_InvalidOrderQuantity_ThrowsException() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .minOrderQuantity(10)
-                .maxOrderQuantity(5) // 최대가 최소보다 작음
-                .build();
+            .productId(1L)
+            .minOrderQuantity(10)
+            .maxOrderQuantity(5) // 최대가 최소보다 작음
+            .build();
 
         // when & then
         assertThatThrownBy(command::validate)
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Maximum order quantity cannot be less than minimum order quantity.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Maximum order quantity cannot be less than minimum order quantity.");
     }
 
     @Test
@@ -186,9 +186,9 @@ class ProductUpdateCommandTest {
     void hasChanges_WithChanges_ReturnsTrue() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .name("새로운 상품명")
-                .build();
+            .productId(1L)
+            .name("새로운 상품명")
+            .build();
 
         // when & then
         assertThat(command.hasChanges()).isTrue();
@@ -199,8 +199,8 @@ class ProductUpdateCommandTest {
     void hasChanges_NoChanges_ReturnsFalse() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .build();
+            .productId(1L)
+            .build();
 
         // when & then
         assertThat(command.hasChanges()).isFalse();
@@ -211,19 +211,20 @@ class ProductUpdateCommandTest {
     void optionalMethods_Work() {
         // given
         ProductUpdateCommand command = ProductUpdateCommand.builder()
-                .productId(1L)
-                .name("테스트 상품")
-                .price(new BigDecimal("10000"))
-                .sku(null) // null 값
-                .build();
+            .productId(1L)
+            .name("테스트 상품")
+            .price(new BigDecimal("10000"))
+            .sku(null) // null 값
+            .build();
 
         // when & then
         assertThat(command.getNameOptional()).isPresent();
         assertThat(command.getNameOptional().get()).isEqualTo("테스트 상품");
-        
+
         assertThat(command.getPriceOptional()).isPresent();
         assertThat(command.getPriceOptional().get()).isEqualTo(new BigDecimal("10000"));
-        
+
         assertThat(command.getSkuOptional()).isEmpty();
     }
+
 }

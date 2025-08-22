@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
@@ -43,7 +44,8 @@ class ProductControllerUpdateTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }

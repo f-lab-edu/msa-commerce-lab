@@ -66,4 +66,5 @@ public interface ProductInventoryPort {
      * 특정 위치의 재고 수 조회
      */
     long countByLocationCode(String locationCode);
+
 }
