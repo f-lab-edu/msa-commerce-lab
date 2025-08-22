@@ -1,13 +1,12 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import com.msa.commerce.common.exception.DuplicateResourceException;
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
-import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
-import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
-import com.msa.commerce.monolith.product.domain.ProductStatus;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,12 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
+import com.msa.commerce.common.exception.DuplicateResourceException;
+import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
+import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.ProductCategory;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductCreateService 테스트")
@@ -40,41 +41,42 @@ class ProductCreateServiceTest {
     private ProductCreateService productCreateService;
 
     private ProductCreateCommand validCommand;
+
     private Product savedProduct;
 
     @BeforeEach
     void setUp() {
         validCommand = ProductCreateCommand.builder()
-                .name("테스트 상품")
-                .description("테스트 상품 설명")
-                .price(new BigDecimal("10000"))
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST-1234")
-                .build();
+            .name("테스트 상품")
+            .description("테스트 상품 설명")
+            .price(new BigDecimal("10000"))
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST-1234")
+            .build();
 
         savedProduct = Product.reconstitute(
-                1L,                                    // id
-                ProductCategory.ELECTRONICS.getId(),   // categoryId
-                "TEST1234",                           // sku
-                "테스트 상품",                         // name
-                "테스트 상품 설명",                    // description
-                null,                                 // shortDescription
-                null,                                 // brand
-                null,                                 // model
-                new BigDecimal("10000"),              // price
-                null,                                 // comparePrice
-                null,                                 // costPrice
-                null,                                 // weight
-                null,                                 // productAttributes
-                ProductStatus.DRAFT,                  // status
-                "PUBLIC",                             // visibility
-                null,                                 // taxClass
-                null,                                 // metaTitle
-                null,                                 // metaDescription
-                null,                                 // searchKeywords
-                false,                                // isFeatured
-                LocalDateTime.now(),                  // createdAt
-                LocalDateTime.now()                   // updatedAt
+            1L,                                    // id
+            ProductCategory.ELECTRONICS.getId(),   // categoryId
+            "TEST1234",                           // sku
+            "테스트 상품",                         // name
+            "테스트 상품 설명",                    // description
+            null,                                 // shortDescription
+            null,                                 // brand
+            null,                                 // model
+            new BigDecimal("10000"),              // price
+            null,                                 // comparePrice
+            null,                                 // costPrice
+            null,                                 // weight
+            null,                                 // productAttributes
+            ProductStatus.DRAFT,                  // status
+            "PUBLIC",                             // visibility
+            null,                                 // taxClass
+            null,                                 // metaTitle
+            null,                                 // metaDescription
+            null,                                 // searchKeywords
+            false,                                // isFeatured
+            LocalDateTime.now(),                  // createdAt
+            LocalDateTime.now()                   // updatedAt
         );
     }
 
@@ -111,8 +113,8 @@ class ProductCreateServiceTest {
 
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(validCommand))
-                .isInstanceOf(DuplicateResourceException.class)
-                .hasMessage("Product SKU already exists: " + validCommand.getSku());
+            .isInstanceOf(DuplicateResourceException.class)
+            .hasMessage("Product SKU already exists: " + validCommand.getSku());
 
         verify(productRepository).existsBySku(validCommand.getSku());
         verify(productRepository, never()).save(any(Product.class));
@@ -124,16 +126,16 @@ class ProductCreateServiceTest {
     void createProduct_InvalidCommand_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-                .name("") // 빈 문자열
-                .price(new BigDecimal("10000"))
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST-1234")
-                .build();
+            .name("") // 빈 문자열
+            .price(new BigDecimal("10000"))
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST-1234")
+            .build();
 
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name is required.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Product name is required.");
 
         verify(productRepository, never()).existsBySku(anyString());
         verify(productRepository, never()).save(any(Product.class));
@@ -144,16 +146,16 @@ class ProductCreateServiceTest {
     void createProduct_NullPrice_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-                .name("테스트 상품")
-                .price(null) // null 가격
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST-1234")
-                .build();
+            .name("테스트 상품")
+            .price(null) // null 가격
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST-1234")
+            .build();
 
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price is required.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Price is required.");
 
         verify(productRepository, never()).existsBySku(anyString());
         verify(productRepository, never()).save(any(Product.class));
@@ -164,16 +166,16 @@ class ProductCreateServiceTest {
     void createProduct_NullCategoryId_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-                .name("테스트 상품")
-                .price(new BigDecimal("10000"))
-                .categoryId(null) // null 카테고리 ID
-                .sku("TEST-1234")
-                .build();
+            .name("테스트 상품")
+            .price(new BigDecimal("10000"))
+            .categoryId(null) // null 카테고리 ID
+            .sku("TEST-1234")
+            .build();
 
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Category ID is required.");
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Category ID is required.");
 
         verify(productRepository, never()).existsBySku(anyString());
         verify(productRepository, never()).save(any(Product.class));
@@ -181,17 +183,18 @@ class ProductCreateServiceTest {
 
     private ProductResponse createProductResponse() {
         return ProductResponse.builder()
-                .id(1L)
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST1234")
-                .name("테스트 상품")
-                .description("테스트 상품 설명")
-                .price(new BigDecimal("10000"))
-                .status(ProductStatus.DRAFT)
-                .visibility("PUBLIC")
-                .isFeatured(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+            .id(1L)
+            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .description("테스트 상품 설명")
+            .price(new BigDecimal("10000"))
+            .status(ProductStatus.DRAFT)
+            .visibility("PUBLIC")
+            .isFeatured(false)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
     }
+
 }

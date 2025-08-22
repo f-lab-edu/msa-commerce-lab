@@ -45,7 +45,7 @@ public class JavaLibraryPlugin implements Plugin<Project> {
         project.getDependencies().add("annotationProcessor", Dependency.LOMBOK.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.SPRING_BOOT_STARTER_TEST.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_KAFKA.getCoordinate());
-        
+
         project.getDependencies().add("testImplementation", Dependency.H2_DATABASE.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.SPRING_KAFKA_TEST.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.AWAITILITY.getCoordinate());

@@ -2,7 +2,7 @@
 
 ## 📖 Overview
 
-이 디렉토리는 MSA Commerce Lab 프로젝트의 API 문서를 포함합니다. 
+이 디렉토리는 MSA Commerce Lab 프로젝트의 API 문서를 포함합니다.
 헥사고날 아키텍처를 기반으로 구현된 상품 관리 API의 명세서를 제공합니다.
 
 ## 📁 Structure
@@ -77,10 +77,10 @@ npm run docs:serve
 ### Product API
 
 - **POST /api/v1/products** - 상품 생성
-  - 새로운 상품을 등록합니다
-  - SKU 자동 생성
-  - 카테고리 ID 검증 (1-10)
-  - 재고 관리 지원
+    - 새로운 상품을 등록합니다
+    - SKU 자동 생성
+    - 카테고리 ID 검증 (1-10)
+    - 재고 관리 지원
 
 ### Schema
 

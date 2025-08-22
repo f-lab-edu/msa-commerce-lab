@@ -63,7 +63,7 @@ public class ProductInventory {
         this.lowStockThreshold = lowStockThreshold != null ? lowStockThreshold : 10;
         this.isTrackingEnabled = isTrackingEnabled != null ? isTrackingEnabled : true;
         this.isBackorderAllowed = isBackorderAllowed != null ? isBackorderAllowed : false;
-        
+
         // Enhanced inventory management fields
         this.minOrderQuantity = minOrderQuantity != null ? minOrderQuantity : 1;
         this.maxOrderQuantity = maxOrderQuantity;
@@ -71,9 +71,36 @@ public class ProductInventory {
         this.reorderQuantity = reorderQuantity != null ? reorderQuantity : 0;
         this.locationCode = locationCode != null ? locationCode : "MAIN";
         this.versionNumber = 0L;
-        
+
         this.lastUpdatedAt = LocalDateTime.now();
         this.createdAt = LocalDateTime.now();
+    }
+
+    public static ProductInventory reconstitute(Long id, Long productId, Long productVariantId,
+        Integer availableQuantity, Integer reservedQuantity, Integer totalQuantity, Integer lowStockThreshold,
+        Boolean isTrackingEnabled, Boolean isBackorderAllowed,
+        Integer minOrderQuantity, Integer maxOrderQuantity, Integer reorderPoint,
+        Integer reorderQuantity, String locationCode, Long versionNumber,
+        LocalDateTime lastUpdatedAt, LocalDateTime createdAt) {
+        ProductInventory inventory = new ProductInventory();
+        inventory.id = id;
+        inventory.productId = productId;
+        inventory.productVariantId = productVariantId;
+        inventory.availableQuantity = availableQuantity;
+        inventory.reservedQuantity = reservedQuantity;
+        inventory.totalQuantity = totalQuantity;
+        inventory.lowStockThreshold = lowStockThreshold;
+        inventory.isTrackingEnabled = isTrackingEnabled;
+        inventory.isBackorderAllowed = isBackorderAllowed;
+        inventory.minOrderQuantity = minOrderQuantity;
+        inventory.maxOrderQuantity = maxOrderQuantity;
+        inventory.reorderPoint = reorderPoint;
+        inventory.reorderQuantity = reorderQuantity;
+        inventory.locationCode = locationCode;
+        inventory.versionNumber = versionNumber;
+        inventory.lastUpdatedAt = lastUpdatedAt;
+        inventory.createdAt = createdAt;
+        return inventory;
     }
 
     private void validateInventory(Long productId, Integer availableQuantity,
@@ -232,10 +259,10 @@ public class ProductInventory {
     }
 
     // 부분 업데이트를 위한 메소드
-    public void updatePartially(Integer currentStock, Integer lowStockThreshold, Boolean isTrackingEnabled, 
-                               Boolean isBackorderAllowed, Integer minOrderQuantity, Integer maxOrderQuantity,
-                               Integer reorderPoint, Integer reorderQuantity, String locationCode) {
-        
+    public void updatePartially(Integer currentStock, Integer lowStockThreshold, Boolean isTrackingEnabled,
+        Boolean isBackorderAllowed, Integer minOrderQuantity, Integer maxOrderQuantity,
+        Integer reorderPoint, Integer reorderQuantity, String locationCode) {
+
         // null이 아닌 필드들만 업데이트
         if (currentStock != null) {
             // 현재 재고 업데이트 시 사용 가능 재고와 전체 재고 모두 업데이트
@@ -266,36 +293,9 @@ public class ProductInventory {
         if (locationCode != null) {
             this.locationCode = locationCode;
         }
-        
+
         this.lastUpdatedAt = LocalDateTime.now();
         this.versionNumber++;
-    }
-
-    public static ProductInventory reconstitute(Long id, Long productId, Long productVariantId,
-        Integer availableQuantity, Integer reservedQuantity, Integer totalQuantity, Integer lowStockThreshold,
-        Boolean isTrackingEnabled, Boolean isBackorderAllowed,
-        Integer minOrderQuantity, Integer maxOrderQuantity, Integer reorderPoint,
-        Integer reorderQuantity, String locationCode, Long versionNumber,
-        LocalDateTime lastUpdatedAt, LocalDateTime createdAt) {
-        ProductInventory inventory = new ProductInventory();
-        inventory.id = id;
-        inventory.productId = productId;
-        inventory.productVariantId = productVariantId;
-        inventory.availableQuantity = availableQuantity;
-        inventory.reservedQuantity = reservedQuantity;
-        inventory.totalQuantity = totalQuantity;
-        inventory.lowStockThreshold = lowStockThreshold;
-        inventory.isTrackingEnabled = isTrackingEnabled;
-        inventory.isBackorderAllowed = isBackorderAllowed;
-        inventory.minOrderQuantity = minOrderQuantity;
-        inventory.maxOrderQuantity = maxOrderQuantity;
-        inventory.reorderPoint = reorderPoint;
-        inventory.reorderQuantity = reorderQuantity;
-        inventory.locationCode = locationCode;
-        inventory.versionNumber = versionNumber;
-        inventory.lastUpdatedAt = lastUpdatedAt;
-        inventory.createdAt = createdAt;
-        return inventory;
     }
 
 }

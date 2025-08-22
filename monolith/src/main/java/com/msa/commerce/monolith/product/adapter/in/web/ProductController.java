@@ -37,10 +37,8 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(
-        @PathVariable("id") Long productId,
+    public ResponseEntity<ProductResponse> updateProduct(@PathVariable("id") Long productId,
         @Valid @RequestBody ProductUpdateRequest request) {
-
         ProductUpdateCommand updateCommand = productWebMapper.toUpdateCommand(productId, request);
 
         return ResponseEntity.ok(productUpdateUseCase.updateProduct(updateCommand));

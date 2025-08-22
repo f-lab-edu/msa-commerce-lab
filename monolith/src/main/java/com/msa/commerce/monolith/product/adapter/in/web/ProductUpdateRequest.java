@@ -1,11 +1,16 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.Optional;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
@@ -207,13 +212,14 @@ public class ProductUpdateRequest {
     // 필드가 명시적으로 설정되었는지 확인하는 메소드
     public boolean hasFieldToUpdate() {
         return categoryId != null || sku != null || name != null || description != null ||
-                shortDescription != null || brand != null || model != null || price != null ||
-                comparePrice != null || costPrice != null || weight != null ||
-                productAttributes != null || visibility != null || taxClass != null ||
-                metaTitle != null || metaDescription != null || searchKeywords != null ||
-                isFeatured != null || initialStock != null || lowStockThreshold != null ||
-                isTrackingEnabled != null || isBackorderAllowed != null ||
-                minOrderQuantity != null || maxOrderQuantity != null ||
-                reorderPoint != null || reorderQuantity != null || locationCode != null;
+            shortDescription != null || brand != null || model != null || price != null ||
+            comparePrice != null || costPrice != null || weight != null ||
+            productAttributes != null || visibility != null || taxClass != null ||
+            metaTitle != null || metaDescription != null || searchKeywords != null ||
+            isFeatured != null || initialStock != null || lowStockThreshold != null ||
+            isTrackingEnabled != null || isBackorderAllowed != null ||
+            minOrderQuantity != null || maxOrderQuantity != null ||
+            reorderPoint != null || reorderQuantity != null || locationCode != null;
     }
+
 }
