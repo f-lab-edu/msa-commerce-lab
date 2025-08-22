@@ -70,7 +70,7 @@ services:
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
       CLUSTER_ID: 'N-C0eqtdRpaKACu-0s0NiA'
-    command: 
+    command:
       - bash
       - -c
       - |
