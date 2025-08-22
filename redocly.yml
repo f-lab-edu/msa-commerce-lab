@@ -1,0 +1,13 @@
+apis:
+  monolith@v1:
+    root: docs/api/monolith-openapi.yml
+
+extends:
+  - recommended
+
+rules:
+  operation-description: warn
+  no-unresolved-refs: error
+  no-server-example.com: warn
+  security-defined: off
+  no-unused-components: warn
