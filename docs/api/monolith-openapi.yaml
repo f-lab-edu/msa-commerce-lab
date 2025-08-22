@@ -193,6 +193,201 @@ paths:
                     path: "/api/v1/products"
                     status: 500
 
+  /api/v1/products/{id}:
+    put:
+      tags:
+        - Product
+      summary: 상품 수정
+      description: |
+        기존 상품의 정보를 수정합니다.
+        
+        ### 비즈니스 규칙
+        - 부분 업데이트를 지원합니다 (변경할 필드만 포함)
+        - 가격은 0.01원 이상 99,999,999.99원 이하여야 합니다
+        - SKU는 수정할 수 없습니다
+        - 빈 값("")과 null 값을 구분하여 처리합니다
+        - 변경 내역은 이력으로 관리됩니다
+        
+        ### 아키텍처
+        이 API는 헥사고날 아키텍처의 인바운드 어댑터를 통해 구현되었습니다.
+        도메인 기반 예외 처리와 글로벌 예외 핸들러를 통한 적절한 HTTP 상태 코드를 제공합니다.
+      operationId: updateProduct
+      parameters:
+        - name: id
+          in: path
+          description: 수정할 상품의 ID
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 1
+      requestBody:
+        description: 수정할 상품 정보 (부분 업데이트 지원)
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+            examples:
+              partial_update:
+                summary: 부분 업데이트 예시
+                description: 이름과 가격만 변경
+                value:
+                  name: "MacBook Pro 16 (2024)"
+                  price: 3590000
+              full_update:
+                summary: 전체 업데이트 예시
+                description: 모든 필드 변경
+                value:
+                  name: "MacBook Pro 16 (2024 Updated)"
+                  description: "최신 M3 Max 칩셋을 탑재한 MacBook Pro 16인치 2024년형"
+                  shortDescription: "2024년형 16인치 맥북 프로"
+                  brand: "Apple"
+                  model: "MacBook Pro M3 Max 2024"
+                  price: 3590000
+                  comparePrice: 3890000
+                  weight: 2.16
+                  visibility: "PUBLIC"
+                  isFeatured: true
+                  metaTitle: "MacBook Pro 16인치 2024년형"
+                  metaDescription: "Apple 최신 MacBook Pro 16인치 2024년형 모델"
+                  searchKeywords: "맥북,프로,애플,노트북,2024"
+              price_only:
+                summary: 가격만 변경
+                description: 가격 업데이트 예시
+                value:
+                  price: 3290000
+      responses:
+        '200':
+          description: 상품 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponse'
+              examples:
+                success:
+                  summary: 성공 응답 예시
+                  value:
+                    id: 1
+                    categoryId: 1
+                    sku: "MACB-12AB34CD"
+                    name: "MacBook Pro 16 (2024)"
+                    description: "최신 M3 Max 칩셋을 탑재한 MacBook Pro 16인치 2024년형"
+                    shortDescription: "2024년형 16인치 맥북 프로"
+                    brand: "Apple"
+                    model: "MacBook Pro M3 Max 2024"
+                    price: 3590000
+                    comparePrice: 3890000
+                    status: "ACTIVE"
+                    visibility: "PUBLIC"
+                    isFeatured: true
+                    availableQuantity: 45
+                    reservedQuantity: 5
+                    totalQuantity: 50
+                    versionNumber: 2
+                    createdAt: "2024-01-15T10:30:00"
+                    updatedAt: "2024-01-15T14:20:00"
+        '400':
+          description: 잘못된 요청 데이터
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validation_error:
+                  summary: 유효성 검증 실패
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+                    validationErrors:
+                      - field: "price"
+                        rejectedValue: "-100"
+                        message: "Price must be greater than 0."
+                no_changes:
+                  summary: 변경사항 없음
+                  value:
+                    message: "No fields to update provided."
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+                invalid_price:
+                  summary: 가격 범위 오류
+                  value:
+                    message: "Price must be greater than 0."
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+        '403':
+          description: 업데이트 권한 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                update_not_allowed:
+                  summary: 업데이트 권한 없음
+                  value:
+                    message: "Product update not allowed in current status"
+                    code: "PRODUCT_UPDATE_NOT_ALLOWED"
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 403
+        '404':
+          description: 상품을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                product_not_found:
+                  summary: 상품 없음
+                  value:
+                    message: "Product not found with ID: 999"
+                    code: "PRODUCT_NOT_FOUND"
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/999"
+                    status: 404
+        '409':
+          description: 중복된 데이터 또는 동시 수정 충돌
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate_name:
+                  summary: 중복된 상품명
+                  value:
+                    message: "Product name already exists: MacBook Pro 16"
+                    code: "PRODUCT_NAME_DUPLICATE"
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 409
+                version_conflict:
+                  summary: 버전 충돌 (낙관적 잠금)
+                  value:
+                    message: "Product has been modified by another user"
+                    code: "PRODUCT_VERSION_CONFLICT"
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 409
+        '500':
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                internal_error:
+                  summary: 서버 내부 오류
+                  value:
+                    message: "서버 내부 오류가 발생했습니다."
+                    timestamp: "2024-01-15T14:20:00"
+                    path: "/api/v1/products/1"
+                    status: 500
+
 components:
   schemas:
     ProductCreateRequest:
@@ -350,6 +545,102 @@ components:
           description: 창고/위치 코드
           default: "MAIN"
           example: "MAIN"
+
+    ProductUpdateRequest:
+      type: object
+      description: |
+        상품 수정 요청 스키마 (부분 업데이트 지원)
+        - 모든 필드는 선택사항입니다
+        - 빈 값("")과 null 값을 구분하여 처리합니다
+        - 제공된 필드만 업데이트됩니다
+        - SKU는 수정할 수 없습니다 (포함되어도 무시됨)
+      properties:
+        name:
+          type: string
+          maxLength: 255
+          description: 상품명
+          example: "MacBook Pro 16 (2024)"
+        description:
+          type: string
+          maxLength: 5000
+          description: 상품 설명
+          example: "최신 M3 Max 칩셋을 탑재한 MacBook Pro 16인치 2024년형"
+        shortDescription:
+          type: string
+          maxLength: 500
+          description: 짧은 설명
+          example: "2024년형 16인치 맥북 프로"
+        brand:
+          type: string
+          maxLength: 100
+          description: 브랜드명
+          example: "Apple"
+        model:
+          type: string
+          maxLength: 100
+          description: 모델명
+          example: "MacBook Pro M3 Max 2024"
+        price:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 99999999.99
+          description: 가격 (원)
+          example: 3590000
+        comparePrice:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: 비교가격 (할인 전 원가)
+          example: 3890000
+        costPrice:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: 원가
+          example: 2600000
+        weight:
+          type: number
+          format: decimal
+          minimum: 0.01
+          description: 무게 (kg)
+          example: 2.16
+        productAttributes:
+          type: string
+          description: 상품 속성 (JSON 형태)
+          example: '{"color": "Space Gray", "storage": "1TB", "memory": "32GB"}'
+        visibility:
+          type: string
+          maxLength: 20
+          description: 공개 상태
+          enum: ["PUBLIC", "PRIVATE", "HIDDEN"]
+          example: "PUBLIC"
+        taxClass:
+          type: string
+          maxLength: 50
+          description: 세금 분류
+          example: "STANDARD"
+        metaTitle:
+          type: string
+          maxLength: 255
+          description: SEO 제목
+          example: "MacBook Pro 16인치 2024년형"
+        metaDescription:
+          type: string
+          maxLength: 500
+          description: SEO 설명
+          example: "Apple 최신 MacBook Pro 16인치 2024년형 모델"
+        searchKeywords:
+          type: string
+          maxLength: 1000
+          description: 검색 키워드
+          example: "맥북,프로,애플,노트북,2024"
+        isFeatured:
+          type: boolean
+          description: 추천 상품 여부
+          example: true
+        # 재고 관련 필드는 별도 API로 관리 (업데이트 API에서는 제외)
+        # 상태 변경은 별도 API로 관리 (업데이트 API에서는 제외)
 
     ProductResponse:
       type: object
