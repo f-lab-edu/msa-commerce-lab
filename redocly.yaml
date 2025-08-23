@@ -1,6 +1,6 @@
 apis:
   monolith@v1:
-    root: docs/api/monolith-openapi.yml
+    root: docs/api-specs/monolith-openapi.yml
 
 extends:
   - recommended
