@@ -1,5 +1,10 @@
 # MSA Commerce Lab .gitignore
 
+### API Documentation (Generated) ###
+# Generated API documentation files
+docs/generated/
+build/api-docs/
+
 ### Java ###
 # Compiled class files
 *.class
@@ -172,6 +177,3 @@ package-lock.json
 
 ### Docker ###
 .dockerignore
-
-### Documentation ###
-docs/generated/
