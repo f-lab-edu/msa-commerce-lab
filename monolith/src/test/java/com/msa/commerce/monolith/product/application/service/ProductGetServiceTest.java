@@ -1,12 +1,9 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,28 +32,31 @@ class ProductGetServiceTest {
 
     @Mock
     private ProductRepository productRepository;
-    
+
     @Mock
     private ProductInventoryRepository inventoryRepository;
-    
+
     @Mock
     private ProductViewCountPort viewCountPort;
-    
+
     @Mock
     private ProductResponseMapper responseMapper;
-    
+
     @InjectMocks
     private ProductGetService productGetService;
-    
+
     private Product activeProduct;
+
     private Product archivedProduct;
+
     private ProductInventory inventory;
+
     private ProductResponse productResponse;
-    
+
     @BeforeEach
     void setUp() {
         LocalDateTime now = LocalDateTime.now();
-        
+
         activeProduct = Product.reconstitute(
             1L, 1L, "TEST-SKU-001", "Test Product", "Test Description",
             "Short desc", "Test Brand", "Test Model", new BigDecimal("100.00"),
@@ -64,7 +64,7 @@ class ProductGetServiceTest {
             "{}", ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
             "Meta Title", "Meta Description", "test,product", true, now, now
         );
-        
+
         archivedProduct = Product.reconstitute(
             2L, 1L, "TEST-SKU-002", "Archived Product", "Archived Description",
             "Archived short desc", "Test Brand", "Test Model", new BigDecimal("100.00"),
@@ -72,10 +72,22 @@ class ProductGetServiceTest {
             "{}", ProductStatus.ARCHIVED, "PUBLIC", "STANDARD",
             "Meta Title", "Meta Description", "test,archived", false, now, now
         );
-        
-        inventory = ProductInventory.create(1L, 100, 10, true, false,
-            1, 999, 10, 50, "MAIN");
-        
+
+        inventory = ProductInventory.builder()
+            .productId(1L)
+            .availableQuantity(100)
+            .reservedQuantity(0)
+            .totalQuantity(100)
+            .lowStockThreshold(10)
+            .isTrackingEnabled(true)
+            .isBackorderAllowed(false)
+            .minOrderQuantity(1)
+            .maxOrderQuantity(999)
+            .reorderPoint(10)
+            .reorderQuantity(50)
+            .locationCode("MAIN")
+            .build();
+
         productResponse = ProductResponse.builder()
             .id(1L)
             .name("Test Product")
@@ -84,7 +96,7 @@ class ProductGetServiceTest {
             .availableQuantity(100)
             .build();
     }
-    
+
     @Test
     @DisplayName("정상적인 상품 조회가 성공해야 한다")
     void getProduct_Success() {
@@ -92,19 +104,19 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         given(inventoryRepository.findByProductId(productId)).willReturn(Optional.of(inventory));
-        given(responseMapper.toResponse(activeProduct, inventory)).willReturn(productResponse);
-        
+        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+
         // When
         ProductResponse result = productGetService.getProduct(productId);
-        
+
         // Then
         assertThat(result).isEqualTo(productResponse);
         then(productRepository).should(times(1)).findById(productId);
         then(inventoryRepository).should(times(1)).findByProductId(productId);
-        then(responseMapper).should(times(1)).toResponse(activeProduct, inventory);
+        then(responseMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
-    
+
     @Test
     @DisplayName("조회수 증가 없이 상품 조회가 성공해야 한다")
     void getProduct_WithoutViewCountIncrement_Success() {
@@ -112,50 +124,50 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         given(inventoryRepository.findByProductId(productId)).willReturn(Optional.of(inventory));
-        given(responseMapper.toResponse(activeProduct, inventory)).willReturn(productResponse);
-        
+        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+
         // When
         ProductResponse result = productGetService.getProduct(productId, false);
-        
+
         // Then
         assertThat(result).isEqualTo(productResponse);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
-    
+
     @Test
     @DisplayName("존재하지 않는 상품 조회 시 예외가 발생해야 한다")
     void getProduct_NotFound_ThrowsException() {
         // Given
         Long productId = 999L;
         given(productRepository.findById(productId)).willReturn(Optional.empty());
-        
+
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
-        
+
         then(inventoryRepository).should(never()).findByProductId(any());
-        then(responseMapper).should(never()).toResponse(any(), any());
+        then(responseMapper).should(never()).toResponse(any());
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
-    
+
     @Test
     @DisplayName("삭제된(ARCHIVED) 상품 조회 시 예외가 발생해야 한다")
     void getProduct_ArchivedProduct_ThrowsException() {
         // Given
         Long productId = 2L;
         given(productRepository.findById(productId)).willReturn(Optional.of(archivedProduct));
-        
+
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
-        
+
         then(inventoryRepository).should(never()).findByProductId(any());
-        then(responseMapper).should(never()).toResponse(any(), any());
+        then(responseMapper).should(never()).toResponse(any());
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
-    
+
     @Test
     @DisplayName("재고 정보가 없는 상품 조회가 성공해야 한다")
     void getProduct_WithoutInventory_Success() {
@@ -163,14 +175,15 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         given(inventoryRepository.findByProductId(productId)).willReturn(Optional.empty());
-        given(responseMapper.toResponse(activeProduct, null)).willReturn(productResponse);
-        
+        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+
         // When
         ProductResponse result = productGetService.getProduct(productId);
-        
+
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(responseMapper).should(times(1)).toResponse(activeProduct, null);
+        then(responseMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
+
 }
