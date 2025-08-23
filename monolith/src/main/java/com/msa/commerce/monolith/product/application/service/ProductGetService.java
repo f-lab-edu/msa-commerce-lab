@@ -25,8 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductGetService implements ProductGetUseCase {
 
     private final ProductRepository productRepository;
+
     private final ProductInventoryRepository inventoryRepository;
+
     private final ProductViewCountPort viewCountPort;
+
     private final ProductResponseMapper responseMapper;
 
     @Override
@@ -35,31 +38,26 @@ public class ProductGetService implements ProductGetUseCase {
     }
 
     @Override
-    @Cacheable(value = ProductCacheConfig.PRODUCT_CACHE, key = "#productId", 
-               condition = "#increaseViewCount == false")
+    @Cacheable(value = ProductCacheConfig.PRODUCT_CACHE, key = "#productId",
+        condition = "#increaseViewCount == false")
     public ProductResponse getProduct(Long productId, boolean increaseViewCount) {
-        log.debug("Getting product with ID: {}, increaseViewCount: {}", productId, increaseViewCount);
-        
         // 1. 상품 기본 정보 조회
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> {
-                    log.warn("Product not found with ID: {}", productId);
-                    return new ResourceNotFoundException("Product not found with id: " + productId);
-                });
-        
+            .orElseThrow(
+                () -> new ResourceNotFoundException(String.format("Product not found with id: %d", productId)));
+
         // 2. 삭제된 상품 필터링 (ARCHIVED 상태 제외)
         if (ProductStatus.ARCHIVED.equals(product.getStatus())) {
-            log.warn("Attempted to access archived product with ID: {}", productId);
-            throw new ResourceNotFoundException("Product not found with id: " + productId);
+            throw new ResourceNotFoundException(String.format("Product not found with id: %d", productId));
         }
-        
+
         // 3. 재고 정보 조회
         ProductInventory inventory = inventoryRepository.findByProductId(productId)
-                .orElse(null);
-        
+            .orElse(null);
+
         // 4. 응답 객체 생성
-        ProductResponse response = responseMapper.toResponse(product, inventory);
-        
+        ProductResponse response = responseMapper.toResponse(product);
+
         // 5. 비동기 조회수 증가 (캐시된 응답이 아닌 경우에만)
         if (increaseViewCount) {
             try {
@@ -70,8 +68,9 @@ public class ProductGetService implements ProductGetUseCase {
                 log.error("Failed to increment view count for product ID: {}", productId, e);
             }
         }
-        
+
         log.debug("Successfully retrieved product with ID: {}", productId);
         return response;
     }
+
 }
