@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
@@ -37,6 +38,9 @@ class ProductControllerUpdateTest {
     private ProductCreateUseCase productCreateUseCase;
 
     @Mock
+    private ProductGetUseCase productGetUseCase;
+
+    @Mock
     private ProductUpdateUseCase productUpdateUseCase;
 
     @Mock
@@ -45,7 +49,7 @@ class ProductControllerUpdateTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }

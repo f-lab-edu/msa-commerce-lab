@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
@@ -35,13 +36,16 @@ class ProductControllerTest {
     private ProductCreateUseCase productCreateUseCase;
 
     @Mock
+    private ProductGetUseCase productGetUseCase;
+
+    @Mock
     private ProductUpdateUseCase productUpdateUseCase;
 
     @BeforeEach
     void setUp() {
         ProductWebMapper productWebMapper = new ProductWebMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productUpdateUseCase, productWebMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }
