@@ -2,19 +2,10 @@ package com.msa.commerce.common.monitoring;
 
 import java.time.LocalDateTime;
 
-import lombok.Builder;
-import lombok.Getter;
+public record CacheMetrics(long hits, long misses, double hitRate, LocalDateTime timestamp) {
 
-@Getter
-@Builder
-public class CacheMetrics {
-
-    private final long hits;
-
-    private final long misses;
-
-    private final double hitRate;
-
-    private final LocalDateTime timestamp;
+    public static CacheMetrics withTimestampNow(long hits, long misses, double hitRate) {
+        return new CacheMetrics(hits, misses, hitRate, LocalDateTime.now());
+    }
 
 }
