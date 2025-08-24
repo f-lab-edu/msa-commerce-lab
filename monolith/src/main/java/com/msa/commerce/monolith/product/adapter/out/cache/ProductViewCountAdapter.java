@@ -44,6 +44,28 @@ public class ProductViewCountAdapter implements ProductViewCountPort {
         }
     }
 
+    @Override
+    public Long getViewCount(Long productId) {
+        try {
+            String key = getViewCountKey(productId);
+            Object value = redisTemplate.opsForValue().get(key);
+            
+            if (value == null) {
+                return 0L;
+            }
+            
+            if (value instanceof Number) {
+                return ((Number) value).longValue();
+            }
+            
+            return Long.parseLong(value.toString());
+            
+        } catch (Exception e) {
+            log.error("Failed to get view count for product {}", productId, e);
+            return 0L;
+        }
+    }
+
     private String getViewCountKey(Long productId) {
         return VIEW_COUNT_KEY_PREFIX + productId;
     }
