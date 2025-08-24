@@ -189,6 +189,8 @@ class LoggingFilterTest {
     @Test
     @DisplayName("Should extract client IP from X-Forwarded-For header")
     void shouldExtractClientIpFromXForwardedForHeader() throws Exception {
+        final String clientIp = "192.168.1.1";
+
         // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod("GET");
@@ -206,7 +208,7 @@ class LoggingFilterTest {
         // Then
         verify(objectMapper, atLeast(1)).writeValueAsString(argThat(logEntry -> {
             if (logEntry instanceof RequestLog requestLog) {
-                return "192.168.1.1".equals(requestLog.getClientIp());
+                return clientIp.equals(requestLog.getClientIp());
             }
             return true;
         }));
