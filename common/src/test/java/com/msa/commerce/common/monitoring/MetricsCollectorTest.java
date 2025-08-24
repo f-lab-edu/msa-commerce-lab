@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @DisplayName("MetricsCollector Tests")
 class MetricsCollectorTest {
 
-    @Mock(lenient = true)
+    @Mock
     private ObjectMapper objectMapper;
 
     private MetricsCollector metricsCollector;
@@ -25,7 +25,7 @@ class MetricsCollectorTest {
     @BeforeEach
     void setUp() throws Exception {
         metricsCollector = new MetricsCollector(objectMapper);
-        when(objectMapper.writeValueAsString(any())).thenReturn("{\"test\":\"json\"}");
+        lenient().when(objectMapper.writeValueAsString(any())).thenReturn("{\"test\":\"json\"}");
     }
 
     @Test
@@ -134,7 +134,7 @@ class MetricsCollectorTest {
         // Given
         when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON error"));
 
-        // When & Then - should not throw exception
+        // When & Then
         assertDoesNotThrow(() -> {
             metricsCollector.recordApiCall("GET", "/api/products", 200, 150);
             metricsCollector.recordCacheHit();
@@ -191,6 +191,201 @@ class MetricsCollectorTest {
         // Then
         assertEquals(threadCount * callsPerThread, metricsCollector.getApiCallCount("GET /api/test"));
         assertEquals(50.0, metricsCollector.getCacheHitRate(), 0.01);
+    }
+
+    @Test
+    @DisplayName("Should trigger HIGH_ERROR_RATE alert when error rate exceeds 5%")
+    void shouldTriggerHighErrorRateAlert() throws Exception {
+        // Given
+        String method = "POST";
+        String uri = "/api/orders";
+        String endpoint = method + " " + uri;
+
+        for (int i = 0; i < 94; i++) {
+            metricsCollector.recordApiCall(method, uri, 200, 100);
+        }
+
+        // When
+        for (int i = 0; i < 6; i++) {
+            metricsCollector.recordApiCall(method, uri, 400, 100);
+        }
+
+        // Then
+        double errorRate = metricsCollector.getErrorRate(endpoint);
+        assertTrue(errorRate > 5.0);
+        assertEquals(6.0, errorRate, 0.01);
+
+        verify(objectMapper, atLeast(100)).writeValueAsString(any());
+    }
+
+    @Test
+    @DisplayName("Should trigger SLOW_RESPONSE alert when response time exceeds 3000ms")
+    void shouldTriggerSlowResponseAlert() throws Exception {
+        // Given
+        String method = "GET";
+        String uri = "/api/slow-endpoint";
+        long slowDuration = 5000L; // 5 seconds
+
+        // When
+        metricsCollector.recordApiCall(method, uri, 200, slowDuration);
+
+        // Then
+        verify(objectMapper, atLeast(2)).writeValueAsString(any()); // One for metrics, one for alert
+    }
+
+    @Test
+    @DisplayName("Should trigger SERVER_ERROR alert for 5xx status codes")
+    void shouldTriggerServerErrorAlert() throws Exception {
+        // Given
+        String method = "GET";
+        String uri = "/api/failing-endpoint";
+        int serverErrorCode = 500;
+
+        // When
+        metricsCollector.recordApiCall(method, uri, serverErrorCode, 100);
+
+        // Then
+        verify(objectMapper, atLeast(2)).writeValueAsString(any()); // One for metrics, one for alert
+    }
+
+    @Test
+    @DisplayName("Should handle cache metrics logging errors gracefully")
+    void shouldHandleCacheMetricsLoggingErrorsGracefully() throws Exception {
+        // Given
+        when(objectMapper.writeValueAsString(any(CacheMetrics.class)))
+            .thenThrow(new RuntimeException("Cache metrics JSON error"));
+
+        // When & Then - should not throw exception
+        assertDoesNotThrow(() -> {
+            metricsCollector.recordCacheHit();
+            metricsCollector.recordCacheMiss();
+        });
+    }
+
+    @Test
+    @DisplayName("Should handle alert logging errors gracefully")
+    void shouldHandleAlertLoggingErrorsGracefully() throws Exception {
+        // Given
+        when(objectMapper.writeValueAsString(any(Alert.class)))
+            .thenThrow(new RuntimeException("Alert JSON error"));
+
+        // When & Then
+        assertDoesNotThrow(() -> {
+            metricsCollector.recordApiCall("GET", "/api/test", 500, 100); // Server error
+            metricsCollector.recordApiCall("GET", "/api/test", 200, 5000); // Slow response
+        });
+    }
+
+    @Test
+    @DisplayName("Should handle ResponseTimeStats edge cases correctly")
+    void shouldHandleResponseTimeStatsEdgeCases() {
+        // Given
+        String method = "PUT";
+        String uri = "/api/edge-cases";
+        String endpoint = method + " " + uri;
+
+        // When
+        metricsCollector.recordApiCall(method, uri, 200, 150);
+
+        // Then
+        var stats = metricsCollector.getResponseTimeStats(endpoint);
+        assertNotNull(stats);
+        assertEquals(1, stats.getCount());
+        assertEquals(150.0, stats.getAverage(), 0.01);
+        assertEquals(150, stats.getMin());
+        assertEquals(150, stats.getMax());
+    }
+
+    @Test
+    @DisplayName("Should return null for non-existent endpoint stats")
+    void shouldReturnNullForNonExistentEndpointStats() {
+        // When
+        var stats = metricsCollector.getResponseTimeStats("NONEXISTENT /api/fake");
+
+        // Then
+        assertNull(stats);
+    }
+
+    @Test
+    @DisplayName("Should trigger multiple alerts for same request")
+    void shouldTriggerMultipleAlertsForSameRequest() throws Exception {
+        // Given
+        String method = "POST";
+        String uri = "/api/problematic";
+
+        for (int i = 0; i < 19; i++) {
+            metricsCollector.recordApiCall(method, uri, 200, 100);
+        }
+
+        // When
+        metricsCollector.recordApiCall(method, uri, 500, 4000);
+
+        // Then
+        verify(objectMapper, atLeast(22)).writeValueAsString(any()); // 20 metrics + 1 slow alert + 1 server error alert
+    }
+
+    @Test
+    @DisplayName("Should handle extreme response times correctly")
+    void shouldHandleExtremeResponseTimesCorrectly() {
+        // Given
+        String method = "GET";
+        String uri = "/api/extreme";
+        String endpoint = method + " " + uri;
+
+        // When
+        metricsCollector.recordApiCall(method, uri, 200, 1); // 1ms
+        metricsCollector.recordApiCall(method, uri, 200, Long.MAX_VALUE / 1000); // Very large but reasonable
+
+        // Then
+        var stats = metricsCollector.getResponseTimeStats(endpoint);
+        assertNotNull(stats);
+        assertEquals(2, stats.getCount());
+        assertEquals(1, stats.getMin());
+        assertTrue(stats.getMax() > 1000000); // Very large number
+        assertTrue(stats.getAverage() > 500000); // Should be very large average
+    }
+
+    @Test
+    @DisplayName("Should handle boundary error rate cases")
+    void shouldHandleBoundaryErrorRateCases() {
+        // Given
+        String method = "DELETE";
+        String uri = "/api/boundary";
+        String endpoint = method + " " + uri;
+
+        // Test exactly 5% error rate (should not trigger alert)
+        for (int i = 0; i < 95; i++) {
+            metricsCollector.recordApiCall(method, uri, 200, 100);
+        }
+        for (int i = 0; i < 5; i++) {
+            metricsCollector.recordApiCall(method, uri, 400, 100);
+        }
+
+        // Then
+        assertEquals(5.0, metricsCollector.getErrorRate(endpoint), 0.01);
+
+        // When
+        metricsCollector.recordApiCall(method, uri, 400, 100);
+
+        // Then
+        assertTrue(metricsCollector.getErrorRate(endpoint) > 5.0);
+    }
+
+    @Test
+    @DisplayName("Should handle boundary response time cases")
+    void shouldHandleBoundaryResponseTimeCases() throws Exception {
+        // Given
+        String method = "PATCH";
+        String uri = "/api/timing";
+
+        // Test exactly 3000ms (should not trigger alert)
+        metricsCollector.recordApiCall(method, uri, 200, 3000);
+
+        // Test 3001ms (should trigger alert)
+        metricsCollector.recordApiCall(method, uri, 200, 3001);
+
+        // Verify both metrics and alert were logged
+        verify(objectMapper, atLeast(3)).writeValueAsString(any()); // 2 metrics + 1 alert
     }
 
 }
