@@ -25,6 +25,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.domain.ProductCategory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
@@ -46,10 +47,16 @@ class ProductControllerUpdateTest {
     @Mock
     private ProductWebMapper productWebMapper;
 
+    @Mock
+    private ProductSearchUseCase productSearchUseCase;
+
+    @Mock
+    private ProductSearchWebMapper productSearchWebMapper;
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productWebMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productSearchUseCase, productWebMapper, productSearchWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }
