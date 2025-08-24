@@ -2,7 +2,7 @@ dependencies {
     implementation(project(":common"))
 
     // Service-specific dependencies
-    implementation(BuildDependencies.getSpringBootStarterDataRedis())
+    // Redis dependency moved to common module
     implementation(BuildDependencies.getSpringKafka())
 
     // Database connector

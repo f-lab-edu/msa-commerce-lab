@@ -147,63 +147,57 @@ public class Product {
         String metaTitle, String metaDescription, String searchKeywords,
         Boolean isFeatured) {
 
-        // null이 아닌 필드들만 업데이트
-        if (categoryId != null) {
-            this.categoryId = categoryId;
-        }
-        if (sku != null) {
-            this.sku = sku;
-        }
-        if (name != null) {
-            this.name = name;
-        }
-        if (description != null) {
-            this.description = description;
-        }
-        if (shortDescription != null) {
-            this.shortDescription = shortDescription;
-        }
-        if (brand != null) {
-            this.brand = brand;
-        }
-        if (model != null) {
-            this.model = model;
-        }
-        if (price != null) {
-            this.price = price;
-        }
-        if (comparePrice != null) {
-            this.comparePrice = comparePrice;
-        }
-        if (costPrice != null) {
-            this.costPrice = costPrice;
-        }
-        if (weight != null) {
-            this.weight = weight;
-        }
-        if (productAttributes != null) {
-            this.productAttributes = productAttributes;
-        }
-        if (visibility != null) {
-            this.visibility = visibility;
-        }
-        if (taxClass != null) {
-            this.taxClass = taxClass;
-        }
-        if (metaTitle != null) {
-            this.metaTitle = metaTitle;
-        }
-        if (metaDescription != null) {
-            this.metaDescription = metaDescription;
-        }
-        if (searchKeywords != null) {
-            this.searchKeywords = searchKeywords;
-        }
-        if (isFeatured != null) {
-            this.isFeatured = isFeatured;
-        }
+        updateBasicFields(categoryId, sku, name, description, shortDescription);
+        updateBrandAndModelFields(brand, model);
+        updatePriceFields(price, comparePrice, costPrice, weight);
+        updateAttributesAndVisibility(productAttributes, visibility, taxClass);
+        updateSeoFields(metaTitle, metaDescription, searchKeywords);
+        updateFeatureFlag(isFeatured);
 
         this.updatedAt = LocalDateTime.now();
+    }
+
+    private void updateBasicFields(Long categoryId, String sku, String name, String description,
+        String shortDescription) {
+        updateFieldIfNotNull(categoryId, value -> this.categoryId = value);
+        updateFieldIfNotNull(sku, value -> this.sku = value);
+        updateFieldIfNotNull(name, value -> this.name = value);
+        updateFieldIfNotNull(description, value -> this.description = value);
+        updateFieldIfNotNull(shortDescription, value -> this.shortDescription = value);
+    }
+
+    private void updateBrandAndModelFields(String brand, String model) {
+        updateFieldIfNotNull(brand, value -> this.brand = value);
+        updateFieldIfNotNull(model, value -> this.model = value);
+    }
+
+    private void updatePriceFields(BigDecimal price, BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight) {
+        updateFieldIfNotNull(price, value -> this.price = value);
+        updateFieldIfNotNull(comparePrice, value -> this.comparePrice = value);
+        updateFieldIfNotNull(costPrice, value -> this.costPrice = value);
+        updateFieldIfNotNull(weight, value -> this.weight = value);
+    }
+
+    private void updateAttributesAndVisibility(String productAttributes, String visibility, String taxClass) {
+        updateFieldIfNotNull(productAttributes, value -> this.productAttributes = value);
+        updateFieldIfNotNull(visibility, value -> this.visibility = value);
+        updateFieldIfNotNull(taxClass, value -> this.taxClass = value);
+    }
+
+    private void updateSeoFields(String metaTitle, String metaDescription, String searchKeywords) {
+        updateFieldIfNotNull(metaTitle, value -> this.metaTitle = value);
+        updateFieldIfNotNull(metaDescription, value -> this.metaDescription = value);
+        updateFieldIfNotNull(searchKeywords, value -> this.searchKeywords = value);
+    }
+
+    private void updateFeatureFlag(Boolean isFeatured) {
+        updateFieldIfNotNull(isFeatured, value -> this.isFeatured = value);
+    }
+
+    private <T> void updateFieldIfNotNull(T value, java.util.function.Consumer<T> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
     }
 
     // 상품이 업데이트 가능한 상태인지 확인

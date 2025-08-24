@@ -51,4 +51,5 @@ public enum Plugins {
     public String toString() {
         return hasVersion() ? id + ":" + version.getVersion() : id;
     }
+
 }

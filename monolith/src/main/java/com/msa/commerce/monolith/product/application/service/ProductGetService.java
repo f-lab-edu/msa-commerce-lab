@@ -10,7 +10,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
-import com.msa.commerce.monolith.product.config.ProductCacheConfig;
+import com.msa.commerce.common.config.RedisConfig;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductInventory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
@@ -38,7 +38,7 @@ public class ProductGetService implements ProductGetUseCase {
     }
 
     @Override
-    @Cacheable(value = ProductCacheConfig.PRODUCT_CACHE, key = "#productId",
+    @Cacheable(value = RedisConfig.PRODUCT_CACHE, key = "#productId",
         condition = "#increaseViewCount == false")
     public ProductResponse getProduct(Long productId, boolean increaseViewCount) {
         // 1. 상품 기본 정보 조회

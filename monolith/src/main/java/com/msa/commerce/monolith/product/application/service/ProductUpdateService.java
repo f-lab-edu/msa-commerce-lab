@@ -34,137 +34,149 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     public ProductResponse updateProduct(ProductUpdateCommand command) {
         log.info("Updating product with ID: {}", command.getProductId());
 
-        // 1. 명령 유효성 검증
         command.validate();
+        Product existingProduct = findAndValidateProduct(command.getProductId());
+        validateProductUpdatable(existingProduct, command.getProductId());
+        validateUniqueConstraints(command, existingProduct);
 
-        // 2. 기존 상품 조회
-        Product existingProduct = productRepository.findById(command.getProductId())
-            .orElseThrow(() -> new ResourceNotFoundException(
-                "Product not found with ID: " + command.getProductId(),
-                ErrorCode.PRODUCT_NOT_FOUND.getCode()));
-
-        // 3. 상품 수정 가능 상태 검증
-        if (!existingProduct.isUpdatable()) {
-            throw ProductUpdateNotAllowedException.productNotUpdatable(
-                command.getProductId(), existingProduct.getStatus().toString());
-        }
-
-        // 4. SKU 중복 검증 (SKU가 변경되는 경우)
-        if (command.getSkuOptional().isPresent()) {
-            String newSku = command.getSkuOptional().get();
-            if (!existingProduct.getSku().equals(newSku)) {
-                if (productRepository.existsBySku(newSku)) {
-                    throw new DuplicateResourceException(
-                        "SKU already exists: " + newSku,
-                        ErrorCode.PRODUCT_SKU_DUPLICATE.getCode());
-                }
-            }
-        }
-
-        // 5. 상품명 중복 검증 (상품명이 변경되는 경우)
-        if (command.getNameOptional().isPresent()) {
-            String newName = command.getNameOptional().get();
-            if (!existingProduct.getName().equals(newName)) {
-                if (productRepository.existsByName(newName)) {
-                    throw new DuplicateResourceException(
-                        "Product name already exists: " + newName,
-                        ErrorCode.PRODUCT_NAME_DUPLICATE.getCode());
-                }
-            }
-        }
-
-        // 6. 상품 정보 부분 업데이트
-        existingProduct.updatePartially(
-            command.getCategoryId(),
-            command.getSku(),
-            command.getName(),
-            command.getDescription(),
-            command.getShortDescription(),
-            command.getBrand(),
-            command.getModel(),
-            command.getPrice(),
-            command.getComparePrice(),
-            command.getCostPrice(),
-            command.getWeight(),
-            command.getProductAttributes(),
-            command.getVisibility(),
-            command.getTaxClass(),
-            command.getMetaTitle(),
-            command.getMetaDescription(),
-            command.getSearchKeywords(),
-            command.getIsFeatured()
-        );
-
-        // 7. 상품 저장
+        updateProductData(existingProduct, command);
         Product updatedProduct = productRepository.save(existingProduct);
-
-        // 8. 재고 정보 업데이트 (재고 관련 필드가 제공된 경우)
-        if (hasInventoryUpdates(command)) {
-            updateProductInventory(updatedProduct.getId(), command);
-        }
-
-        // 9. 캐시 무효화 처리
-        invalidateProductCache(updatedProduct.getId());
-
-        // 10. 변경 이력 로깅 (추후 변경 이력 테이블 구현 시 활용)
-        logProductChanges(existingProduct, updatedProduct, command);
+        
+        performPostUpdateOperations(updatedProduct, command, existingProduct);
 
         log.info("Product updated successfully with ID: {}", updatedProduct.getId());
-
         return productResponseMapper.toResponse(updatedProduct);
     }
 
+    private Product findAndValidateProduct(Long productId) {
+        return productRepository.findById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Product not found with ID: " + productId,
+                ErrorCode.PRODUCT_NOT_FOUND.getCode()));
+    }
+
+    private void validateProductUpdatable(Product product, Long productId) {
+        if (!product.isUpdatable()) {
+            throw ProductUpdateNotAllowedException.productNotUpdatable(
+                productId, product.getStatus().toString());
+        }
+    }
+
+    private void validateUniqueConstraints(ProductUpdateCommand command, Product existingProduct) {
+        validateSkuUnique(command, existingProduct);
+        validateNameUnique(command, existingProduct);
+    }
+
+    private void validateSkuUnique(ProductUpdateCommand command, Product existingProduct) {
+        command.getSkuOptional().ifPresent(newSku -> {
+            if (!existingProduct.getSku().equals(newSku) && productRepository.existsBySku(newSku)) {
+                throw new DuplicateResourceException(
+                    "SKU already exists: " + newSku,
+                    ErrorCode.PRODUCT_SKU_DUPLICATE.getCode());
+            }
+        });
+    }
+
+    private void validateNameUnique(ProductUpdateCommand command, Product existingProduct) {
+        command.getNameOptional().ifPresent(newName -> {
+            if (!existingProduct.getName().equals(newName) && productRepository.existsByName(newName)) {
+                throw new DuplicateResourceException(
+                    "Product name already exists: " + newName,
+                    ErrorCode.PRODUCT_NAME_DUPLICATE.getCode());
+            }
+        });
+    }
+
+    private void updateProductData(Product product, ProductUpdateCommand command) {
+        product.updatePartially(
+            command.getCategoryId(), command.getSku(), command.getName(),
+            command.getDescription(), command.getShortDescription(), command.getBrand(),
+            command.getModel(), command.getPrice(), command.getComparePrice(),
+            command.getCostPrice(), command.getWeight(), command.getProductAttributes(),
+            command.getVisibility(), command.getTaxClass(), command.getMetaTitle(),
+            command.getMetaDescription(), command.getSearchKeywords(), command.getIsFeatured()
+        );
+    }
+
+    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command, Product originalProduct) {
+        updateInventoryIfNeeded(updatedProduct.getId(), command);
+        invalidateProductCache(updatedProduct.getId());
+        logProductChanges(originalProduct, updatedProduct, command);
+    }
+
+    private void updateInventoryIfNeeded(Long productId, ProductUpdateCommand command) {
+        if (hasInventoryUpdates(command)) {
+            updateProductInventory(productId, command);
+        }
+    }
+
     private boolean hasInventoryUpdates(ProductUpdateCommand command) {
+        return hasStockUpdates(command) || hasInventoryConfigUpdates(command) || hasOrderQuantityUpdates(command);
+    }
+
+    private boolean hasStockUpdates(ProductUpdateCommand command) {
         return command.getInitialStockOptional().isPresent() ||
-            command.getLowStockThresholdOptional().isPresent() ||
-            command.getIsTrackingEnabledOptional().isPresent() ||
+            command.getLowStockThresholdOptional().isPresent();
+    }
+
+    private boolean hasInventoryConfigUpdates(ProductUpdateCommand command) {
+        return command.getIsTrackingEnabledOptional().isPresent() ||
             command.getIsBackorderAllowedOptional().isPresent() ||
-            command.getMinOrderQuantityOptional().isPresent() ||
+            command.getLocationCodeOptional().isPresent();
+    }
+
+    private boolean hasOrderQuantityUpdates(ProductUpdateCommand command) {
+        return command.getMinOrderQuantityOptional().isPresent() ||
             command.getMaxOrderQuantityOptional().isPresent() ||
             command.getReorderPointOptional().isPresent() ||
-            command.getReorderQuantityOptional().isPresent() ||
-            command.getLocationCodeOptional().isPresent();
+            command.getReorderQuantityOptional().isPresent();
     }
 
     private void updateProductInventory(Long productId, ProductUpdateCommand command) {
         log.debug("Updating inventory for product ID: {}", productId);
 
-        // 기존 재고 정보 조회 또는 새로 생성
-        ProductInventory inventory = productInventoryRepository.findByProductId(productId)
-            .orElse(null);
-
+        ProductInventory inventory = productInventoryRepository.findByProductId(productId).orElse(null);
+        
         if (inventory != null) {
-            // 기존 재고 정보 업데이트
-            inventory.updatePartially(
-                command.getInitialStock(),
-                command.getLowStockThreshold(),
-                command.getIsTrackingEnabled(),
-                command.getIsBackorderAllowed(),
-                command.getMinOrderQuantity(),
-                command.getMaxOrderQuantity(),
-                command.getReorderPoint(),
-                command.getReorderQuantity(),
-                command.getLocationCode()
-            );
-            productInventoryRepository.save(inventory);
-        } else if (command.getInitialStockOptional().isPresent()) {
-            // 새로운 재고 정보 생성 (초기 재고가 제공된 경우만)
-            ProductInventory newInventory = ProductInventory.builder()
-                .productId(productId)
-                .availableQuantity(command.getInitialStock())
-                .reservedQuantity(0)
-                .totalQuantity(command.getInitialStock())
-                .lowStockThreshold(command.getLowStockThreshold())
-                .isTrackingEnabled(command.getIsTrackingEnabled())
-                .isBackorderAllowed(command.getIsBackorderAllowed())
-                .minOrderQuantity(command.getMinOrderQuantity())
-                .maxOrderQuantity(command.getMaxOrderQuantity())
-                .reorderPoint(command.getReorderPoint())
-                .reorderQuantity(command.getReorderQuantity())
-                .locationCode(command.getLocationCode())
-                .build();
+            updateExistingInventory(inventory, command);
+        } else {
+            createNewInventoryIfNeeded(productId, command);
+        }
+    }
+
+    private void updateExistingInventory(ProductInventory inventory, ProductUpdateCommand command) {
+        inventory.updatePartially(
+            command.getInitialStock(), command.getLowStockThreshold(),
+            command.getIsTrackingEnabled(), command.getIsBackorderAllowed(),
+            command.getMinOrderQuantity(), command.getMaxOrderQuantity(),
+            command.getReorderPoint(), command.getReorderQuantity(),
+            command.getLocationCode()
+        );
+        productInventoryRepository.save(inventory);
+    }
+
+    private void createNewInventoryIfNeeded(Long productId, ProductUpdateCommand command) {
+        if (command.getInitialStockOptional().isPresent()) {
+            ProductInventory newInventory = buildNewInventory(productId, command);
             productInventoryRepository.save(newInventory);
         }
+    }
+
+    private ProductInventory buildNewInventory(Long productId, ProductUpdateCommand command) {
+        return ProductInventory.builder()
+            .productId(productId)
+            .availableQuantity(command.getInitialStock())
+            .reservedQuantity(0)
+            .totalQuantity(command.getInitialStock())
+            .lowStockThreshold(command.getLowStockThreshold())
+            .isTrackingEnabled(command.getIsTrackingEnabled())
+            .isBackorderAllowed(command.getIsBackorderAllowed())
+            .minOrderQuantity(command.getMinOrderQuantity())
+            .maxOrderQuantity(command.getMaxOrderQuantity())
+            .reorderPoint(command.getReorderPoint())
+            .reorderQuantity(command.getReorderQuantity())
+            .locationCode(command.getLocationCode())
+            .build();
     }
 
     private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
@@ -178,49 +190,52 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
         StringBuilder description = new StringBuilder();
-
-        if (command.getCategoryId() != null)
-            description.append("categoryId,");
-        if (command.getSku() != null)
-            description.append("sku,");
-        if (command.getName() != null)
-            description.append("name,");
-        if (command.getDescription() != null)
-            description.append("description,");
-        if (command.getShortDescription() != null)
-            description.append("shortDescription,");
-        if (command.getBrand() != null)
-            description.append("brand,");
-        if (command.getModel() != null)
-            description.append("model,");
-        if (command.getPrice() != null)
-            description.append("price,");
-        if (command.getComparePrice() != null)
-            description.append("comparePrice,");
-        if (command.getCostPrice() != null)
-            description.append("costPrice,");
-        if (command.getWeight() != null)
-            description.append("weight,");
-        if (command.getProductAttributes() != null)
-            description.append("productAttributes,");
-        if (command.getVisibility() != null)
-            description.append("visibility,");
-        if (command.getTaxClass() != null)
-            description.append("taxClass,");
-        if (command.getMetaTitle() != null)
-            description.append("metaTitle,");
-        if (command.getMetaDescription() != null)
-            description.append("metaDescription,");
-        if (command.getSearchKeywords() != null)
-            description.append("searchKeywords,");
-        if (command.getIsFeatured() != null)
-            description.append("isFeatured,");
-
-        // 재고 관련 필드
-        if (hasInventoryUpdates(command))
-            description.append("inventory,");
-
+        
+        appendBasicFieldUpdates(description, command);
+        appendPriceFieldUpdates(description, command);
+        appendMetadataFieldUpdates(description, command);
+        appendInventoryFieldUpdates(description, command);
+        
         return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
+    }
+
+    private void appendBasicFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
+        appendFieldIfNotNull(description, command.getSku(), "sku");
+        appendFieldIfNotNull(description, command.getName(), "name");
+        appendFieldIfNotNull(description, command.getDescription(), "description");
+        appendFieldIfNotNull(description, command.getShortDescription(), "shortDescription");
+        appendFieldIfNotNull(description, command.getBrand(), "brand");
+        appendFieldIfNotNull(description, command.getModel(), "model");
+    }
+
+    private void appendPriceFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getPrice(), "price");
+        appendFieldIfNotNull(description, command.getComparePrice(), "comparePrice");
+        appendFieldIfNotNull(description, command.getCostPrice(), "costPrice");
+        appendFieldIfNotNull(description, command.getWeight(), "weight");
+    }
+
+    private void appendMetadataFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getProductAttributes(), "productAttributes");
+        appendFieldIfNotNull(description, command.getVisibility(), "visibility");
+        appendFieldIfNotNull(description, command.getTaxClass(), "taxClass");
+        appendFieldIfNotNull(description, command.getMetaTitle(), "metaTitle");
+        appendFieldIfNotNull(description, command.getMetaDescription(), "metaDescription");
+        appendFieldIfNotNull(description, command.getSearchKeywords(), "searchKeywords");
+        appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
+    }
+
+    private void appendInventoryFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        if (hasInventoryUpdates(command)) {
+            description.append("inventory,");
+        }
+    }
+
+    private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
+        if (field != null) {
+            description.append(fieldName).append(",");
+        }
     }
 
     private void invalidateProductCache(Long productId) {

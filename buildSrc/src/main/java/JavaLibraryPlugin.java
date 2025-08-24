@@ -39,6 +39,7 @@ public class JavaLibraryPlugin implements Plugin<Project> {
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_WEB.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_DATA_JPA.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_VALIDATION.getCoordinate());
+        project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_DATA_REDIS.getCoordinate());
         project.getDependencies().add("api", Dependency.MYSQL_CONNECTOR.getCoordinate());
 
         project.getDependencies().add("compileOnly", Dependency.LOMBOK.getCoordinate());
