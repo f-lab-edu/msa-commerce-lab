@@ -1,0 +1,217 @@
+package com.msa.commerce.monolith.product.application.service;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+
+import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
+import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
+import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ProductSearchService 테스트")
+class ProductSearchServiceTest {
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private ProductViewCountPort productViewCountPort;
+
+    @Mock
+    private ProductSearchMapper productSearchMapper;
+
+    @InjectMocks
+    private ProductSearchService productSearchService;
+
+    private Product testProduct1;
+    private Product testProduct2;
+    private ProductSearchCommand searchCommand;
+
+    @BeforeEach
+    void setUp() {
+        testProduct1 = Product.reconstitute(
+            1L, 1L, "TEST-001", "Test Product 1", "Test Description 1",
+            "Short Description 1", "TestBrand", "Model1", 
+            new BigDecimal("100.00"), new BigDecimal("120.00"), new BigDecimal("80.00"),
+            new BigDecimal("1.0"), null, ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
+            "SEO Title 1", "SEO Description 1", "test keywords", true,
+            LocalDateTime.now().minusDays(1), LocalDateTime.now()
+        );
+
+        testProduct2 = Product.reconstitute(
+            2L, 1L, "TEST-002", "Test Product 2", "Test Description 2",
+            "Short Description 2", "TestBrand", "Model2",
+            new BigDecimal("200.00"), new BigDecimal("250.00"), new BigDecimal("150.00"),
+            new BigDecimal("2.0"), null, ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
+            "SEO Title 2", "SEO Description 2", "test keywords", false,
+            LocalDateTime.now().minusDays(2), LocalDateTime.now()
+        );
+
+        searchCommand = ProductSearchCommand.builder()
+            .categoryId(1L)
+            .minPrice(new BigDecimal("50.00"))
+            .maxPrice(new BigDecimal("300.00"))
+            .status(ProductStatus.ACTIVE)
+            .page(0)
+            .size(20)
+            .sortBy("createdAt")
+            .sortDirection("desc")
+            .build();
+    }
+
+    @Test
+    @DisplayName("상품 검색이 정상적으로 수행된다")
+    void searchProducts_Success() {
+        // Given
+        List<Product> products = Arrays.asList(testProduct1, testProduct2);
+        Page<Product> productPage = new PageImpl<>(products);
+
+        ProductSearchResponse response1 = ProductSearchResponse.builder()
+            .id(1L)
+            .name("Test Product 1")
+            .price(new BigDecimal("100.00"))
+            .build();
+
+        ProductSearchResponse response2 = ProductSearchResponse.builder()
+            .id(2L)
+            .name("Test Product 2")
+            .price(new BigDecimal("200.00"))
+            .build();
+
+        Page<ProductSearchResponse> responsePage = new PageImpl<>(Arrays.asList(response1, response2));
+
+        ProductPageResponse pageResponse = ProductPageResponse.builder()
+            .content(Arrays.asList(response1, response2))
+            .page(0)
+            .size(20)
+            .totalElements(2L)
+            .totalPages(1)
+            .first(true)
+            .last(true)
+            .hasNext(false)
+            .hasPrevious(false)
+            .build();
+
+        given(productRepository.searchProducts(any(ProductSearchCommand.class))).willReturn(productPage);
+        given(productViewCountPort.getViewCount(anyLong())).willReturn(5L);
+        given(productSearchMapper.toSearchResponse(any(Product.class))).willReturn(response1, response2);
+        given(productSearchMapper.toPageResponse(any())).willReturn(pageResponse);
+
+        // When
+        ProductPageResponse result = productSearchService.searchProducts(searchCommand);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        assertThat(result.getTotalPages()).isEqualTo(1);
+        assertThat(result.isFirst()).isTrue();
+        assertThat(result.isLast()).isTrue();
+
+        verify(productRepository).searchProducts(searchCommand);
+        verify(productViewCountPort).getViewCount(1L);
+        verify(productViewCountPort).getViewCount(2L);
+    }
+
+    @Test
+    @DisplayName("빈 검색 결과도 정상적으로 처리된다")
+    void searchProducts_EmptyResult() {
+        // Given
+        Page<Product> emptyPage = new PageImpl<>(Arrays.asList());
+        ProductPageResponse emptyPageResponse = ProductPageResponse.builder()
+            .content(Arrays.asList())
+            .page(0)
+            .size(20)
+            .totalElements(0L)
+            .totalPages(0)
+            .first(true)
+            .last(true)
+            .hasNext(false)
+            .hasPrevious(false)
+            .build();
+
+        given(productRepository.searchProducts(any(ProductSearchCommand.class))).willReturn(emptyPage);
+        given(productSearchMapper.toPageResponse(any())).willReturn(emptyPageResponse);
+
+        // When
+        ProductPageResponse result = productSearchService.searchProducts(searchCommand);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isEmpty();
+        assertThat(result.getTotalElements()).isEqualTo(0);
+        assertThat(result.getTotalPages()).isEqualTo(0);
+        
+        verify(productRepository).searchProducts(searchCommand);
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 페이지 번호로 검색 시 예외가 발생한다")
+    void searchProducts_InvalidPage() {
+        // Given
+        ProductSearchCommand invalidCommand = ProductSearchCommand.builder()
+            .page(-1)
+            .size(20)
+            .build();
+
+        // When & Then
+        assertThatThrownBy(() -> productSearchService.searchProducts(invalidCommand))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Page must be greater than or equal to 0");
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 페이지 크기로 검색 시 예외가 발생한다")
+    void searchProducts_InvalidSize() {
+        // Given
+        ProductSearchCommand invalidCommand = ProductSearchCommand.builder()
+            .page(0)
+            .size(101)
+            .build();
+
+        // When & Then
+        assertThatThrownBy(() -> productSearchService.searchProducts(invalidCommand))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Size must be between 1 and 100");
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 가격 범위로 검색 시 예외가 발생한다")
+    void searchProducts_InvalidPriceRange() {
+        // Given
+        ProductSearchCommand invalidCommand = ProductSearchCommand.builder()
+            .minPrice(new BigDecimal("200.00"))
+            .maxPrice(new BigDecimal("100.00"))
+            .page(0)
+            .size(20)
+            .build();
+
+        // When & Then
+        assertThatThrownBy(() -> productSearchService.searchProducts(invalidCommand))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("Minimum price cannot be greater than maximum price");
+    }
+}
