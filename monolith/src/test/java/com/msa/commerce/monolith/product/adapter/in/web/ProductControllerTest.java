@@ -45,14 +45,11 @@ class ProductControllerTest {
     @Mock
     private ProductSearchUseCase productSearchUseCase;
 
-    @Mock
-    private ProductSearchWebMapper productSearchWebMapper;
-
     @BeforeEach
     void setUp() {
         ProductWebMapper productWebMapper = new ProductWebMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productSearchUseCase, productWebMapper, productSearchWebMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productSearchUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }
