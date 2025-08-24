@@ -4,8 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 
@@ -69,6 +75,48 @@ public class ProductRepositoryImpl implements ProductRepository {
             .stream()
             .map(ProductJpaEntity::toDomainEntity)
             .collect(Collectors.toList());
+    }
+
+    @Override
+    public Page<Product> searchProducts(ProductSearchCommand command) {
+        Specification<ProductJpaEntity> spec = ProductSpecification.withFilters(command);
+        Pageable pageable = createPageable(command);
+
+        Page<ProductJpaEntity> jpaEntityPage = productJpaRepository.findAll(spec, pageable);
+        
+        return jpaEntityPage.map(ProductJpaEntity::toDomainEntity);
+    }
+
+    private Pageable createPageable(ProductSearchCommand command) {
+        Sort sort = createSort(command.getSortBy(), command.getSortDirection());
+        return PageRequest.of(
+            command.getPage() != null ? command.getPage() : 0, 
+            command.getSize() != null ? command.getSize() : 20, 
+            sort
+        );
+    }
+
+    private Sort createSort(String sortBy, String sortDirection) {
+        String actualSortBy = mapSortField(sortBy);
+        Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection) 
+            ? Sort.Direction.ASC 
+            : Sort.Direction.DESC;
+        
+        return Sort.by(direction, actualSortBy);
+    }
+
+    private String mapSortField(String sortBy) {
+        if (sortBy == null) {
+            return "createdAt";
+        }
+        
+        return switch (sortBy.toLowerCase()) {
+            case "price" -> "price";
+            case "name" -> "name";
+            case "createdat", "created", "newest", "oldest" -> "createdAt";
+            case "updatedat", "updated" -> "updatedAt";
+            default -> "createdAt";
+        };
     }
 
 }
