@@ -174,9 +174,7 @@ class LoggingFilterTest {
         when(objectMapper.writeValueAsString(any())).thenThrow(new RuntimeException("JSON processing failed"));
 
         // When & Then - should not throw exception
-        assertDoesNotThrow(() -> {
-            loggingFilter.doFilterInternal(request, response, filterChain);
-        });
+        assertDoesNotThrow(() -> loggingFilter.doFilterInternal(request, response, filterChain));
 
         verify(metricsCollector, times(1)).recordApiCall(
             eq("POST"),
@@ -189,26 +187,23 @@ class LoggingFilterTest {
     @Test
     @DisplayName("Should extract client IP from X-Forwarded-For header")
     void shouldExtractClientIpFromXForwardedForHeader() throws Exception {
-        final String clientIp = "192.168.1.1";
+        final String clientIp = "192.0.2.1";
 
-        // Given
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod("GET");
         request.setRequestURI("/api/products");
-        request.addHeader("X-Forwarded-For", "192.168.1.1, 10.0.0.1");
+        request.addHeader("X-Forwarded-For", "192.0.2.1, 198.51.100.1");
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain filterChain = new MockFilterChain();
 
         when(objectMapper.writeValueAsString(any())).thenReturn("{\"test\":\"json\"}");
 
-        // When
         loggingFilter.doFilterInternal(request, response, filterChain);
 
-        // Then
         verify(objectMapper, atLeast(1)).writeValueAsString(argThat(logEntry -> {
-            if (logEntry instanceof RequestLog requestLog) {
-                return clientIp.equals(requestLog.getClientIp());
+            if (logEntry instanceof RequestLog reqLog) {
+                return clientIp.equals(reqLog.getClientIp());
             }
             return true;
         }));
