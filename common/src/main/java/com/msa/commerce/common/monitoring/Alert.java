@@ -2,21 +2,18 @@ package com.msa.commerce.common.monitoring;
 
 import java.time.LocalDateTime;
 
-import lombok.Builder;
-import lombok.Getter;
+public record Alert(String type, String endpoint, String message, String severity, LocalDateTime timestamp) {
 
-@Getter
-@Builder
-public class Alert {
+    public static Alert withSeverityFromType(String type, String endpoint, String message) {
+        return new Alert(type, endpoint, message, determineSeverityStatic(type), LocalDateTime.now());
+    }
 
-    private final String type;
-
-    private final String endpoint;
-
-    private final String message;
-
-    private final String severity;
-
-    private final LocalDateTime timestamp;
+    private static String determineSeverityStatic(String type) {
+        return switch (type) {
+            case "TIMEOUT", "DOWN" -> "CRITICAL";
+            case "SLOW", "ERROR" -> "WARN";
+            default -> "INFO";
+        };
+    }
 
 }

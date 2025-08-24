@@ -2,19 +2,10 @@ package com.msa.commerce.common.monitoring;
 
 import java.time.LocalDateTime;
 
-import lombok.Builder;
-import lombok.Getter;
+public record ApiMetrics(String endpoint, int statusCode, long duration, LocalDateTime timestamp) {
 
-@Getter
-@Builder
-public class ApiMetrics {
-
-    private final String endpoint;
-
-    private final int statusCode;
-
-    private final long duration;
-
-    private final LocalDateTime timestamp;
+    public static ApiMetrics withTimestampNow(String endpoint, int statusCode, long duration) {
+        return new ApiMetrics(endpoint, statusCode, duration, LocalDateTime.now());
+    }
 
 }
