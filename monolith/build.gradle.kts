@@ -3,7 +3,7 @@ dependencies {
 
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringBootStarterSecurity())
-    implementation(BuildDependencies.getSpringBootStarterDataRedis())
+    // Redis dependency moved to common module
     implementation(BuildDependencies.getSpringKafka())
 
     // JWT
