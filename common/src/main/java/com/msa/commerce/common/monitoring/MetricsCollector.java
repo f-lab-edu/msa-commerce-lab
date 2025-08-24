@@ -1,6 +1,5 @@
 package com.msa.commerce.common.monitoring;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -43,18 +42,11 @@ public class MetricsCollector {
             apiErrorCounters.computeIfAbsent(endpoint, k -> new AtomicLong(0)).incrementAndGet();
         }
 
-        // Track response times
         responseTimeStats.computeIfAbsent(endpoint, k -> new ResponseTimeStats())
             .addResponseTime(duration);
 
-        // Log metrics
         try {
-            ApiMetrics metrics = ApiMetrics.builder()
-                .endpoint(endpoint)
-                .statusCode(statusCode)
-                .duration(duration)
-                .timestamp(LocalDateTime.now())
-                .build();
+            ApiMetrics metrics = ApiMetrics.withTimestampNow(endpoint, statusCode, duration);
 
             log.info("METRICS: {}", objectMapper.writeValueAsString(metrics));
         } catch (Exception e) {
@@ -108,12 +100,7 @@ public class MetricsCollector {
 
     private void logCacheMetrics() {
         try {
-            CacheMetrics metrics = CacheMetrics.builder()
-                .hits(cacheHits.get())
-                .misses(cacheMisses.get())
-                .hitRate(getCacheHitRate())
-                .timestamp(LocalDateTime.now())
-                .build();
+            CacheMetrics metrics = CacheMetrics.withTimestampNow(cacheHits.get(), cacheMisses.get(), getCacheHitRate());
 
             log.info("CACHE_METRICS: {}", objectMapper.writeValueAsString(metrics));
         } catch (Exception e) {
@@ -144,13 +131,7 @@ public class MetricsCollector {
 
     private void logAlert(String alertType, String endpoint, String message) {
         try {
-            Alert alert = Alert.builder()
-                .type(alertType)
-                .endpoint(endpoint)
-                .message(message)
-                .severity(determineSeverity(alertType))
-                .timestamp(LocalDateTime.now())
-                .build();
+            Alert alert = Alert.withSeverityFromType(alertType, endpoint, message);
 
             log.warn("ALERT: {}", objectMapper.writeValueAsString(alert));
         } catch (Exception e) {
