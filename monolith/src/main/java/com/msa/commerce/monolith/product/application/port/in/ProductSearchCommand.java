@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Builder;
 import lombok.Data;
 
@@ -39,6 +42,12 @@ public class ProductSearchCommand {
         
         if (maxPrice != null && maxPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Maximum price cannot be negative");
+        }
+    }
+
+    public void validatePriceRange() {
+        if (minPrice != null && maxPrice != null && minPrice.compareTo(maxPrice) > 0) {
+            throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
         }
     }
 }

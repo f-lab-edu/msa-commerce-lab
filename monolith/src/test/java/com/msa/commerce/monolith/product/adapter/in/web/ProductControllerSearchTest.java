@@ -1,12 +1,10 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.hamcrest.Matchers.hasSize;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -50,12 +48,9 @@ class ProductControllerSearchTest {
     @MockBean
     private ProductWebMapper productWebMapper;
 
-    @MockBean
-    private ProductSearchWebMapper productSearchWebMapper;
-
     @Test
     @DisplayName("상품 검색 API가 정상적으로 동작한다")
-    void searchProducts_Success() throws Exception {
+    void getProducts_Success() throws Exception {
         // Given
         ProductSearchResponse product1 = ProductSearchResponse.builder()
             .id(1L)
@@ -99,13 +94,6 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
-        given(productSearchWebMapper.toCommand(any())).willReturn(ProductSearchCommand.builder()
-            .categoryId(1L)
-            .page(0)
-            .size(20)
-            .sortBy("createdAt")
-            .sortDirection("desc")
-            .build());
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -139,7 +127,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("가격 범위 필터링이 정상적으로 동작한다")
-    void searchProducts_WithPriceRange() throws Exception {
+    void getProducts_WithPriceRange() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
             .content(Arrays.asList())
@@ -153,7 +141,6 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
-        given(productSearchWebMapper.toCommand(any())).willReturn(ProductSearchCommand.builder().build());
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -166,7 +153,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("상품 상태 필터링이 정상적으로 동작한다")
-    void searchProducts_WithStatus() throws Exception {
+    void getProducts_WithStatus() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
             .content(Arrays.asList())
@@ -180,7 +167,6 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
-        given(productSearchWebMapper.toCommand(any())).willReturn(ProductSearchCommand.builder().build());
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -192,7 +178,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("정렬 옵션이 정상적으로 동작한다")
-    void searchProducts_WithSorting() throws Exception {
+    void getProducts_WithSorting() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
             .content(Arrays.asList())
@@ -206,7 +192,6 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
-        given(productSearchWebMapper.toCommand(any())).willReturn(ProductSearchCommand.builder().build());
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -216,4 +201,5 @@ class ProductControllerSearchTest {
             .andDo(print())
             .andExpect(status().isOk());
     }
+
 }

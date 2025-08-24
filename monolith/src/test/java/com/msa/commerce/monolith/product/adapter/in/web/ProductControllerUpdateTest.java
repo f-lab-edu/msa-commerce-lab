@@ -50,13 +50,10 @@ class ProductControllerUpdateTest {
     @Mock
     private ProductSearchUseCase productSearchUseCase;
 
-    @Mock
-    private ProductSearchWebMapper productSearchWebMapper;
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productSearchUseCase, productWebMapper, productSearchWebMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productSearchUseCase, productWebMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }
