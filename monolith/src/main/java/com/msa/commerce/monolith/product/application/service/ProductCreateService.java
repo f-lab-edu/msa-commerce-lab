@@ -34,7 +34,7 @@ public class ProductCreateService implements ProductCreateUseCase {
         // 2. 비즈니스 룰 검증: 중복 SKU 체크
         validateDuplicateSku(command.getSku());
 
-        // 3. 도메인 객체 생성 (DB 스키마에 맞게 수정)
+        // 3. 도메인 객체 생성 (DB 스키마에 맞게 수정) // Mapper로 뺌
         Product product = Product.builder()
             .categoryId(command.getCategoryId())
             .sku(command.getSku())

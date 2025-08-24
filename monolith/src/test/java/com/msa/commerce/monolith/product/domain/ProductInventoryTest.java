@@ -287,14 +287,14 @@ class ProductInventoryTest {
             .build();
 
         // when - positive adjustment
-        inventory.adjustStock(20, "Incoming shipment");
+        inventory.adjustStock(20);
 
         // then
         assertThat(inventory.getAvailableQuantity()).isEqualTo(120);
         assertThat(inventory.getTotalQuantity()).isEqualTo(120);
 
         // when - negative adjustment
-        inventory.adjustStock(-10, "Damaged goods");
+        inventory.adjustStock(-10);
 
         // then
         assertThat(inventory.getAvailableQuantity()).isEqualTo(110);

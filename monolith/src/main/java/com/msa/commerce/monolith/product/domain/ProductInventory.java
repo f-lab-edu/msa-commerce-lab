@@ -124,24 +124,42 @@ public class ProductInventory {
 
     private void validateEnhancedFields(Integer minOrderQuantity, Integer maxOrderQuantity,
         Integer reorderPoint, Integer reorderQuantity, String locationCode) {
-        if (minOrderQuantity != null && minOrderQuantity <= 0) {
-            throw new IllegalArgumentException("Minimum order quantity must be positive");
-        }
+        validateOrderQuantities(minOrderQuantity, maxOrderQuantity);
+        validateReorderFields(reorderPoint, reorderQuantity);
+        validateLocationCode(locationCode);
+    }
 
+    private void validateOrderQuantities(Integer minOrderQuantity, Integer maxOrderQuantity) {
+        validateFieldPositive(minOrderQuantity);
+        validateMaxOrderQuantity(minOrderQuantity, maxOrderQuantity);
+    }
+
+    private void validateMaxOrderQuantity(Integer minOrderQuantity, Integer maxOrderQuantity) {
         if (maxOrderQuantity != null && minOrderQuantity != null && maxOrderQuantity < minOrderQuantity) {
             throw new IllegalArgumentException("Maximum order quantity cannot be less than minimum order quantity");
         }
+    }
 
-        if (reorderPoint != null && reorderPoint < 0) {
-            throw new IllegalArgumentException("Reorder point cannot be negative");
-        }
+    private void validateReorderFields(Integer reorderPoint, Integer reorderQuantity) {
+        validateFieldNonNegative(reorderPoint, "Reorder point cannot be negative");
+        validateFieldNonNegative(reorderQuantity, "Reorder quantity cannot be negative");
+    }
 
-        if (reorderQuantity != null && reorderQuantity < 0) {
-            throw new IllegalArgumentException("Reorder quantity cannot be negative");
-        }
-
+    private void validateLocationCode(String locationCode) {
         if (locationCode != null && locationCode.trim().isEmpty()) {
             throw new IllegalArgumentException("Location code cannot be empty");
+        }
+    }
+
+    private void validateFieldPositive(Integer value) {
+        if (value != null && value <= 0) {
+            throw new IllegalArgumentException("Minimum order quantity must be positive");
+        }
+    }
+
+    private void validateFieldNonNegative(Integer value, String message) {
+        if (value != null && value < 0) {
+            throw new IllegalArgumentException(message);
         }
     }
 
@@ -212,7 +230,7 @@ public class ProductInventory {
         return canOrder(requestedQuantity) && (availableQuantity >= requestedQuantity || isBackorderAllowed);
     }
 
-    public void adjustStock(int adjustment, String reason) {
+    public void adjustStock(int adjustment) {
         if (adjustment == 0) {
             return;
         }
@@ -239,23 +257,26 @@ public class ProductInventory {
 
     public boolean canOrder(int quantity) {
         if (!isTrackingEnabled) {
-            return true; // 재고 추적하지 않으면 항상 주문 가능
-        }
-
-        // 최소/최대 주문 수량 검증
-        if (quantity < minOrderQuantity) {
-            return false;
-        }
-
-        if (maxOrderQuantity != null && quantity > maxOrderQuantity) {
-            return false;
-        }
-
-        if (availableQuantity >= quantity) {
             return true;
         }
 
-        return isBackorderAllowed; // 재고 부족 시 백오더 허용 여부에 따라
+        return isWithinOrderQuantityLimits(quantity) && canFulfillQuantity(quantity);
+    }
+
+    private boolean isWithinOrderQuantityLimits(int quantity) {
+        return isAboveMinimumQuantity(quantity) && isBelowMaximumQuantity(quantity);
+    }
+
+    private boolean isAboveMinimumQuantity(int quantity) {
+        return quantity >= minOrderQuantity;
+    }
+
+    private boolean isBelowMaximumQuantity(int quantity) {
+        return maxOrderQuantity == null || quantity <= maxOrderQuantity;
+    }
+
+    private boolean canFulfillQuantity(int quantity) {
+        return availableQuantity >= quantity || isBackorderAllowed;
     }
 
     // 부분 업데이트를 위한 메소드
@@ -263,39 +284,54 @@ public class ProductInventory {
         Boolean isBackorderAllowed, Integer minOrderQuantity, Integer maxOrderQuantity,
         Integer reorderPoint, Integer reorderQuantity, String locationCode) {
 
-        // null이 아닌 필드들만 업데이트
+        updateStockFields(currentStock, lowStockThreshold);
+        updateTrackingSettings(isTrackingEnabled, isBackorderAllowed);
+        updateOrderQuantityFields(minOrderQuantity, maxOrderQuantity);
+        updateReorderFields(reorderPoint, reorderQuantity);
+        updateLocationField(locationCode);
+        updateTimestampAndVersion();
+    }
+
+    private void updateStockFields(Integer currentStock, Integer lowStockThreshold) {
+        updateCurrentStock(currentStock);
+        updateFieldIfNotNull(lowStockThreshold, value -> this.lowStockThreshold = value);
+    }
+
+    private void updateCurrentStock(Integer currentStock) {
         if (currentStock != null) {
-            // 현재 재고 업데이트 시 사용 가능 재고와 전체 재고 모두 업데이트
             this.availableQuantity = currentStock;
             this.totalQuantity = currentStock + this.reservedQuantity;
         }
-        if (lowStockThreshold != null) {
-            this.lowStockThreshold = lowStockThreshold;
-        }
-        if (isTrackingEnabled != null) {
-            this.isTrackingEnabled = isTrackingEnabled;
-        }
-        if (isBackorderAllowed != null) {
-            this.isBackorderAllowed = isBackorderAllowed;
-        }
-        if (minOrderQuantity != null) {
-            this.minOrderQuantity = minOrderQuantity;
-        }
-        if (maxOrderQuantity != null) {
-            this.maxOrderQuantity = maxOrderQuantity;
-        }
-        if (reorderPoint != null) {
-            this.reorderPoint = reorderPoint;
-        }
-        if (reorderQuantity != null) {
-            this.reorderQuantity = reorderQuantity;
-        }
-        if (locationCode != null) {
-            this.locationCode = locationCode;
-        }
+    }
 
+    private void updateTrackingSettings(Boolean isTrackingEnabled, Boolean isBackorderAllowed) {
+        updateFieldIfNotNull(isTrackingEnabled, value -> this.isTrackingEnabled = value);
+        updateFieldIfNotNull(isBackorderAllowed, value -> this.isBackorderAllowed = value);
+    }
+
+    private void updateOrderQuantityFields(Integer minOrderQuantity, Integer maxOrderQuantity) {
+        updateFieldIfNotNull(minOrderQuantity, value -> this.minOrderQuantity = value);
+        updateFieldIfNotNull(maxOrderQuantity, value -> this.maxOrderQuantity = value);
+    }
+
+    private void updateReorderFields(Integer reorderPoint, Integer reorderQuantity) {
+        updateFieldIfNotNull(reorderPoint, value -> this.reorderPoint = value);
+        updateFieldIfNotNull(reorderQuantity, value -> this.reorderQuantity = value);
+    }
+
+    private void updateLocationField(String locationCode) {
+        updateFieldIfNotNull(locationCode, value -> this.locationCode = value);
+    }
+
+    private void updateTimestampAndVersion() {
         this.lastUpdatedAt = LocalDateTime.now();
         this.versionNumber++;
+    }
+
+    private <T> void updateFieldIfNotNull(T value, java.util.function.Consumer<T> setter) {
+        if (value != null) {
+            setter.accept(value);
+        }
     }
 
 }
