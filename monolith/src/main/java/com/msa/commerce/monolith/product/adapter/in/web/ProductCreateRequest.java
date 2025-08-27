@@ -78,7 +78,6 @@ public class ProductCreateRequest {
 
     private Boolean isFeatured;
 
-    // 재고 관련 필드 (별도 도메인으로 관리)
     @Min(value = 0, message = "Initial stock cannot be negative.")
     private Integer initialStock;
 
@@ -89,7 +88,6 @@ public class ProductCreateRequest {
 
     private Boolean isBackorderAllowed;
 
-    // 확장된 재고 관리 필드
     @Min(value = 1, message = "Minimum order quantity must be at least 1.")
     private Integer minOrderQuantity;
 
