@@ -73,7 +73,6 @@ public class ProductUpdateRequest {
 
     private Boolean isFeatured;
 
-    // 재고 관련 필드 (별도 도메인으로 관리)
     @Min(value = 0, message = "Initial stock cannot be negative.")
     private Integer initialStock;
 
@@ -84,7 +83,6 @@ public class ProductUpdateRequest {
 
     private Boolean isBackorderAllowed;
 
-    // 확장된 재고 관리 필드
     @Min(value = 1, message = "Minimum order quantity must be at least 1.")
     private Integer minOrderQuantity;
 
@@ -100,7 +98,6 @@ public class ProductUpdateRequest {
     @Size(max = 50, message = "Location code cannot exceed 50 characters.")
     private String locationCode;
 
-    // Optional 래퍼 메소드들 - null과 빈 값을 구분하기 위함
     public Optional<Long> getCategoryIdOptional() {
         return Optional.ofNullable(categoryId);
     }
@@ -209,7 +206,6 @@ public class ProductUpdateRequest {
         return Optional.ofNullable(locationCode);
     }
 
-    // 필드가 명시적으로 설정되었는지 확인하는 메소드
     public boolean hasFieldToUpdate() {
         return categoryId != null || sku != null || name != null || description != null ||
             shortDescription != null || brand != null || model != null || price != null ||
