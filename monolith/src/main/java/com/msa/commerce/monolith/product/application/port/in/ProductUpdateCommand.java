@@ -3,6 +3,9 @@ package com.msa.commerce.monolith.product.application.port.in;
 import java.math.BigDecimal;
 import java.util.Optional;
 
+import com.msa.commerce.monolith.product.domain.validation.Notification;
+import com.msa.commerce.monolith.product.domain.validation.ProductValidator;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -10,7 +13,7 @@ import lombok.Getter;
 @Builder
 public class ProductUpdateCommand {
 
-    private final Long productId;                   // 업데이트할 상품 ID
+    private final Long productId;
 
     private final Long categoryId;
 
@@ -48,7 +51,6 @@ public class ProductUpdateCommand {
 
     private final Boolean isFeatured;
 
-    // 재고 관련 (별도 ProductInventory로 관리)
     private final Integer initialStock;
 
     private final Integer lowStockThreshold;
@@ -57,7 +59,6 @@ public class ProductUpdateCommand {
 
     private final Boolean isBackorderAllowed;
 
-    // 확장된 재고 관리 필드
     private final Integer minOrderQuantity;
 
     private final Integer maxOrderQuantity;
@@ -68,7 +69,6 @@ public class ProductUpdateCommand {
 
     private final String locationCode;
 
-    // Optional 래퍼 메소드들 - 부분 업데이트 지원
     public Optional<Long> getCategoryIdOptional() {
         return Optional.ofNullable(categoryId);
     }
@@ -178,74 +178,18 @@ public class ProductUpdateCommand {
     }
 
     public void validate() {
-        if (productId == null) {
-            throw new IllegalArgumentException("Product ID is required for update.");
-        }
-
-        // SKU 유효성 검증 (명시된 경우만)
-        if (sku != null && (sku.trim().isEmpty() || sku.length() > 100)) {
-            throw new IllegalArgumentException("SKU must not be empty and cannot exceed 100 characters.");
-        }
-
-        // 상품명 유효성 검증 (명시된 경우만)
-        if (name != null && (name.trim().isEmpty() || name.length() > 255)) {
-            throw new IllegalArgumentException("Product name must not be empty and cannot exceed 255 characters.");
-        }
-
-        // 가격 유효성 검증 (명시된 경우만)
-        if (price != null && (price.compareTo(BigDecimal.ZERO) <= 0
-            || price.compareTo(new BigDecimal("99999999.99")) > 0)) {
-            throw new IllegalArgumentException("Price must be between 0.01 and 99,999,999.99.");
-        }
-
-        // 설명 필드 길이 검증
-        if (description != null && description.length() > 5000) {
-            throw new IllegalArgumentException("Product description cannot exceed 5000 characters.");
-        }
-
-        if (shortDescription != null && shortDescription.length() > 500) {
-            throw new IllegalArgumentException("Short description cannot exceed 500 characters.");
-        }
-
-        if (brand != null && brand.length() > 100) {
-            throw new IllegalArgumentException("Brand cannot exceed 100 characters.");
-        }
-
-        if (model != null && model.length() > 100) {
-            throw new IllegalArgumentException("Model cannot exceed 100 characters.");
-        }
-
-        // 재고 관련 유효성 검증
-        if (initialStock != null && initialStock < 0) {
-            throw new IllegalArgumentException("Initial stock cannot be negative.");
-        }
-
-        if (lowStockThreshold != null && lowStockThreshold < 0) {
-            throw new IllegalArgumentException("Low stock threshold cannot be negative.");
-        }
-
-        if (minOrderQuantity != null && minOrderQuantity <= 0) {
-            throw new IllegalArgumentException("Minimum order quantity must be positive.");
-        }
-
-        if (maxOrderQuantity != null && minOrderQuantity != null && maxOrderQuantity < minOrderQuantity) {
-            throw new IllegalArgumentException("Maximum order quantity cannot be less than minimum order quantity.");
-        }
-
-        if (reorderPoint != null && reorderPoint < 0) {
-            throw new IllegalArgumentException("Reorder point cannot be negative.");
-        }
-
-        if (reorderQuantity != null && reorderQuantity < 0) {
-            throw new IllegalArgumentException("Reorder quantity cannot be negative.");
-        }
-
-        if (locationCode != null && locationCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("Location code cannot be empty.");
-        }
+        Notification notification = validateWithNotification();
+        notification.throwIfHasErrors();
     }
 
-    // 변경 사항이 있는지 확인
+    public Notification validateWithNotification() {
+        return ProductValidator.validateProductUpdate(
+            productId, sku, name, price, description, shortDescription,
+            brand, model, initialStock, lowStockThreshold, minOrderQuantity,
+            maxOrderQuantity, reorderPoint, reorderQuantity, locationCode
+        );
+    }
+
     public boolean hasChanges() {
         return categoryId != null || sku != null || name != null || description != null ||
             shortDescription != null || brand != null || model != null || price != null ||
@@ -256,6 +200,9 @@ public class ProductUpdateCommand {
             isTrackingEnabled != null || isBackorderAllowed != null ||
             minOrderQuantity != null || maxOrderQuantity != null ||
             reorderPoint != null || reorderQuantity != null || locationCode != null;
+    }
+
+    public void setProductById(Long productId) {
     }
 
 }
