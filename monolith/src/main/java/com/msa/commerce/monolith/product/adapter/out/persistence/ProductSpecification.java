@@ -49,15 +49,15 @@ public class ProductSpecification {
     public static Specification<ProductJpaEntity> withPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
-            
+
             if (minPrice != null) {
                 predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
             }
-            
+
             if (maxPrice != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
             }
-            
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -70,4 +70,5 @@ public class ProductSpecification {
             return criteriaBuilder.equal(root.get("status"), status);
         };
     }
+
 }
