@@ -24,4 +24,5 @@ public interface ProductSearchMapper {
     @Mapping(target = "hasNext", expression = "java(page.hasNext())")
     @Mapping(target = "hasPrevious", expression = "java(page.hasPrevious())")
     ProductPageResponse toPageResponse(Page<ProductSearchResponse> page);
+
 }
