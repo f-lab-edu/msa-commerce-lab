@@ -46,7 +46,7 @@ class ProductControllerSearchTest {
     private ProductSearchUseCase productSearchUseCase;
 
     @MockBean
-    private ProductWebMapper productWebMapper;
+    private ProductMapper productMapper;
 
     @Test
     @DisplayName("상품 검색 API가 정상적으로 동작한다")
@@ -94,6 +94,15 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
+        ProductSearchCommand searchCommand = ProductSearchCommand.builder()
+            .categoryId(1L)
+            .page(0)
+            .size(20)
+            .sortBy("createdAt")
+            .sortDirection("desc")
+            .build();
+
+        given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -141,6 +150,16 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
+        ProductSearchCommand searchCommand = ProductSearchCommand.builder()
+            .minPrice(new BigDecimal("50.00"))
+            .maxPrice(new BigDecimal("150.00"))
+            .page(0)
+            .size(20)
+            .sortBy("createdAt")
+            .sortDirection("desc")
+            .build();
+
+        given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -167,6 +186,15 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
+        ProductSearchCommand searchCommand = ProductSearchCommand.builder()
+            .status(ProductStatus.ACTIVE)
+            .page(0)
+            .size(20)
+            .sortBy("createdAt")
+            .sortDirection("desc")
+            .build();
+
+        given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
@@ -192,6 +220,14 @@ class ProductControllerSearchTest {
             .hasPrevious(false)
             .build();
 
+        ProductSearchCommand searchCommand = ProductSearchCommand.builder()
+            .page(0)
+            .size(20)
+            .sortBy("price")
+            .sortDirection("asc")
+            .build();
+
+        given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
         given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then

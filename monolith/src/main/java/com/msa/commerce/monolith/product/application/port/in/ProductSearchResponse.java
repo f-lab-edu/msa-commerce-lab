@@ -30,4 +30,5 @@ public class ProductSearchResponse {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
     private final Long viewCount;
+
 }

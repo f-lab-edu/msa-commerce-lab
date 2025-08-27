@@ -7,18 +7,22 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
 
-class ProductWebMapperTest {
+@DisplayName("ProductMapper 테스트")
+class ProductMapperTest {
 
-    private ProductWebMapper productWebMapper;
+    private ProductMapper productMapper;
 
     private ProductCreateRequest createRequest;
 
     @BeforeEach
     void setUp() {
-        productWebMapper = new ProductWebMapper();
+        productMapper = Mappers.getMapper(ProductMapper.class);
         createRequest = new ProductCreateRequest();
         setField(createRequest, "sku", "TEST-SKU-001");
         setField(createRequest, "name", "Test Product");
@@ -39,7 +43,7 @@ class ProductWebMapperTest {
     @DisplayName("ProductCreateRequest를 ProductCreateCommand로 변환할 수 있다")
     void toCommand_ShouldMapRequestToCommand() {
         // when
-        ProductCreateCommand command = productWebMapper.toCommand(createRequest);
+        ProductCreateCommand command = productMapper.toCommand(createRequest);
 
         // then
         assertThat(command).isNotNull();
@@ -74,7 +78,7 @@ class ProductWebMapperTest {
         setField(requestWithNulls, "initialStock", 50);
 
         // when
-        ProductCreateCommand command = productWebMapper.toCommand(requestWithNulls);
+        ProductCreateCommand command = productMapper.toCommand(requestWithNulls);
 
         // then
         assertThat(command).isNotNull();
@@ -91,6 +95,53 @@ class ProductWebMapperTest {
         assertThat(command.getReorderPoint()).isNull();
         assertThat(command.getReorderQuantity()).isNull();
         assertThat(command.getLocationCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("ProductSearchRequest를 ProductSearchCommand로 변환할 수 있다")
+    void toSearchCommand_ShouldMapRequestToCommand() {
+        // given
+        ProductSearchRequest request = new ProductSearchRequest();
+        request.setCategoryId(1L);
+        request.setMinPrice(new BigDecimal("10.00"));
+        request.setMaxPrice(new BigDecimal("100.00"));
+        request.setStatus(ProductStatus.ACTIVE);
+        request.setPage(0);
+        request.setSize(20);
+        request.setSortBy("name");
+        request.setSortDirection("asc");
+
+        // when
+        ProductSearchCommand command = productMapper.toSearchCommand(request);
+
+        // then
+        assertThat(command).isNotNull();
+        assertThat(command.getCategoryId()).isEqualTo(1L);
+        assertThat(command.getMinPrice()).isEqualTo(new BigDecimal("10.00"));
+        assertThat(command.getMaxPrice()).isEqualTo(new BigDecimal("100.00"));
+        assertThat(command.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+        assertThat(command.getPage()).isEqualTo(0);
+        assertThat(command.getSize()).isEqualTo(20);
+        assertThat(command.getSortBy()).isEqualTo("name");
+        assertThat(command.getSortDirection()).isEqualTo("asc");
+    }
+
+    @Test
+    @DisplayName("SKU가 null이면 자동 생성된다")
+    void toCommand_ShouldGenerateSkuWhenNull() {
+        // given
+        ProductCreateRequest request = new ProductCreateRequest();
+        setField(request, "sku", null);
+        setField(request, "name", "테스트 상품");
+        setField(request, "price", new BigDecimal("29.99"));
+        setField(request, "categoryId", 1L);
+
+        // when
+        ProductCreateCommand command = productMapper.toCommand(request);
+
+        // then
+        assertThat(command.getSku()).isNotNull();
+        assertThat(command.getSku()).matches("테스트-[A-F0-9]{8}");
     }
 
     private void setField(Object target, String fieldName, Object value) {
