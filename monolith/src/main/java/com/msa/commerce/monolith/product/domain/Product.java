@@ -14,43 +14,43 @@ public class Product {
 
     private Long id;
 
-    private Long categoryId;              // DB 스키마와 일치
+    private Long categoryId;
 
-    private String sku;                   // 필수 필드 추가
+    private String sku;
 
     private String name;
 
     private String description;
 
-    private String shortDescription;      // 추가
+    private String shortDescription;
 
-    private String brand;                 // 추가
+    private String brand;
 
-    private String model;                 // 추가
+    private String model;
 
     private BigDecimal price;
 
-    private BigDecimal comparePrice;      // 할인 전 원가
+    private BigDecimal comparePrice;
 
-    private BigDecimal costPrice;         // 원가
+    private BigDecimal costPrice;
 
-    private BigDecimal weight;            // 추가
+    private BigDecimal weight;
 
-    private String productAttributes;     // JSON 속성 (단순화)
+    private String productAttributes;
 
     private ProductStatus status;
 
-    private String visibility;            // 공개/비공개
+    private String visibility;
 
-    private String taxClass;              // 세금 분류
+    private String taxClass;
 
-    private String metaTitle;             // SEO 제목
+    private String metaTitle;
 
-    private String metaDescription;       // SEO 설명
+    private String metaDescription;
 
-    private String searchKeywords;        // 검색 키워드
+    private String searchKeywords;
 
-    private Boolean isFeatured;           // 추천 상품 여부
+    private Boolean isFeatured;
 
     private LocalDateTime createdAt;
 
@@ -77,7 +77,7 @@ public class Product {
         this.costPrice = costPrice;
         this.weight = weight;
         this.productAttributes = productAttributes;
-        this.status = ProductStatus.DRAFT; // DB 스키마 기본값과 일치
+        this.status = ProductStatus.DRAFT;
         this.visibility = visibility != null ? visibility : "PUBLIC";
         this.taxClass = taxClass;
         this.metaTitle = metaTitle;
@@ -139,7 +139,6 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // 부분 업데이트를 위한 새로운 메소드
     public void updatePartially(Long categoryId, String sku, String name, String description,
         String shortDescription, String brand, String model, BigDecimal price,
         BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
@@ -200,15 +199,11 @@ public class Product {
         }
     }
 
-    // 상품이 업데이트 가능한 상태인지 확인
     public boolean isUpdatable() {
         return this.status != ProductStatus.ARCHIVED;
     }
 
-    // 상품의 상태 변경 권한이 있는지 확인 (추후 확장 가능)
     public boolean canBeUpdatedBy(String userId) {
-        // 현재는 단순히 상품이 업데이트 가능한 상태인지만 확인
-        // 추후 권한 체계가 구축되면 사용자별 권한 검증 로직 추가
         return isUpdatable();
     }
 

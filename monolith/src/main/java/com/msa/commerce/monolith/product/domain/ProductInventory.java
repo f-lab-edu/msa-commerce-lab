@@ -15,32 +15,32 @@ public class ProductInventory {
 
     private Long productId;
 
-    private Long productVariantId;        // nullable
+    private Long productVariantId;
 
-    private Integer availableQuantity;    // 판매 가능 재고
+    private Integer availableQuantity;
 
-    private Integer reservedQuantity;     // 예약된 재고 (주문 대기)
+    private Integer reservedQuantity;
 
-    private Integer totalQuantity;        // 전체 재고
+    private Integer totalQuantity;
 
-    private Integer lowStockThreshold;    // 재고 부족 임계값
+    private Integer lowStockThreshold;
 
-    private Boolean isTrackingEnabled;    // 재고 추적 여부
+    private Boolean isTrackingEnabled;
 
-    private Boolean isBackorderAllowed;   // 품절 시 주문 허용 여부
+    private Boolean isBackorderAllowed;
 
     // Enhanced inventory management fields
-    private Integer minOrderQuantity;     // 최소 주문 수량
+    private Integer minOrderQuantity;
 
-    private Integer maxOrderQuantity;     // 최대 주문 수량 (nullable)
+    private Integer maxOrderQuantity;
 
-    private Integer reorderPoint;         // 재주문 임계점
+    private Integer reorderPoint;
 
-    private Integer reorderQuantity;      // 재주문 수량
+    private Integer reorderQuantity;
 
-    private String locationCode;          // 창고 위치 코드
+    private String locationCode;
 
-    private Long versionNumber;           // 낙관적 잠금용 버전 번호
+    private Long versionNumber;
 
     private LocalDateTime lastUpdatedAt;
 
@@ -64,7 +64,6 @@ public class ProductInventory {
         this.isTrackingEnabled = isTrackingEnabled != null ? isTrackingEnabled : true;
         this.isBackorderAllowed = isBackorderAllowed != null ? isBackorderAllowed : false;
 
-        // Enhanced inventory management fields
         this.minOrderQuantity = minOrderQuantity != null ? minOrderQuantity : 1;
         this.maxOrderQuantity = maxOrderQuantity;
         this.reorderPoint = reorderPoint != null ? reorderPoint : 0;
@@ -279,7 +278,6 @@ public class ProductInventory {
         return availableQuantity >= quantity || isBackorderAllowed;
     }
 
-    // 부분 업데이트를 위한 메소드
     public void updatePartially(Integer currentStock, Integer lowStockThreshold, Boolean isTrackingEnabled,
         Boolean isBackorderAllowed, Integer minOrderQuantity, Integer maxOrderQuantity,
         Integer reorderPoint, Integer reorderQuantity, String locationCode) {
