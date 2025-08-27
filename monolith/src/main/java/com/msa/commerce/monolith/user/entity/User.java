@@ -103,7 +103,6 @@ public class User {
         this.status = UserStatus.ACTIVE;
     }
 
-    // --- 편의 메서드 ---
     public void markEmailVerified() {
         this.emailVerified = true;
     }
@@ -124,7 +123,6 @@ public class User {
         this.status = UserStatus.DELETED;
     }
 
-    // Lombok이 자동으로 생성: getter, toString, equals(id만), hashCode(id만), noArgsConstructor(protected)
 
     public void loginNow() {
         this.lastLoginAt = LocalDateTime.now();
