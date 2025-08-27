@@ -12,6 +12,8 @@ import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRe
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductInventory;
+import com.msa.commerce.monolith.product.domain.validation.Notification;
+import com.msa.commerce.monolith.product.domain.validation.ValidationException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,13 +30,50 @@ public class ProductCreateService implements ProductCreateUseCase {
 
     @Override
     public ProductResponse createProduct(ProductCreateCommand command) {
-        // 1. 명령 유효성 검증
         command.validate();
-
-        // 2. 비즈니스 룰 검증: 중복 SKU 체크
         validateDuplicateSku(command.getSku());
+        return executeProductCreation(command);
+    }
 
-        // 3. 도메인 객체 생성 (DB 스키마에 맞게 수정) // Mapper로 뺌
+    public ProductResponse createProductWithNotification(ProductCreateCommand command) {
+        Notification inputValidation = command.validateWithNotification();
+
+        Notification businessValidation = validateBusinessRules(command);
+
+        Notification combinedValidation = combineValidations(inputValidation, businessValidation);
+
+        if (combinedValidation.hasErrors()) {
+            throw new ValidationException(combinedValidation.getErrors());
+        }
+
+        return executeProductCreation(command);
+    }
+
+    private Notification validateBusinessRules(ProductCreateCommand command) {
+        Notification notification = new Notification();
+
+        if (command.getSku() != null && productRepository.existsBySku(command.getSku())) {
+            notification.addError("sku", "Product SKU already exists: " + command.getSku());
+        }
+
+
+        return notification;
+    }
+
+    private Notification combineValidations(Notification... validations) {
+        Notification combined = new Notification();
+
+        for (Notification validation : validations) {
+            if (validation.hasErrors()) {
+                validation.getErrors().forEach(error ->
+                    combined.addError(error.getField(), error.getMessage()));
+            }
+        }
+
+        return combined;
+    }
+
+    private ProductResponse executeProductCreation(ProductCreateCommand command) {
         Product product = Product.builder()
             .categoryId(command.getCategoryId())
             .sku(command.getSku())
@@ -56,10 +95,8 @@ public class ProductCreateService implements ProductCreateUseCase {
             .isFeatured(command.getIsFeatured())
             .build();
 
-        // 4. 상품 저장
         Product savedProduct = productRepository.save(product);
 
-        // 5. 재고 정보 생성 및 저장 (초기 재고가 있는 경우)
         if (command.getInitialStock() != null && command.getInitialStock() > 0) {
             ProductInventory inventory = ProductInventory.builder()
                 .productId(savedProduct.getId())
@@ -73,7 +110,6 @@ public class ProductCreateService implements ProductCreateUseCase {
             productInventoryRepository.save(inventory);
         }
 
-        // 6. 응답 객체 변환
         return productResponseMapper.toResponse(savedProduct);
     }
 

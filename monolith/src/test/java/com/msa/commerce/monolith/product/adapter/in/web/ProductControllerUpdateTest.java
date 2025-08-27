@@ -23,8 +23,10 @@ import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.service.ProductCreateService;
 import com.msa.commerce.monolith.product.domain.ProductCategory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
@@ -44,12 +46,19 @@ class ProductControllerUpdateTest {
     private ProductUpdateUseCase productUpdateUseCase;
 
     @Mock
-    private ProductWebMapper productWebMapper;
+    private ProductMapper productMapper;
+
+    @Mock
+    private ProductSearchUseCase productSearchUseCase;
+
+    @Mock
+    private ProductCreateService productCreateService;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productWebMapper))
+                new ProductController(productCreateUseCase, productCreateService, productGetUseCase, productUpdateUseCase,
+                    productSearchUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }
@@ -62,7 +71,7 @@ class ProductControllerUpdateTest {
         ProductUpdateCommand command = createUpdateCommand(productId);
         ProductResponse response = createProductResponse();
 
-        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
+        given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command)).willReturn(response);
 
         String requestJson = """
@@ -84,7 +93,7 @@ class ProductControllerUpdateTest {
             .andExpect(jsonPath("$.price").value(15000))
             .andExpect(jsonPath("$.status").value("ACTIVE"));
 
-        verify(productWebMapper).toUpdateCommand(eq(productId), any(ProductUpdateRequest.class));
+        verify(productMapper).toUpdateCommand(eq(productId), any(ProductUpdateRequest.class));
         verify(productUpdateUseCase).updateProduct(command);
     }
 
@@ -95,7 +104,7 @@ class ProductControllerUpdateTest {
         Long productId = 1L;
 
         // mapper가 IllegalArgumentException을 던짐
-        when(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class)))
+        when(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class)))
             .thenThrow(new IllegalArgumentException("No fields to update provided."));
 
         String emptyRequestJson = "{}";
@@ -114,7 +123,7 @@ class ProductControllerUpdateTest {
         Long productId = 1L;
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
+        given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
             .willThrow(new IllegalArgumentException("Invalid input"));
 
@@ -142,7 +151,7 @@ class ProductControllerUpdateTest {
         Long productId = 999L;
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
+        given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
             .willThrow(
                 new ResourceNotFoundException("Product not found with ID: 999", ErrorCode.PRODUCT_NOT_FOUND.getCode()));
@@ -171,7 +180,7 @@ class ProductControllerUpdateTest {
         Long productId = 1L;
         ProductUpdateCommand command = createUpdateCommand(productId);
 
-        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
+        given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command))
             .willThrow(new RuntimeException("Database connection error"));
 
@@ -206,7 +215,7 @@ class ProductControllerUpdateTest {
 
         ProductResponse response = createProductResponse();
 
-        given(productWebMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
+        given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command)).willReturn(response);
 
         // when & then

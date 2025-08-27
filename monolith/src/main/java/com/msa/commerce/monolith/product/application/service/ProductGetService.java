@@ -41,30 +41,24 @@ public class ProductGetService implements ProductGetUseCase {
     @Cacheable(value = RedisConfig.PRODUCT_CACHE, key = "#productId",
         condition = "#increaseViewCount == false")
     public ProductResponse getProduct(Long productId, boolean increaseViewCount) {
-        // 1. 상품 기본 정보 조회
         Product product = productRepository.findById(productId)
             .orElseThrow(
                 () -> new ResourceNotFoundException(String.format("Product not found with id: %d", productId)));
 
-        // 2. 삭제된 상품 필터링 (ARCHIVED 상태 제외)
         if (ProductStatus.ARCHIVED.equals(product.getStatus())) {
             throw new ResourceNotFoundException(String.format("Product not found with id: %d", productId));
         }
 
-        // 3. 재고 정보 조회
         ProductInventory inventory = inventoryRepository.findByProductId(productId)
             .orElse(null);
 
-        // 4. 응답 객체 생성
         ProductResponse response = responseMapper.toResponse(product);
 
-        // 5. 비동기 조회수 증가 (캐시된 응답이 아닌 경우에만)
         if (increaseViewCount) {
             try {
                 viewCountPort.incrementViewCount(productId);
                 log.debug("View count increment requested for product ID: {}", productId);
             } catch (Exception e) {
-                // 조회수 증가 실패는 전체 프로세스에 영향을 주지 않음
                 log.error("Failed to increment view count for product ID: {}", productId, e);
             }
         }

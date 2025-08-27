@@ -26,7 +26,6 @@ import java.util.Set;
 @ConditionalOnProperty(name = "spring.data.redis.host")
 public class RedisConfig {
 
-    // 기본 캐시 이름 상수 (하위 호환성 유지)
     public static final String DEFAULT_CACHE = "default";
     public static final String PRODUCT_CACHE = "product";
     public static final String PRODUCT_VIEW_COUNT_CACHE = "product-view-count";
@@ -36,29 +35,23 @@ public class RedisConfig {
 
     @PostConstruct
     public void registerDefaultCaches() {
-        // 기본 캐시들 등록
         DomainCacheRegistry.registerCaches(
-            // 상품 관련 캐시
             CacheDefinition.of(PRODUCT_CACHE, CacheStrategy.LONG_TERM, 
-                "상품 기본 정보 - 자주 변경되지 않는 마스터 데이터"),
+                "Product basic information - master data that changes infrequently"),
             CacheDefinition.of(PRODUCT_VIEW_COUNT_CACHE, CacheStrategy.SHORT_TERM, 
-                "상품 조회수 - 실시간성이 중요한 데이터"),
+                "Product view count - real-time critical data"),
             
-            // 사용자 관련 캐시
             CacheDefinition.of(USER_CACHE, CacheStrategy.MEDIUM_TERM, 
-                "사용자 프로필 정보 - 세션 기반 데이터"),
+                "User profile information - session based data"),
             
-            // 주문 관련 캐시
             CacheDefinition.of(ORDER_CACHE, CacheStrategy.MEDIUM_TERM, 
-                "주문 정보 - 상태 변경이 있는 트랜잭션 데이터"),
+                "Order information - transactional data with state changes"),
             
-            // 결제 관련 캐시
             CacheDefinition.of(PAYMENT_CACHE, CacheStrategy.SHORT_TERM, 
-                "결제 정보 - 상태가 빠르게 변경되는 데이터"),
+                "Payment information - rapidly changing status data"),
             
-            // 기본 캐시
             CacheDefinition.of(DEFAULT_CACHE, CacheStrategy.DEFAULT, 
-                "기본 범용 캐시")
+                "Default general purpose cache")
         );
     }
 
@@ -67,11 +60,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
-        // Key serializer - String 사용
         template.setKeySerializer(new StringRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
         
-        // Value serializer - JSON 사용
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
         template.setValueSerializer(serializer);
         template.setHashValueSerializer(serializer);
@@ -82,27 +73,24 @@ public class RedisConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
-        // 기본 캐시 설정
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
                 .entryTtl(CacheStrategy.DEFAULT.getTtl())
-                .disableCachingNullValues(); // null 값 캐싱 비활성화
+                .disableCachingNullValues();
 
-        // 등록된 캐시 정의를 기반으로 캐시 설정 구성
         Map<String, RedisCacheConfiguration> cacheConfigurations = buildCacheConfigurations(defaultConfig);
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(cacheConfigurations)
-                .transactionAware() // 트랜잭션 지원
+                .transactionAware()
                 .build();
     }
 
     private Map<String, RedisCacheConfiguration> buildCacheConfigurations(RedisCacheConfiguration defaultConfig) {
         Map<String, RedisCacheConfiguration> configurations = new HashMap<>();
         
-        // 레지스트리에서 등록된 모든 캐시 정의를 가져와서 설정
         DomainCacheRegistry.getAllCacheDefinitions().forEach((cacheName, cacheDefinition) -> {
             RedisCacheConfiguration config = defaultConfig.entryTtl(cacheDefinition.getTtl());
             configurations.put(cacheName, config);
@@ -120,7 +108,6 @@ public class RedisConfig {
         public static final String PAYMENT = PAYMENT_CACHE;
         
         private CacheNames() {
-            // 유틸리티 클래스로 인스턴스화 방지
         }
     }
 
@@ -162,7 +149,6 @@ public class RedisConfig {
         }
         
         private CacheUtils() {
-            // 유틸리티 클래스로 인스턴스화 방지
         }
     }
 }

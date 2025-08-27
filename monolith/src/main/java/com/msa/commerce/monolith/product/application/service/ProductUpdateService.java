@@ -180,12 +180,9 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
-        // 변경 이력 로깅
         log.info("Product changes for ID: {} - Updated fields: {}",
             after.getId(), getUpdatedFieldsDescription(command));
 
-        // 추후 변경 이력 테이블이 구현되면 여기서 변경 이력을 저장
-        // productHistoryRepository.save(ProductHistory.create(before, after, command));
     }
 
     private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
@@ -239,23 +236,10 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void invalidateProductCache(Long productId) {
-        // 캐시 무효화 처리
         log.debug("Invalidating cache for product ID: {}", productId);
 
-        // 추후 캐시 시스템이 구축되면 다음과 같은 캐시 무효화 로직 구현:
-        // 1. 단일 상품 캐시 무효화: @CacheEvict(value = "products", key = "#productId")
-        // 2. 카테고리별 상품 목록 캐시 무효화
-        // 3. 추천 상품 목록 캐시 무효화
-        // 4. 검색 결과 캐시 무효화
-
-        // 현재는 로깅만 수행
         log.info("Cache invalidation completed for product ID: {}", productId);
 
-        // 추후 구현 예시:
-        // cacheManager.evict("products", productId);
-        // cacheManager.evict("products-by-category", product.getCategoryId());
-        // cacheManager.evict("featured-products");
-        // searchCacheService.invalidateSearchCache();
     }
 
 }
