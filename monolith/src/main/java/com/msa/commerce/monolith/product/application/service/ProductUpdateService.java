@@ -10,10 +10,8 @@ import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductInventory;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductUpdateService implements ProductUpdateUseCase {
 
     private final ProductRepository productRepository;
-
-    private final ProductInventoryRepository productInventoryRepository;
 
     private final ProductResponseMapper productResponseMapper;
 
@@ -99,90 +95,13 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command, Product originalProduct) {
-        updateInventoryIfNeeded(updatedProduct.getId(), command);
         invalidateProductCache(updatedProduct.getId());
         logProductChanges(originalProduct, updatedProduct, command);
-    }
-
-    private void updateInventoryIfNeeded(Long productId, ProductUpdateCommand command) {
-        if (hasInventoryUpdates(command)) {
-            updateProductInventory(productId, command);
-        }
-    }
-
-    private boolean hasInventoryUpdates(ProductUpdateCommand command) {
-        return hasStockUpdates(command) || hasInventoryConfigUpdates(command) || hasOrderQuantityUpdates(command);
-    }
-
-    private boolean hasStockUpdates(ProductUpdateCommand command) {
-        return command.getInitialStockOptional().isPresent() ||
-            command.getLowStockThresholdOptional().isPresent();
-    }
-
-    private boolean hasInventoryConfigUpdates(ProductUpdateCommand command) {
-        return command.getIsTrackingEnabledOptional().isPresent() ||
-            command.getIsBackorderAllowedOptional().isPresent() ||
-            command.getLocationCodeOptional().isPresent();
-    }
-
-    private boolean hasOrderQuantityUpdates(ProductUpdateCommand command) {
-        return command.getMinOrderQuantityOptional().isPresent() ||
-            command.getMaxOrderQuantityOptional().isPresent() ||
-            command.getReorderPointOptional().isPresent() ||
-            command.getReorderQuantityOptional().isPresent();
-    }
-
-    private void updateProductInventory(Long productId, ProductUpdateCommand command) {
-        log.debug("Updating inventory for product ID: {}", productId);
-
-        ProductInventory inventory = productInventoryRepository.findByProductId(productId).orElse(null);
-        
-        if (inventory != null) {
-            updateExistingInventory(inventory, command);
-        } else {
-            createNewInventoryIfNeeded(productId, command);
-        }
-    }
-
-    private void updateExistingInventory(ProductInventory inventory, ProductUpdateCommand command) {
-        inventory.updatePartially(
-            command.getInitialStock(), command.getLowStockThreshold(),
-            command.getIsTrackingEnabled(), command.getIsBackorderAllowed(),
-            command.getMinOrderQuantity(), command.getMaxOrderQuantity(),
-            command.getReorderPoint(), command.getReorderQuantity(),
-            command.getLocationCode()
-        );
-        productInventoryRepository.save(inventory);
-    }
-
-    private void createNewInventoryIfNeeded(Long productId, ProductUpdateCommand command) {
-        if (command.getInitialStockOptional().isPresent()) {
-            ProductInventory newInventory = buildNewInventory(productId, command);
-            productInventoryRepository.save(newInventory);
-        }
-    }
-
-    private ProductInventory buildNewInventory(Long productId, ProductUpdateCommand command) {
-        return ProductInventory.builder()
-            .productId(productId)
-            .availableQuantity(command.getInitialStock())
-            .reservedQuantity(0)
-            .totalQuantity(command.getInitialStock())
-            .lowStockThreshold(command.getLowStockThreshold())
-            .isTrackingEnabled(command.getIsTrackingEnabled())
-            .isBackorderAllowed(command.getIsBackorderAllowed())
-            .minOrderQuantity(command.getMinOrderQuantity())
-            .maxOrderQuantity(command.getMaxOrderQuantity())
-            .reorderPoint(command.getReorderPoint())
-            .reorderQuantity(command.getReorderQuantity())
-            .locationCode(command.getLocationCode())
-            .build();
     }
 
     private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
         log.info("Product changes for ID: {} - Updated fields: {}",
             after.getId(), getUpdatedFieldsDescription(command));
-
     }
 
     private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
@@ -191,7 +110,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         appendBasicFieldUpdates(description, command);
         appendPriceFieldUpdates(description, command);
         appendMetadataFieldUpdates(description, command);
-        appendInventoryFieldUpdates(description, command);
         
         return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
     }
@@ -223,12 +141,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
     }
 
-    private void appendInventoryFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        if (hasInventoryUpdates(command)) {
-            description.append("inventory,");
-        }
-    }
-
     private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
         if (field != null) {
             description.append(fieldName).append(",");
@@ -237,9 +149,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private void invalidateProductCache(Long productId) {
         log.debug("Invalidating cache for product ID: {}", productId);
-
         log.info("Cache invalidation completed for product ID: {}", productId);
-
     }
-
 }

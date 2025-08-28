@@ -25,7 +25,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.application.service.ProductCreateService;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -49,13 +48,10 @@ class ProductControllerTest {
     @Mock
     private ProductMapper productMapper;
 
-    @Mock
-    private ProductCreateService productCreateService;
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productCreateService, productGetUseCase, productUpdateUseCase,
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase,
                     productSearchUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
@@ -224,3 +220,4 @@ class ProductControllerTest {
     }
 
 }
+

@@ -25,6 +25,8 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchRespon
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.common.monitoring.MetricsCollector;
+import org.springframework.security.test.context.support.WithMockUser;
 
 @WebMvcTest(ProductController.class)
 @DisplayName("ProductController 검색 API 테스트")
@@ -47,9 +49,13 @@ class ProductControllerSearchTest {
 
     @MockBean
     private ProductMapper productMapper;
+    
+    @MockBean
+    private MetricsCollector metricsCollector;
 
     @Test
     @DisplayName("상품 검색 API가 정상적으로 동작한다")
+    @WithMockUser
     void getProducts_Success() throws Exception {
         // Given
         ProductSearchResponse product1 = ProductSearchResponse.builder()
@@ -103,7 +109,7 @@ class ProductControllerSearchTest {
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
-        given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
+        given(productGetUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/products")
@@ -136,6 +142,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("가격 범위 필터링이 정상적으로 동작한다")
+    @WithMockUser
     void getProducts_WithPriceRange() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
@@ -160,7 +167,7 @@ class ProductControllerSearchTest {
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
-        given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
+        given(productGetUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/products")
@@ -172,6 +179,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("상품 상태 필터링이 정상적으로 동작한다")
+    @WithMockUser
     void getProducts_WithStatus() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
@@ -195,7 +203,7 @@ class ProductControllerSearchTest {
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
-        given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
+        given(productGetUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/products")
@@ -206,6 +214,7 @@ class ProductControllerSearchTest {
 
     @Test
     @DisplayName("정렬 옵션이 정상적으로 동작한다")
+    @WithMockUser
     void getProducts_WithSorting() throws Exception {
         // Given
         ProductPageResponse pageResponse = ProductPageResponse.builder()
@@ -228,7 +237,7 @@ class ProductControllerSearchTest {
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
-        given(productSearchUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
+        given(productGetUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
 
         // When & Then
         mockMvc.perform(get("/api/v1/products")
@@ -239,3 +248,4 @@ class ProductControllerSearchTest {
     }
 
 }
+

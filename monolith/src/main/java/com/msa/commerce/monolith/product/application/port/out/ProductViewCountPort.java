@@ -7,3 +7,4 @@ public interface ProductViewCountPort {
     Long getViewCount(Long productId);
 
 }
+
