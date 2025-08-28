@@ -3,6 +3,7 @@ package com.msa.commerce.monolith.product.application.service;
 import org.springframework.stereotype.Component;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.domain.Product;
 
 @Component
@@ -39,4 +40,32 @@ public class ProductResponseMapper {
             .build();
     }
 
+    public ProductSearchResponse toSearchResponse(Product product) {
+        if (product == null) {
+            return null;
+        }
+
+        return ProductSearchResponse.builder()
+            .id(product.getId())
+            .categoryId(product.getCategoryId())
+            .sku(product.getSku())
+            .name(product.getName())
+            .description(product.getDescription())
+            .shortDescription(product.getShortDescription())
+            .brand(product.getBrand())
+            .model(product.getModel())
+            .price(product.getPrice())
+            .comparePrice(product.getComparePrice())
+            .costPrice(product.getCostPrice())
+            .weight(product.getWeight())
+            .status(product.getStatus())
+            .visibility(product.getVisibility())
+            .isFeatured(product.getIsFeatured())
+            .createdAt(product.getCreatedAt())
+            .updatedAt(product.getUpdatedAt())
+            .viewCount(0L) // Default view count for search results
+            .build();
+    }
+
 }
+

@@ -26,8 +26,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.application.service.ProductCreateService;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.domain.ProductCategory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
@@ -47,18 +45,25 @@ class ProductControllerUpdateTest {
     private ProductUpdateUseCase productUpdateUseCase;
 
     @Mock
-    private ProductMapper productMapper;
-
-    @Mock
     private ProductSearchUseCase productSearchUseCase;
 
     @Mock
-    private ProductCreateService productCreateService;
+    private ProductMapper productMapper;
+
+    // private final ProductCreateUseCase productCreateUseCase;
+    //
+    // private final ProductGetUseCase productGetUseCase;
+    //
+    // private final ProductUpdateUseCase productUpdateUseCase;
+    //
+    // private final ProductSearchUseCase productSearchUseCase;
+    //
+    // private final ProductMapper productMapper;
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productCreateService, productGetUseCase, productUpdateUseCase,
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase,
                     productSearchUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
@@ -290,3 +295,4 @@ class ProductControllerUpdateTest {
     }
 
 }
+

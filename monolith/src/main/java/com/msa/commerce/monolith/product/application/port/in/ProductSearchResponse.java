@@ -32,3 +32,4 @@ public class ProductSearchResponse {
     private final Long viewCount;
 
 }
+

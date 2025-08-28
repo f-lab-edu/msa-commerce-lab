@@ -21,11 +21,9 @@ import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
-import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductCategory;
-import com.msa.commerce.monolith.product.domain.ProductInventory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,9 +32,6 @@ class ProductUpdateServiceTest {
 
     @Mock
     private ProductRepository productRepository;
-
-    @Mock
-    private ProductInventoryRepository productInventoryRepository;
 
     @Mock
     private ProductResponseMapper productResponseMapper;
@@ -246,68 +241,6 @@ class ProductUpdateServiceTest {
         verify(productRepository).save(any(Product.class));
     }
 
-    @Test
-    @DisplayName("재고 정보 포함 업데이트")
-    void updateProduct_WithInventoryUpdate() {
-        // given
-        ProductUpdateCommand commandWithInventory = ProductUpdateCommand.builder()
-            .productId(1L)
-            .name("업데이트된 상품명")
-            .initialStock(100)
-            .lowStockThreshold(10)
-            .isTrackingEnabled(true)
-            .build();
-
-        ProductInventory existingInventory = ProductInventory.reconstitute(
-            1L, 1L, null, 50, 5, 55, 10, true, false,
-            1, 100, 5, 10, "MAIN", 0L,
-            LocalDateTime.now(), LocalDateTime.now()
-        );
-
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productInventoryRepository.findByProductId(1L)).willReturn(Optional.of(existingInventory));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productInventoryRepository.save(any(ProductInventory.class))).willReturn(existingInventory);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
-
-        // when
-        ProductResponse response = productUpdateService.updateProduct(commandWithInventory);
-
-        // then
-        assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
-        verify(productInventoryRepository).findByProductId(1L);
-        verify(productRepository).save(any(Product.class));
-        verify(productInventoryRepository).save(any(ProductInventory.class));
-    }
-
-    @Test
-    @DisplayName("새로운 재고 정보 생성")
-    void updateProduct_CreateNewInventory() {
-        // given
-        ProductUpdateCommand commandWithInventory = ProductUpdateCommand.builder()
-            .productId(1L)
-            .name("업데이트된 상품명")
-            .initialStock(50)
-            .lowStockThreshold(5)
-            .isTrackingEnabled(true)
-            .build();
-
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productInventoryRepository.findByProductId(1L)).willReturn(Optional.empty());
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
-
-        // when
-        ProductResponse response = productUpdateService.updateProduct(commandWithInventory);
-
-        // then
-        assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
-        verify(productInventoryRepository).findByProductId(1L);
-        verify(productRepository).save(any(Product.class));
-        verify(productInventoryRepository).save(any(ProductInventory.class));
-    }
 
     @Test
     @DisplayName("유효하지 않은 업데이트 명령 시 예외 발생")
@@ -393,3 +326,4 @@ class ProductUpdateServiceTest {
     }
 
 }
+

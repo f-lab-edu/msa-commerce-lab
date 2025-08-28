@@ -5,6 +5,10 @@ import java.math.BigDecimal;
 import com.msa.commerce.monolith.product.domain.validation.Notification;
 import com.msa.commerce.monolith.product.domain.validation.ProductValidator;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,20 +16,31 @@ import lombok.Getter;
 @Builder
 public class ProductCreateCommand {
 
+    @NotNull(message = "Category ID is required")
     private final Long categoryId;
 
+    @NotBlank(message = "SKU is required")
+    @Size(max = 100, message = "SKU must not exceed 100 characters")
     private final String sku;
 
+    @NotBlank(message = "Product name is required")
+    @Size(max = 200, message = "Product name must not exceed 200 characters")
     private final String name;
 
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private final String description;
 
+    @Size(max = 500, message = "Short description must not exceed 500 characters")
     private final String shortDescription;
 
+    @Size(max = 100, message = "Brand must not exceed 100 characters")
     private final String brand;
 
+    @Size(max = 100, message = "Model must not exceed 100 characters")
     private final String model;
 
+    @NotNull(message = "Price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
     private final BigDecimal price;
 
     private final BigDecimal comparePrice;
@@ -80,3 +95,4 @@ public class ProductCreateCommand {
     }
 
 }
+

@@ -1,52 +1,64 @@
 package com.msa.commerce.monolith.product.domain.validation;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Entity
+@Table(name = "validation_errors")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ValidationError {
 
-    private final String field;
-    private final String message;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    public ValidationError(String field, String message) {
-        this.field = field;
-        this.message = Objects.requireNonNull(message, "Validation error message cannot be null");
+    @Column(name = "notification_id")
+    private Long notificationId;
+
+    @Column(name = "field_name", nullable = false, length = 100)
+    private String fieldName;
+
+    @Column(name = "error_code", nullable = false, length = 50)
+    private String errorCode;
+
+    @Column(name = "error_message", nullable = false, length = 500)
+    private String errorMessage;
+
+    @Column(name = "rejected_value", length = 1000)
+    private String rejectedValue;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Builder
+    public ValidationError(String fieldName, String errorCode, String errorMessage, String rejectedValue) {
+        this.fieldName = fieldName;
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.rejectedValue = rejectedValue;
     }
 
     public String getField() {
-        return field;
+        return fieldName;
     }
 
     public String getMessage() {
-        return message;
-    }
-
-    public boolean hasField() {
-        return field != null && !field.trim().isEmpty();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        ValidationError that = (ValidationError) o;
-        return Objects.equals(field, that.field) && Objects.equals(message, that.message);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(field, message);
-    }
-
-    @Override
-    public String toString() {
-        if (hasField()) {
-            return field + ": " + message;
-        }
-        return message;
+        return errorMessage;
     }
 
 }
+

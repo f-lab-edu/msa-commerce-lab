@@ -81,3 +81,4 @@ public class ProductResponse {
     private final Long versionNumber;
 
 }
+

@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductCategory;
@@ -30,9 +29,6 @@ class ProductCreateServiceTest {
 
     @Mock
     private ProductRepository productRepository;
-
-    @Mock
-    private ProductInventoryRepository productInventoryRepository;
 
     @Mock
     private ProductResponseMapper productResponseMapper;
@@ -198,3 +194,4 @@ class ProductCreateServiceTest {
     }
 
 }
+

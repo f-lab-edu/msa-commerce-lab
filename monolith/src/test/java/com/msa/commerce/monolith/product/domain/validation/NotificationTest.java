@@ -24,7 +24,7 @@ class NotificationTest {
     @DisplayName("단일 오류 추가")
     void addSingleError() {
         // given
-        Notification notification = new Notification();
+        Notification notification = Notification.create();
 
         // when
         notification.addError("field1", "Error message 1");
@@ -42,7 +42,7 @@ class NotificationTest {
     @DisplayName("다중 오류 추가")
     void addMultipleErrors() {
         // given
-        Notification notification = new Notification();
+        Notification notification = Notification.create();
 
         // when
         notification.addError("field1", "Error message 1")
@@ -104,3 +104,4 @@ class NotificationTest {
     }
 
 }
+
