@@ -13,47 +13,26 @@ import lombok.NoArgsConstructor;
 public class Product {
 
     private Long id;
-
     private Long categoryId;
-
     private String sku;
-
     private String name;
-
     private String description;
-
     private String shortDescription;
-
     private String brand;
-
     private String model;
-
     private BigDecimal price;
-
     private BigDecimal comparePrice;
-
     private BigDecimal costPrice;
-
     private BigDecimal weight;
-
     private String productAttributes;
-
     private ProductStatus status;
-
     private String visibility;
-
     private String taxClass;
-
     private String metaTitle;
-
     private String metaDescription;
-
     private String searchKeywords;
-
     private Boolean isFeatured;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
 
     @Builder
@@ -244,3 +223,4 @@ public class Product {
     }
 
 }
+

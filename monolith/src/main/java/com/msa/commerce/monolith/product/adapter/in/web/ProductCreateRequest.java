@@ -104,3 +104,4 @@ public class ProductCreateRequest {
     private String locationCode;
 
 }
+

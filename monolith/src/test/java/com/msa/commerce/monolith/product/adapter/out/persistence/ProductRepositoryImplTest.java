@@ -1,6 +1,6 @@
 package com.msa.commerce.monolith.product.adapter.out.persistence;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,13 +12,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.ActiveProfiles;
-
+import com.msa.commerce.monolith.config.TestBeansConfiguration;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @DataJpaTest
-@Import(ProductRepositoryImpl.class)
+@Import({ProductRepositoryImpl.class, TestBeansConfiguration.class})
 @ActiveProfiles("test")
 @DisplayName("ProductRepositoryImpl 통합 테스트")
 class ProductRepositoryImplTest {
@@ -78,8 +78,8 @@ class ProductRepositoryImplTest {
         assertThat(result.getContent()).isNotEmpty();
         assertThat(result.getContent())
             .extracting(Product::getPrice)
-            .allMatch(price -> price.compareTo(new BigDecimal("50.00")) >= 0 && 
-                             price.compareTo(new BigDecimal("150.00")) <= 0);
+            .allMatch(price -> price.compareTo(new BigDecimal("50.00")) >= 0 &&
+                price.compareTo(new BigDecimal("150.00")) <= 0);
     }
 
     @Test
@@ -128,11 +128,11 @@ class ProductRepositoryImplTest {
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).allMatch(product -> 
+        assertThat(result.getContent()).allMatch(product ->
             product.getCategoryId().equals(1L) &&
-            product.getPrice().compareTo(new BigDecimal("90.00")) >= 0 &&
-            product.getPrice().compareTo(new BigDecimal("150.00")) <= 0 &&
-            product.getStatus() == ProductStatus.ACTIVE
+                product.getPrice().compareTo(new BigDecimal("90.00")) >= 0 &&
+                product.getPrice().compareTo(new BigDecimal("150.00")) <= 0 &&
+                product.getStatus() == ProductStatus.ACTIVE
         );
     }
 
@@ -234,9 +234,11 @@ class ProductRepositoryImplTest {
         productRepository.save(product1);
         productRepository.save(product2);
         Product savedProduct3 = productRepository.save(product3);
-        
+
         // Set product3 to inactive after saving to test status filtering
         savedProduct3.deactivate();
         productRepository.save(savedProduct3);
     }
+
 }
+
