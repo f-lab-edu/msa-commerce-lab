@@ -26,3 +26,4 @@ public interface ProductRepository {
     Page<Product> searchProducts(ProductSearchCommand command);
 
 }
+

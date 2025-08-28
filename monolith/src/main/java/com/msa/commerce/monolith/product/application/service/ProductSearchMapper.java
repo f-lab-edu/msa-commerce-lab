@@ -26,3 +26,4 @@ public interface ProductSearchMapper {
     ProductPageResponse toPageResponse(Page<ProductSearchResponse> page);
 
 }
+

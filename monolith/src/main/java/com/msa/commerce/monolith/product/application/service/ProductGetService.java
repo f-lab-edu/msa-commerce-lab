@@ -6,13 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.out.ProductInventoryRepository;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
 import com.msa.commerce.common.config.RedisConfig;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductInventory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 import lombok.RequiredArgsConstructor;
@@ -25,8 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductGetService implements ProductGetUseCase {
 
     private final ProductRepository productRepository;
-
-    private final ProductInventoryRepository inventoryRepository;
 
     private final ProductViewCountPort viewCountPort;
 
@@ -49,9 +47,6 @@ public class ProductGetService implements ProductGetUseCase {
             throw new ResourceNotFoundException(String.format("Product not found with id: %d", productId));
         }
 
-        ProductInventory inventory = inventoryRepository.findByProductId(productId)
-            .orElse(null);
-
         ProductResponse response = responseMapper.toResponse(product);
 
         if (increaseViewCount) {
@@ -67,4 +62,20 @@ public class ProductGetService implements ProductGetUseCase {
         return response;
     }
 
+    @Override
+    public ProductPageResponse searchProducts(ProductSearchCommand searchCommand) {
+        searchCommand.validate();
+        
+        log.debug("Searching products with command: categoryId={}, minPrice={}, maxPrice={}, status={}, page={}, size={}", 
+                searchCommand.getCategoryId(), searchCommand.getMinPrice(), searchCommand.getMaxPrice(), 
+                searchCommand.getStatus(), searchCommand.getPage(), searchCommand.getSize());
+        
+        var productPage = productRepository.searchProducts(searchCommand);
+        
+        log.debug("Found {} products for search criteria", productPage.getTotalElements());
+        
+        return ProductPageResponse.from(productPage, responseMapper::toSearchResponse);
+    }
+
 }
+
