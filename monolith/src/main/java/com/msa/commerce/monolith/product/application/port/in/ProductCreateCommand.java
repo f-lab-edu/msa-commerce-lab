@@ -2,9 +2,6 @@ package com.msa.commerce.monolith.product.application.port.in;
 
 import java.math.BigDecimal;
 
-import com.msa.commerce.monolith.product.domain.validation.Notification;
-import com.msa.commerce.monolith.product.domain.validation.ProductValidator;
-
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -81,18 +78,4 @@ public class ProductCreateCommand {
 
     private final String locationCode;
 
-    public void validate() {
-        Notification notification = validateWithNotification();
-        notification.throwIfHasErrors();
-    }
-
-    public Notification validateWithNotification() {
-        return ProductValidator.validateProductCreation(
-            categoryId, sku, name, price, description, shortDescription,
-            brand, model, initialStock, lowStockThreshold, minOrderQuantity,
-            maxOrderQuantity, reorderPoint, reorderQuantity, locationCode
-        );
-    }
-
 }
-
