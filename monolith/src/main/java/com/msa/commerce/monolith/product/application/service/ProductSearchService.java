@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.msa.commerce.common.aop.ValidateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
@@ -28,9 +29,8 @@ public class ProductSearchService implements ProductSearchUseCase {
     private final ProductSearchMapper productSearchMapper;
 
     @Override
+    @ValidateCommand(errorPrefix = "Product search validation failed")
     public ProductPageResponse searchProducts(ProductSearchCommand command) {
-        command.validate();
-
         Page<Product> productPage = productRepository.searchProducts(command);
 
         Page<ProductSearchResponse> responsePage = productPage.map(this::enrichWithViewCount);
