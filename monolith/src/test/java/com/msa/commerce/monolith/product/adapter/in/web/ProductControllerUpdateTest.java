@@ -63,8 +63,7 @@ class ProductControllerUpdateTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase,
-                    productSearchUseCase, productMapper))
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }

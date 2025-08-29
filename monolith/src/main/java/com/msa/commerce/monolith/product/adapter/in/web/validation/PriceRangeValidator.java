@@ -30,4 +30,3 @@ public class PriceRangeValidator implements ConstraintValidator<PriceRange, Prod
     }
 
 }
-

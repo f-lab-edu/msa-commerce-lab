@@ -16,7 +16,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCas
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 
 import jakarta.validation.Valid;
@@ -33,8 +32,6 @@ public class ProductController {
     private final ProductGetUseCase productGetUseCase;
 
     private final ProductUpdateUseCase productUpdateUseCase;
-
-    private final ProductSearchUseCase productSearchUseCase;
 
     private final ProductMapper productMapper;
 
@@ -61,4 +58,3 @@ public class ProductController {
     }
 
 }
-

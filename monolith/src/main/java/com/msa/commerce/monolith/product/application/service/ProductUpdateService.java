@@ -1,8 +1,11 @@
 package com.msa.commerce.monolith.product.application.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.msa.commerce.common.aop.ValidateCommand;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
@@ -27,17 +30,17 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     private final ProductResponseMapper productResponseMapper;
 
     @Override
+    @ValidateCommand(errorPrefix = "Product update validation failed")
     public ProductResponse updateProduct(ProductUpdateCommand command) {
         log.info("Updating product with ID: {}", command.getProductId());
 
-        command.validate();
         Product existingProduct = findAndValidateProduct(command.getProductId());
         validateProductUpdatable(existingProduct, command.getProductId());
         validateUniqueConstraints(command, existingProduct);
 
         updateProductData(existingProduct, command);
         Product updatedProduct = productRepository.save(existingProduct);
-        
+
         performPostUpdateOperations(updatedProduct, command, existingProduct);
 
         log.info("Product updated successfully with ID: {}", updatedProduct.getId());
@@ -64,7 +67,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void validateSkuUnique(ProductUpdateCommand command, Product existingProduct) {
-        command.getSkuOptional().ifPresent(newSku -> {
+        Optional.ofNullable(command.getSku()).ifPresent(newSku -> {
             if (!existingProduct.getSku().equals(newSku) && productRepository.existsBySku(newSku)) {
                 throw new DuplicateResourceException(
                     "SKU already exists: " + newSku,
@@ -74,7 +77,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void validateNameUnique(ProductUpdateCommand command, Product existingProduct) {
-        command.getNameOptional().ifPresent(newName -> {
+        Optional.ofNullable(command.getName()).ifPresent(newName -> {
             if (!existingProduct.getName().equals(newName) && productRepository.existsByName(newName)) {
                 throw new DuplicateResourceException(
                     "Product name already exists: " + newName,
@@ -94,7 +97,8 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         );
     }
 
-    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command, Product originalProduct) {
+    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command,
+        Product originalProduct) {
         invalidateProductCache(updatedProduct.getId());
         logProductChanges(originalProduct, updatedProduct, command);
     }
@@ -106,11 +110,11 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
         StringBuilder description = new StringBuilder();
-        
+
         appendBasicFieldUpdates(description, command);
         appendPriceFieldUpdates(description, command);
         appendMetadataFieldUpdates(description, command);
-        
+
         return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
     }
 
@@ -151,4 +155,5 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         log.debug("Invalidating cache for product ID: {}", productId);
         log.info("Cache invalidation completed for product ID: {}", productId);
     }
+
 }
