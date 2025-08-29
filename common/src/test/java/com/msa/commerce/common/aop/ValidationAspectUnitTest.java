@@ -1,13 +1,10 @@
 package com.msa.commerce.common.aop;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
-
+import com.msa.commerce.common.exception.CommandValidationException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import lombok.Builder;
+import lombok.Getter;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,12 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.msa.commerce.common.exception.CommandValidationException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashSet;
+import java.util.Set;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
-import lombok.Builder;
-import lombok.Getter;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ValidationAspect - Unit Tests")
@@ -49,9 +49,9 @@ class ValidationAspectUnitTest {
     void setUp() throws Exception {
         testMethod = TestService.class.getMethod("processCommand", TestCommand.class);
         testCommand = TestCommand.builder()
-            .id(1L)
-            .name("Test")
-            .build();
+                .id(1L)
+                .name("Test")
+                .build();
 
         when(joinPoint.getSignature()).thenReturn(methodSignature);
         when(methodSignature.getMethod()).thenReturn(testMethod);
@@ -61,21 +61,27 @@ class ValidationAspectUnitTest {
     @DisplayName("유효한 Command 객체는 검증을 통과한다")
     void validCommandShouldPassValidation() throws Exception {
         // Given
-        when(joinPoint.getArgs()).thenReturn(new Object[] {testCommand});
-        when(validator.validate(eq(testCommand))).thenReturn(new HashSet<>());
+        when(joinPoint.getArgs()).thenReturn(new Object[]{testCommand});
 
         ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[] {});
-        when(annotation.groups()).thenReturn(new Class<?>[] {});
+        when(annotation.parameterIndices()).thenReturn(new int[]{});
+        when(annotation.groups()).thenReturn(new Class<?>[]{});
         when(annotation.failFast()).thenReturn(false);
         when(annotation.includeParameterNames()).thenReturn(true);
         when(annotation.errorPrefix()).thenReturn("Test validation failed");
 
+        when(validator.validate(any(), any(Class[].class))).thenReturn(new HashSet<>()); // Mock validator.validate to return an empty set (no violations)
+
         Method methodWithAnnotation = mock(Method.class);
         when(methodWithAnnotation.getAnnotation(ValidateCommand.class)).thenReturn(annotation);
+
+        Parameter parameter = mock(Parameter.class);
+        when(parameter.getName()).thenReturn("testParam");
+        when(methodWithAnnotation.getParameters()).thenReturn(new Parameter[]{parameter});
+
         when(methodSignature.getMethod()).thenReturn(methodWithAnnotation);
 
-        // When & Then - should not throw exception
+        // When & Then
         validationAspect.validateCommandParameters(joinPoint);
     }
 
@@ -83,7 +89,7 @@ class ValidationAspectUnitTest {
     @DisplayName("검증 실패 시 CommandValidationException을 발생시킨다")
     void invalidCommandShouldThrowException() throws Exception {
         // Given
-        when(joinPoint.getArgs()).thenReturn(new Object[] {testCommand});
+        when(joinPoint.getArgs()).thenReturn(new Object[]{testCommand});
 
         @SuppressWarnings("unchecked")
         Set<ConstraintViolation<Object>> violations = new HashSet<>();
@@ -95,12 +101,12 @@ class ValidationAspectUnitTest {
         violations.add(violation);
 
         @SuppressWarnings("unchecked")
-        Set<ConstraintViolation<Object>> mockViolations = (Set<ConstraintViolation<Object>>)(Set<?>)violations;
+        Set<ConstraintViolation<Object>> mockViolations = (Set<ConstraintViolation<Object>>) (Set<?>) violations;
         when(validator.validate(any())).thenReturn(mockViolations);
 
         ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[] {});
-        when(annotation.groups()).thenReturn(new Class<?>[] {});
+        when(annotation.parameterIndices()).thenReturn(new int[]{});
+        when(annotation.groups()).thenReturn(new Class<?>[]{});
         when(annotation.failFast()).thenReturn(false);
         when(annotation.includeParameterNames()).thenReturn(true);
         when(annotation.errorPrefix()).thenReturn("Test validation failed");
@@ -112,8 +118,8 @@ class ValidationAspectUnitTest {
 
         // When & Then
         assertThatThrownBy(() -> validationAspect.validateCommandParameters(joinPoint))
-            .isInstanceOf(CommandValidationException.class)
-            .hasMessageContaining("Command validation failed");
+                .isInstanceOf(CommandValidationException.class)
+                .hasMessageContaining("Command validation failed");
     }
 
     @Test
@@ -121,14 +127,10 @@ class ValidationAspectUnitTest {
     void nonCommandObjectShouldBeIgnored() throws Exception {
         // Given
         String nonCommandObject = "not a command";
-        when(joinPoint.getArgs()).thenReturn(new Object[] {nonCommandObject});
+        when(joinPoint.getArgs()).thenReturn(new Object[]{nonCommandObject});
 
         ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[] {});
-        when(annotation.groups()).thenReturn(new Class<?>[] {});
-        when(annotation.failFast()).thenReturn(false);
-        when(annotation.includeParameterNames()).thenReturn(true);
-        when(annotation.errorPrefix()).thenReturn("Test validation failed");
+        when(annotation.parameterIndices()).thenReturn(new int[]{});
 
         Method methodWithAnnotation = mock(Method.class);
         when(methodWithAnnotation.getAnnotation(ValidateCommand.class)).thenReturn(annotation);
