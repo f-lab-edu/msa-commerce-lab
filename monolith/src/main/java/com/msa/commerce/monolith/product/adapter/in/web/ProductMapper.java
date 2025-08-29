@@ -8,6 +8,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
+import com.msa.commerce.common.aop.ValidateResult;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
@@ -22,14 +23,17 @@ public interface ProductMapper {
     @Mapping(target = "sku", ignore = true)
     @Mapping(target = "visibility", ignore = true)
     @Mapping(target = "isFeatured", ignore = true)
+    @ValidateResult
     ProductCreateCommand toCommand(ProductCreateRequest request);
 
+    @ValidateResult
     ProductSearchCommand toSearchCommand(ProductSearchRequest request);
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "sku", ignore = true)
     @Mapping(target = "visibility", ignore = true)
     @Mapping(target = "isFeatured", ignore = true)
+    @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
 
     @AfterMapping
@@ -51,27 +55,6 @@ public interface ProductMapper {
             target.isFeatured(false);
         } else {
             target.isFeatured(request.getIsFeatured());
-        }
-    }
-
-    @AfterMapping
-    default void validateUpdateRequest(@MappingTarget ProductUpdateCommand.ProductUpdateCommandBuilder target,
-        Long productId, ProductUpdateRequest request) {
-        if (request != null && !request.hasFieldToUpdate()) {
-            throw new IllegalArgumentException("No fields to update provided.");
-        }
-
-        // Handle custom fields for update
-        if (request != null) {
-            if (request.getSku() != null) {
-                target.sku(request.getSku());
-            }
-            if (request.getVisibility() != null) {
-                target.visibility(request.getVisibility());
-            }
-            if (request.getIsFeatured() != null) {
-                target.isFeatured(request.getIsFeatured());
-            }
         }
     }
 
@@ -100,4 +83,3 @@ public interface ProductMapper {
     }
 
 }
-

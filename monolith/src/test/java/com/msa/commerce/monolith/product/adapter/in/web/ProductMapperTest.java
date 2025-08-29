@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.springframework.data.domain.Sort;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
@@ -108,8 +109,8 @@ class ProductMapperTest {
         request.setStatus(ProductStatus.ACTIVE);
         request.setPage(0);
         request.setSize(20);
-        request.setSortBy("name");
-        request.setSortDirection("asc");
+        request.setSortProperty("name");
+        request.setSortDirection(Sort.Direction.DESC);
 
         // when
         ProductSearchCommand command = productMapper.toSearchCommand(request);
@@ -122,8 +123,8 @@ class ProductMapperTest {
         assertThat(command.getStatus()).isEqualTo(ProductStatus.ACTIVE);
         assertThat(command.getPage()).isEqualTo(0);
         assertThat(command.getSize()).isEqualTo(20);
-        assertThat(command.getSortBy()).isEqualTo("name");
-        assertThat(command.getSortDirection()).isEqualTo("asc");
+        assertThat(command.getSortProperty()).isEqualTo("name");
+        assertThat(command.getSortDirection()).isEqualTo(Sort.Direction.DESC);
     }
 
     @Test

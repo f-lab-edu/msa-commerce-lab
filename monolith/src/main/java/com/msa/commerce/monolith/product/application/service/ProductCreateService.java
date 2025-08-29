@@ -3,6 +3,7 @@ package com.msa.commerce.monolith.product.application.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.msa.commerce.common.aop.ValidateCommand;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
@@ -23,8 +24,8 @@ public class ProductCreateService implements ProductCreateUseCase {
     private final ProductResponseMapper productResponseMapper;
 
     @Override
+    @ValidateCommand(errorPrefix = "Product creation validation failed")
     public ProductResponse createProduct(ProductCreateCommand command) {
-        command.validate();
         validateDuplicateSku(command.getSku());
         return executeProductCreation(command);
     }

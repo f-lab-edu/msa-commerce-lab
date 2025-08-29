@@ -2,6 +2,8 @@ package com.msa.commerce.monolith.product.adapter.in.web;
 
 import java.math.BigDecimal;
 
+import org.springframework.data.domain.Sort;
+
 import com.msa.commerce.monolith.product.adapter.in.web.validation.PriceRange;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
@@ -35,9 +37,8 @@ public class ProductSearchRequest {
     @Max(value = 100, message = "Size must be at most 100")
     private Integer size = 20;
 
-    private String sortBy = "createdAt";
+    private String sortProperty = "createdAt";
 
-    private String sortDirection = "desc";
+    private Sort.Direction sortDirection = Sort.Direction.DESC;
 
 }
-

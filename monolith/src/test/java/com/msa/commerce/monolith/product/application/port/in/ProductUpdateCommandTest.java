@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.msa.commerce.monolith.product.domain.validation.ValidationException;
+
 @DisplayName("ProductUpdateCommand 테스트")
 class ProductUpdateCommandTest {
 
@@ -38,8 +40,8 @@ class ProductUpdateCommandTest {
 
         // when & then
         assertThatThrownBy(command::validate)
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product ID is required for update.");
+            .isInstanceOf(ValidationException.class)
+            .hasMessage("Product update validation");
     }
 
     @Test

@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
+
 import com.msa.commerce.monolith.config.TestBeansConfiguration;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.Product;
@@ -39,8 +41,8 @@ class ProductRepositoryImplTest {
             .categoryId(1L)
             .page(0)
             .size(10)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When
@@ -66,8 +68,8 @@ class ProductRepositoryImplTest {
             .maxPrice(new BigDecimal("150.00"))
             .page(0)
             .size(10)
-            .sortBy("price")
-            .sortDirection("asc")
+            .sortProperty("price")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When
@@ -92,8 +94,8 @@ class ProductRepositoryImplTest {
             .status(ProductStatus.ACTIVE)
             .page(0)
             .size(10)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When
@@ -119,8 +121,8 @@ class ProductRepositoryImplTest {
             .status(ProductStatus.ACTIVE)
             .page(0)
             .size(10)
-            .sortBy("price")
-            .sortDirection("desc")
+            .sortProperty("price")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When
@@ -145,8 +147,8 @@ class ProductRepositoryImplTest {
         ProductSearchCommand command = ProductSearchCommand.builder()
             .page(0)
             .size(1)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When
@@ -168,15 +170,15 @@ class ProductRepositoryImplTest {
         ProductSearchCommand commandAsc = ProductSearchCommand.builder()
             .page(0)
             .size(10)
-            .sortBy("price")
-            .sortDirection("asc")
+            .sortProperty("price")
+            .sortDirection(Sort.Direction.ASC)
             .build();
 
         ProductSearchCommand commandDesc = ProductSearchCommand.builder()
             .page(0)
             .size(10)
-            .sortBy("price")
-            .sortDirection("desc")
+            .sortProperty("price")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         // When

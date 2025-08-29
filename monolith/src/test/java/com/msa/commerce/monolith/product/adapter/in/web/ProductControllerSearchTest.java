@@ -14,9 +14,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.msa.commerce.common.monitoring.MetricsCollector;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
@@ -25,8 +28,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchRespon
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
-import com.msa.commerce.common.monitoring.MetricsCollector;
-import org.springframework.security.test.context.support.WithMockUser;
 
 @WebMvcTest(ProductController.class)
 @DisplayName("ProductController 검색 API 테스트")
@@ -35,22 +36,22 @@ class ProductControllerSearchTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private ProductCreateUseCase productCreateUseCase;
 
-    @MockBean
+    @MockitoBean
     private ProductGetUseCase productGetUseCase;
 
-    @MockBean
+    @MockitoBean
     private ProductUpdateUseCase productUpdateUseCase;
 
-    @MockBean
+    @MockitoBean
     private ProductSearchUseCase productSearchUseCase;
 
-    @MockBean
+    @MockitoBean
     private ProductMapper productMapper;
-    
-    @MockBean
+
+    @MockitoBean
     private MetricsCollector metricsCollector;
 
     @Test
@@ -104,8 +105,8 @@ class ProductControllerSearchTest {
             .categoryId(1L)
             .page(0)
             .size(20)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
@@ -116,8 +117,8 @@ class ProductControllerSearchTest {
                 .param("categoryId", "1")
                 .param("page", "0")
                 .param("size", "20")
-                .param("sortBy", "createdAt")
-                .param("sortDirection", "desc"))
+                .param("sortProperty", "createdAt")
+                .param("sortDirection", "DESC"))
             .andDo(print())
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray())
@@ -162,8 +163,8 @@ class ProductControllerSearchTest {
             .maxPrice(new BigDecimal("150.00"))
             .page(0)
             .size(20)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
@@ -198,8 +199,8 @@ class ProductControllerSearchTest {
             .status(ProductStatus.ACTIVE)
             .page(0)
             .size(20)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
@@ -232,8 +233,8 @@ class ProductControllerSearchTest {
         ProductSearchCommand searchCommand = ProductSearchCommand.builder()
             .page(0)
             .size(20)
-            .sortBy("price")
-            .sortDirection("asc")
+            .sortProperty("price")
+            .sortDirection(Sort.Direction.ASC)
             .build();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
@@ -241,8 +242,8 @@ class ProductControllerSearchTest {
 
         // When & Then
         mockMvc.perform(get("/api/v1/products")
-                .param("sortBy", "price")
-                .param("sortDirection", "asc"))
+                .param("sortProperties", "price")
+                .param("sortDirection", "ASC"))
             .andDo(print())
             .andExpect(status().isOk());
     }

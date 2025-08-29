@@ -22,4 +22,3 @@ public @interface PriceRange {
     Class<? extends Payload>[] payload() default {};
 
 }
-

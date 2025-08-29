@@ -83,34 +83,30 @@ public class ProductRepositoryImpl implements ProductRepository {
         Pageable pageable = createPageable(command);
 
         Page<ProductJpaEntity> jpaEntityPage = productJpaRepository.findAll(spec, pageable);
-        
+
         return jpaEntityPage.map(ProductJpaEntity::toDomainEntity);
     }
 
     private Pageable createPageable(ProductSearchCommand command) {
-        Sort sort = createSort(command.getSortBy(), command.getSortDirection());
+        Sort sort = createSort(command.getSortProperty(), command.getSortDirection());
         return PageRequest.of(
-            command.getPage() != null ? command.getPage() : 0, 
-            command.getSize() != null ? command.getSize() : 20, 
+            command.getPage() != null ? command.getPage() : 0,
+            command.getSize() != null ? command.getSize() : 20,
             sort
         );
     }
 
-    private Sort createSort(String sortBy, String sortDirection) {
-        String actualSortBy = mapSortField(sortBy);
-        Sort.Direction direction = "asc".equalsIgnoreCase(sortDirection) 
-            ? Sort.Direction.ASC 
-            : Sort.Direction.DESC;
-        
-        return Sort.by(direction, actualSortBy);
+    private Sort createSort(String sortProperty, Sort.Direction sortDirection) {
+        String actualsortProperty = mapSortField(sortProperty);
+        return Sort.by(sortDirection, actualsortProperty);
     }
 
-    private String mapSortField(String sortBy) {
-        if (sortBy == null) {
+    private String mapSortField(String sortProperty) {
+        if (sortProperty == null) {
             return "createdAt";
         }
-        
-        return switch (sortBy.toLowerCase()) {
+
+        return switch (sortProperty.toLowerCase()) {
             case "price" -> "price";
             case "name" -> "name";
             case "createdat", "created", "newest", "oldest" -> "createdAt";

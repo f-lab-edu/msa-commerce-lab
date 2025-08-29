@@ -1,11 +1,8 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Sort;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
@@ -47,14 +45,16 @@ class ProductSearchServiceTest {
     private ProductSearchService productSearchService;
 
     private Product testProduct1;
+
     private Product testProduct2;
+
     private ProductSearchCommand searchCommand;
 
     @BeforeEach
     void setUp() {
         testProduct1 = Product.reconstitute(
             1L, 1L, "TEST-001", "Test Product 1", "Test Description 1",
-            "Short Description 1", "TestBrand", "Model1", 
+            "Short Description 1", "TestBrand", "Model1",
             new BigDecimal("100.00"), new BigDecimal("120.00"), new BigDecimal("80.00"),
             new BigDecimal("1.0"), null, ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
             "SEO Title 1", "SEO Description 1", "test keywords", true,
@@ -77,8 +77,8 @@ class ProductSearchServiceTest {
             .status(ProductStatus.ACTIVE)
             .page(0)
             .size(20)
-            .sortBy("createdAt")
-            .sortDirection("desc")
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
             .build();
     }
 
@@ -164,7 +164,7 @@ class ProductSearchServiceTest {
         assertThat(result.getContent()).isEmpty();
         assertThat(result.getTotalElements()).isEqualTo(0);
         assertThat(result.getTotalPages()).isEqualTo(0);
-        
+
         verify(productRepository).searchProducts(searchCommand);
     }
 
@@ -214,4 +214,5 @@ class ProductSearchServiceTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Minimum price cannot be greater than maximum price");
     }
+
 }
