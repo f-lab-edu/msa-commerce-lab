@@ -13,90 +13,109 @@ import lombok.NoArgsConstructor;
 public class Product {
 
     private Long id;
-    private Long categoryId;
+
     private String sku;
+
     private String name;
-    private String description;
+
     private String shortDescription;
+
+    private String description;
+
+    private Long categoryId;
+
     private String brand;
-    private String model;
-    private BigDecimal price;
-    private BigDecimal comparePrice;
-    private BigDecimal costPrice;
-    private BigDecimal weight;
-    private String productAttributes;
+
+    private ProductType productType;
+
     private ProductStatus status;
-    private String visibility;
-    private String taxClass;
-    private String metaTitle;
-    private String metaDescription;
-    private String searchKeywords;
+
+    private BigDecimal basePrice;
+
+    private BigDecimal salePrice;
+
+    private String currency;
+
+    private Integer weightGrams;
+
+    private Boolean requiresShipping;
+
+    private Boolean isTaxable;
+
     private Boolean isFeatured;
+
+    private String slug;
+
+    private String searchTags;
+
+    private String primaryImageUrl;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
-    @Builder
-    public Product(Long categoryId, String sku, String name, String description,
-        String shortDescription, String brand, String model, BigDecimal price,
-        BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
-        String productAttributes, String visibility, String taxClass,
-        String metaTitle, String metaDescription, String searchKeywords,
-        Boolean isFeatured) {
-        validateProduct(categoryId, sku, name, price);
+    private Long version;
 
-        this.categoryId = categoryId;
+    @Builder
+    public Product(String sku, String name, String shortDescription, String description,
+        Long categoryId, String brand, ProductType productType, BigDecimal basePrice,
+        BigDecimal salePrice, String currency, Integer weightGrams, Boolean requiresShipping,
+        Boolean isTaxable, Boolean isFeatured, String slug, String searchTags,
+        String primaryImageUrl) {
+        validateProduct(sku, name, basePrice);
+
         this.sku = sku;
         this.name = name;
-        this.description = description;
         this.shortDescription = shortDescription;
+        this.description = description;
+        this.categoryId = categoryId;
         this.brand = brand;
-        this.model = model;
-        this.price = price;
-        this.comparePrice = comparePrice;
-        this.costPrice = costPrice;
-        this.weight = weight;
-        this.productAttributes = productAttributes;
+        this.productType = productType != null ? productType : ProductType.PHYSICAL;
         this.status = ProductStatus.DRAFT;
-        this.visibility = visibility != null ? visibility : "PUBLIC";
-        this.taxClass = taxClass;
-        this.metaTitle = metaTitle;
-        this.metaDescription = metaDescription;
-        this.searchKeywords = searchKeywords;
+        this.basePrice = basePrice;
+        this.salePrice = salePrice;
+        this.currency = currency != null ? currency : "KRW";
+        this.weightGrams = weightGrams;
+        this.requiresShipping = requiresShipping != null ? requiresShipping : true;
+        this.isTaxable = isTaxable != null ? isTaxable : true;
         this.isFeatured = isFeatured != null ? isFeatured : false;
+        this.slug = slug;
+        this.searchTags = searchTags;
+        this.primaryImageUrl = primaryImageUrl;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.version = 1L;
     }
 
-    public static Product reconstitute(Long id, Long categoryId, String sku, String name, String description,
-        String shortDescription, String brand, String model, BigDecimal price,
-        BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
-        String productAttributes, ProductStatus status, String visibility,
-        String taxClass, String metaTitle, String metaDescription,
-        String searchKeywords, Boolean isFeatured,
-        LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public static Product reconstitute(Long id, String sku, String name, String shortDescription,
+        String description, Long categoryId, String brand, ProductType productType,
+        ProductStatus status, BigDecimal basePrice, BigDecimal salePrice, String currency,
+        Integer weightGrams, Boolean requiresShipping, Boolean isTaxable, Boolean isFeatured,
+        String slug, String searchTags, String primaryImageUrl, LocalDateTime createdAt,
+        LocalDateTime updatedAt, Long version) {
         Product product = new Product();
         product.id = id;
-        product.categoryId = categoryId;
         product.sku = sku;
         product.name = name;
-        product.description = description;
         product.shortDescription = shortDescription;
+        product.description = description;
+        product.categoryId = categoryId;
         product.brand = brand;
-        product.model = model;
-        product.price = price;
-        product.comparePrice = comparePrice;
-        product.costPrice = costPrice;
-        product.weight = weight;
-        product.productAttributes = productAttributes;
+        product.productType = productType;
         product.status = status;
-        product.visibility = visibility;
-        product.taxClass = taxClass;
-        product.metaTitle = metaTitle;
-        product.metaDescription = metaDescription;
-        product.searchKeywords = searchKeywords;
+        product.basePrice = basePrice;
+        product.salePrice = salePrice;
+        product.currency = currency;
+        product.weightGrams = weightGrams;
+        product.requiresShipping = requiresShipping;
+        product.isTaxable = isTaxable;
         product.isFeatured = isFeatured;
+        product.slug = slug;
+        product.searchTags = searchTags;
+        product.primaryImageUrl = primaryImageUrl;
         product.createdAt = createdAt;
         product.updatedAt = updatedAt;
+        product.version = version;
         return product;
     }
 
@@ -105,67 +124,66 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updateProductInfo(String name, String description, BigDecimal price) {
+    public void updateProductInfo(String name, String description, BigDecimal basePrice) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name;
         }
         if (description != null) {
             this.description = description;
         }
-        if (price != null && price.compareTo(BigDecimal.ZERO) > 0) {
-            this.price = price;
+        if (basePrice != null && basePrice.compareTo(BigDecimal.ZERO) > 0) {
+            this.basePrice = basePrice;
         }
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void updatePartially(Long categoryId, String sku, String name, String description,
-        String shortDescription, String brand, String model, BigDecimal price,
-        BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight,
-        String productAttributes, String visibility, String taxClass,
-        String metaTitle, String metaDescription, String searchKeywords,
-        Boolean isFeatured) {
+    public void updatePartially(String sku, String name, String shortDescription, String description,
+        Long categoryId, String brand, ProductType productType, BigDecimal basePrice,
+        BigDecimal salePrice, String currency, Integer weightGrams, Boolean requiresShipping,
+        Boolean isTaxable, Boolean isFeatured, String slug, String searchTags,
+        String primaryImageUrl) {
 
-        updateBasicFields(categoryId, sku, name, description, shortDescription);
-        updateBrandAndModelFields(brand, model);
-        updatePriceFields(price, comparePrice, costPrice, weight);
-        updateAttributesAndVisibility(productAttributes, visibility, taxClass);
-        updateSeoFields(metaTitle, metaDescription, searchKeywords);
+        updateBasicFields(sku, name, shortDescription, description, categoryId);
+        updateBrandAndTypeFields(brand, productType);
+        updatePriceAndWeightFields(basePrice, salePrice, currency, weightGrams);
+        updateShippingAndTaxFields(requiresShipping, isTaxable);
+        updateContentFields(slug, searchTags, primaryImageUrl);
         updateFeatureFlag(isFeatured);
 
         this.updatedAt = LocalDateTime.now();
     }
 
-    private void updateBasicFields(Long categoryId, String sku, String name, String description,
-        String shortDescription) {
-        updateFieldIfNotNull(categoryId, value -> this.categoryId = value);
+    private void updateBasicFields(String sku, String name, String shortDescription, String description,
+        Long categoryId) {
         updateFieldIfNotNull(sku, value -> this.sku = value);
         updateFieldIfNotNull(name, value -> this.name = value);
-        updateFieldIfNotNull(description, value -> this.description = value);
         updateFieldIfNotNull(shortDescription, value -> this.shortDescription = value);
+        updateFieldIfNotNull(description, value -> this.description = value);
+        updateFieldIfNotNull(categoryId, value -> this.categoryId = value);
     }
 
-    private void updateBrandAndModelFields(String brand, String model) {
+    private void updateBrandAndTypeFields(String brand, ProductType productType) {
         updateFieldIfNotNull(brand, value -> this.brand = value);
-        updateFieldIfNotNull(model, value -> this.model = value);
+        updateFieldIfNotNull(productType, value -> this.productType = value);
     }
 
-    private void updatePriceFields(BigDecimal price, BigDecimal comparePrice, BigDecimal costPrice, BigDecimal weight) {
-        updateFieldIfNotNull(price, value -> this.price = value);
-        updateFieldIfNotNull(comparePrice, value -> this.comparePrice = value);
-        updateFieldIfNotNull(costPrice, value -> this.costPrice = value);
-        updateFieldIfNotNull(weight, value -> this.weight = value);
+    private void updatePriceAndWeightFields(BigDecimal basePrice, BigDecimal salePrice, String currency,
+        Integer weightGrams) {
+        updateFieldIfNotNull(basePrice, value -> this.basePrice = value);
+        updateFieldIfNotNull(salePrice, value -> this.salePrice = value);
+        updateFieldIfNotNull(currency, value -> this.currency = value);
+        updateFieldIfNotNull(weightGrams, value -> this.weightGrams = value);
     }
 
-    private void updateAttributesAndVisibility(String productAttributes, String visibility, String taxClass) {
-        updateFieldIfNotNull(productAttributes, value -> this.productAttributes = value);
-        updateFieldIfNotNull(visibility, value -> this.visibility = value);
-        updateFieldIfNotNull(taxClass, value -> this.taxClass = value);
+    private void updateShippingAndTaxFields(Boolean requiresShipping, Boolean isTaxable) {
+        updateFieldIfNotNull(requiresShipping, value -> this.requiresShipping = value);
+        updateFieldIfNotNull(isTaxable, value -> this.isTaxable = value);
     }
 
-    private void updateSeoFields(String metaTitle, String metaDescription, String searchKeywords) {
-        updateFieldIfNotNull(metaTitle, value -> this.metaTitle = value);
-        updateFieldIfNotNull(metaDescription, value -> this.metaDescription = value);
-        updateFieldIfNotNull(searchKeywords, value -> this.searchKeywords = value);
+    private void updateContentFields(String slug, String searchTags, String primaryImageUrl) {
+        updateFieldIfNotNull(slug, value -> this.slug = value);
+        updateFieldIfNotNull(searchTags, value -> this.searchTags = value);
+        updateFieldIfNotNull(primaryImageUrl, value -> this.primaryImageUrl = value);
     }
 
     private void updateFeatureFlag(Boolean isFeatured) {
@@ -196,11 +214,7 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
-    private void validateProduct(Long categoryId, String sku, String name, BigDecimal price) {
-        if (categoryId == null) {
-            throw new IllegalArgumentException("Category ID is required.");
-        }
-
+    private void validateProduct(String sku, String name, BigDecimal basePrice) {
         if (sku == null || sku.trim().isEmpty()) {
             throw new IllegalArgumentException("SKU is required.");
         }
@@ -213,14 +227,13 @@ public class Product {
             throw new IllegalArgumentException("Product name cannot exceed 255 characters.");
         }
 
-        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Price must be greater than 0.");
+        if (basePrice == null || basePrice.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Base price must be greater than 0.");
         }
 
-        if (price.compareTo(new BigDecimal("99999999.99")) > 0) {
-            throw new IllegalArgumentException("Price cannot exceed 99,999,999.99.");
+        if (basePrice.compareTo(new BigDecimal("999999999999.9999")) > 0) {
+            throw new IllegalArgumentException("Base price cannot exceed 999,999,999,999.9999.");
         }
     }
 
 }
-

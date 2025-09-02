@@ -19,4 +19,3 @@ public interface ProductJpaRepository extends JpaRepository<ProductJpaEntity, Lo
     List<ProductJpaEntity> findByIsFeaturedTrue();
 
 }
-

@@ -2,6 +2,8 @@ package com.msa.commerce.monolith.product.application.port.in;
 
 import java.math.BigDecimal;
 
+import com.msa.commerce.monolith.product.domain.ProductType;
+
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,53 +15,54 @@ import lombok.Getter;
 @Builder
 public class ProductCreateCommand {
 
-    @NotNull(message = "Category ID is required")
-    private final Long categoryId;
-
     @NotBlank(message = "SKU is required")
     @Size(max = 100, message = "SKU must not exceed 100 characters")
     private final String sku;
 
     @NotBlank(message = "Product name is required")
-    @Size(max = 200, message = "Product name must not exceed 200 characters")
+    @Size(max = 255, message = "Product name must not exceed 255 characters")
     private final String name;
-
-    @Size(max = 1000, message = "Description must not exceed 1000 characters")
-    private final String description;
 
     @Size(max = 500, message = "Short description must not exceed 500 characters")
     private final String shortDescription;
 
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    private final String description;
+
+    private final Long categoryId;
+
     @Size(max = 100, message = "Brand must not exceed 100 characters")
     private final String brand;
 
-    @Size(max = 100, message = "Model must not exceed 100 characters")
-    private final String model;
+    private final ProductType productType;
 
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
-    private final BigDecimal price;
+    @NotNull(message = "Base price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Base price must be greater than 0")
+    private final BigDecimal basePrice;
 
-    private final BigDecimal comparePrice;
+    private final BigDecimal salePrice;
 
-    private final BigDecimal costPrice;
+    @Size(max = 3, message = "Currency must be 3 characters")
+    private final String currency;
 
-    private final BigDecimal weight;
+    private final Integer weightGrams;
 
-    private final String productAttributes;
+    private final Boolean requiresShipping;
 
-    private final String visibility;
-
-    private final String taxClass;
-
-    private final String metaTitle;
-
-    private final String metaDescription;
-
-    private final String searchKeywords;
+    private final Boolean isTaxable;
 
     private final Boolean isFeatured;
 
+    @NotBlank(message = "Slug is required")
+    @Size(max = 300, message = "Slug must not exceed 300 characters")
+    private final String slug;
+
+    private final String searchTags;
+
+    @Size(max = 500, message = "Primary image URL must not exceed 500 characters")
+    private final String primaryImageUrl;
+
+    // Inventory fields
     private final Integer initialStock;
 
     private final Integer lowStockThreshold;

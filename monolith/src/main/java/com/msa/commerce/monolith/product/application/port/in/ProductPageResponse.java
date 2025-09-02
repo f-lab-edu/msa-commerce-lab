@@ -16,17 +16,25 @@ import lombok.Data;
 public class ProductPageResponse {
 
     private final List<ProductSearchResponse> content;
+
     private final int page;
+
     private final int size;
+
     private final long totalElements;
+
     private final int totalPages;
+
     private final boolean first;
+
     private final boolean last;
+
     private final boolean hasNext;
+
     private final boolean hasPrevious;
 
-    public static ProductPageResponse from(Page<Product> productPage, 
-            Function<Product, ProductSearchResponse> mapper) {
+    public static ProductPageResponse from(Page<Product> productPage,
+        Function<Product, ProductSearchResponse> mapper) {
         List<ProductSearchResponse> content = productPage.getContent()
             .stream()
             .map(mapper)
@@ -46,4 +54,3 @@ public class ProductPageResponse {
     }
 
 }
-

@@ -5,4 +5,3 @@ public interface ProductSearchUseCase {
     ProductPageResponse searchProducts(ProductSearchCommand command);
 
 }
-

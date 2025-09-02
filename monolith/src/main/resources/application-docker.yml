@@ -13,4 +13,3 @@ spring:
       port: 6379
   kafka:
     bootstrap-servers: kafka:9092
-

@@ -57,6 +57,8 @@ logging:
     com.msa.commerce: WARN  # Reduce log noise in tests
     org.springframework: WARN
     org.hibernate: WARN
+    org.hibernate.sql: DEBUG
+    org.hibernate.type.descriptor.sql: trace
     ROOT: WARN
 
 # Test-specific configuration

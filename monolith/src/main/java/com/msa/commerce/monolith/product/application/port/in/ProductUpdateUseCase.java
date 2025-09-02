@@ -5,4 +5,3 @@ public interface ProductUpdateUseCase {
     ProductResponse updateProduct(ProductUpdateCommand command);
 
 }
-

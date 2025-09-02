@@ -36,8 +36,7 @@ public class ProductGetService implements ProductGetUseCase {
     }
 
     @Override
-    @Cacheable(value = RedisConfig.PRODUCT_CACHE, key = "#productId",
-        condition = "#increaseViewCount == false")
+    @Cacheable(value = RedisConfig.PRODUCT_CACHE, key = "#productId", condition = "#increaseViewCount == false")
     public ProductResponse getProduct(Long productId, boolean increaseViewCount) {
         Product product = productRepository.findById(productId)
             .orElseThrow(
@@ -52,29 +51,17 @@ public class ProductGetService implements ProductGetUseCase {
         if (increaseViewCount) {
             try {
                 viewCountPort.incrementViewCount(productId);
-                log.debug("View count increment requested for product ID: {}", productId);
             } catch (Exception e) {
                 log.error("Failed to increment view count for product ID: {}", productId, e);
             }
         }
-
-        log.debug("Successfully retrieved product with ID: {}", productId);
         return response;
     }
 
     @Override
     public ProductPageResponse searchProducts(ProductSearchCommand searchCommand) {
-        log.debug(
-            "Searching products with command: categoryId={}, minPrice={}, maxPrice={}, status={}, page={}, size={}",
-            searchCommand.getCategoryId(), searchCommand.getMinPrice(), searchCommand.getMaxPrice(),
-            searchCommand.getStatus(), searchCommand.getPage(), searchCommand.getSize());
-
         var productPage = productRepository.searchProducts(searchCommand);
-
-        log.debug("Found {} products for search criteria", productPage.getTotalElements());
-
         return ProductPageResponse.from(productPage, responseMapper::toSearchResponse);
     }
 
 }
-

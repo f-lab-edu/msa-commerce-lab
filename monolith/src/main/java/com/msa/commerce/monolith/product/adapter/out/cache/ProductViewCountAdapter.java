@@ -71,4 +71,3 @@ public class ProductViewCountAdapter implements ProductViewCountPort {
     }
 
 }
-
