@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -59,32 +60,28 @@ class ProductControllerTest {
 
     @Test
     @DisplayName("정상적인 상품 생성 요청")
+    @WithMockUser
     void createProduct_Success() throws Exception {
-        // given
-        String requestJson = """
-            {
-                "sku": "TEST-SKU-001",
-                "name": "테스트 상품",
-                "description": "테스트 상품 설명",
-                "price": 10000,
-                "categoryId": 1
-            }
-            """;
-        ProductResponse response = createProductResponse();
+        // Given
+        String requestJson = createProductRequestJson();
+        ProductResponse response = createMockProductResponse();
 
         given(productCreateUseCase.createProduct(any())).willReturn(response);
 
-        // when & then
+        // When & Then
         mockMvc.perform(post("/api/v1/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
-            .andExpect(status().isCreated())
-            .andExpect(jsonPath("$.id").value(1L))
-            .andExpect(jsonPath("$.name").value("테스트 상품"))
-            .andExpect(jsonPath("$.description").value("테스트 상품 설명"))
-            .andExpect(jsonPath("$.price").value(10000))
-            .andExpect(jsonPath("$.categoryId").value(1))
-            .andExpect(jsonPath("$.status").value("DRAFT"));
+            .andExpectAll(
+                status().isCreated(),
+                jsonPath("$.id").value(1L),
+                jsonPath("$.sku").value("TEST-SKU-001"),
+                jsonPath("$.name").value("테스트 상품"),
+                jsonPath("$.description").value("테스트 상품 설명"),
+                jsonPath("$.basePrice").value(10000),
+                jsonPath("$.categoryId").value(1),
+                jsonPath("$.status").value("DRAFT")
+            );
     }
 
     @Test
@@ -210,14 +207,36 @@ class ProductControllerTest {
             .sku("TEST1234")
             .name("테스트 상품")
             .description("테스트 상품 설명")
-            .price(new BigDecimal("10000"))
+            .basePrice(new BigDecimal("10000"))
             .status(ProductStatus.DRAFT)
-            .visibility("PUBLIC")
             .isFeatured(false)
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
             .build();
     }
 
-}
+    private String createProductRequestJson() {
+        return """
+            {
+                "sku": "TEST-SKU-001",
+                "name": "테스트 상품",
+                "description": "테스트 상품 설명",
+                "price": 10000,
+                "categoryId": 1
+            }
+            """;
+    }
 
+    private ProductResponse createMockProductResponse() {
+        return ProductResponse.builder()
+            .id(1L)
+            .sku("TEST-SKU-001")
+            .name("테스트 상품")
+            .description("테스트 상품 설명")
+            .basePrice(new BigDecimal("10000"))
+            .categoryId(1L)
+            .status(ProductStatus.DRAFT)
+            .build();
+    }
+
+}

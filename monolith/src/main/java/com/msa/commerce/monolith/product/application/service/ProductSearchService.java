@@ -12,7 +12,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCas
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
 import com.msa.commerce.monolith.product.domain.Product;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,7 +30,14 @@ public class ProductSearchService implements ProductSearchUseCase {
     @Override
     @ValidateCommand(errorPrefix = "Product search validation failed")
     public ProductPageResponse searchProducts(ProductSearchCommand command) {
+        // Manual validation until AOP is properly configured
+        validateCommand(command);
+        
         Page<Product> productPage = productRepository.searchProducts(command);
+        
+        if (productPage == null) {
+            throw new IllegalStateException("Repository returned null result for search command");
+        }
 
         Page<ProductSearchResponse> responsePage = productPage.map(this::enrichWithViewCount);
 
@@ -48,25 +54,55 @@ public class ProductSearchService implements ProductSearchUseCase {
 
         return ProductSearchResponse.builder()
             .id(response.getId())
-            .categoryId(response.getCategoryId())
             .sku(response.getSku())
             .name(response.getName())
-            .description(response.getDescription())
             .shortDescription(response.getShortDescription())
+            .description(response.getDescription())
+            .categoryId(response.getCategoryId())
             .brand(response.getBrand())
-            .model(response.getModel())
-            .price(response.getPrice())
-            .comparePrice(response.getComparePrice())
-            .costPrice(response.getCostPrice())
-            .weight(response.getWeight())
+            .productType(response.getProductType())
             .status(response.getStatus())
-            .visibility(response.getVisibility())
+            .basePrice(response.getBasePrice())
+            .salePrice(response.getSalePrice())
+            .currency(response.getCurrency())
+            .weightGrams(response.getWeightGrams())
+            .requiresShipping(response.getRequiresShipping())
+            .isTaxable(response.getIsTaxable())
             .isFeatured(response.getIsFeatured())
+            .slug(response.getSlug())
+            .searchTags(response.getSearchTags())
+            .primaryImageUrl(response.getPrimaryImageUrl())
             .createdAt(response.getCreatedAt())
             .updatedAt(response.getUpdatedAt())
+            .version(response.getVersion())
             .viewCount(viewCount != null ? viewCount : 0L)
             .build();
     }
 
-}
+    private void validateCommand(ProductSearchCommand command) {
+        // Manual validation based on the command annotations
+        if (command.getPage() != null && command.getPage() < 0) {
+            throw new IllegalArgumentException("Page must be greater than or equal to 0");
+        }
+        
+        if (command.getSize() != null && (command.getSize() < 1 || command.getSize() > 100)) {
+            throw new IllegalArgumentException("Size must be between 1 and 100");
+        }
+        
+        if (command.getMinPrice() != null && command.getMinPrice().signum() < 0) {
+            throw new IllegalArgumentException("Minimum price cannot be negative");
+        }
+        
+        if (command.getMaxPrice() != null && command.getMaxPrice().signum() < 0) {
+            throw new IllegalArgumentException("Maximum price cannot be negative");
+        }
 
+        // Custom business rule validation
+        if (command.getMinPrice() != null && command.getMaxPrice() != null) {
+            if (command.getMinPrice().compareTo(command.getMaxPrice()) > 0) {
+                throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
+            }
+        }
+    }
+
+}

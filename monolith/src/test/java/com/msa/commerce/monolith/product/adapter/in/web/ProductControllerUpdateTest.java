@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -26,7 +27,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -70,36 +70,43 @@ class ProductControllerUpdateTest {
 
     @Test
     @DisplayName("정상적인 상품 업데이트")
+    @WithMockUser
     void updateProduct_Success() throws Exception {
-        // given
+        // Given
         Long productId = 1L;
-        ProductUpdateCommand command = createUpdateCommand(productId);
-        ProductResponse response = createProductResponse();
+        String requestJson = createUpdateRequestJson();
+        ProductUpdateCommand command = createMockUpdateCommand(productId);
+        ProductResponse response = createMockUpdatedProductResponse();
 
         given(productMapper.toUpdateCommand(eq(productId), any(ProductUpdateRequest.class))).willReturn(command);
         given(productUpdateUseCase.updateProduct(command)).willReturn(response);
 
-        String requestJson = """
+        // When & Then
+        mockMvc.perform(put("/api/v1/products/{id}", productId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJson))
+            .andExpectAll(
+                status().isOk(),
+                content().contentType(MediaType.APPLICATION_JSON),
+                jsonPath("$.id").value(1L),
+                jsonPath("$.name").value("업데이트된 상품명"),
+                jsonPath("$.description").value("업데이트된 설명"),
+                jsonPath("$.basePrice").value(15000),
+                jsonPath("$.status").value("ACTIVE")
+            );
+
+        verify(productMapper).toUpdateCommand(eq(productId), any(ProductUpdateRequest.class));
+        verify(productUpdateUseCase).updateProduct(command);
+    }
+
+    private String createUpdateRequestJson() {
+        return """
             {
                 "name": "업데이트된 상품명",
                 "description": "업데이트된 설명",
                 "price": 15000
             }
             """;
-
-        // when & then
-        mockMvc.perform(put("/api/v1/products/{id}", productId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(jsonPath("$.id").value(1L))
-            .andExpect(jsonPath("$.name").value("업데이트된 상품명"))
-            .andExpect(jsonPath("$.price").value(15000))
-            .andExpect(jsonPath("$.status").value("ACTIVE"));
-
-        verify(productMapper).toUpdateCommand(eq(productId), any(ProductUpdateRequest.class));
-        verify(productUpdateUseCase).updateProduct(command);
     }
 
     @Test
@@ -261,37 +268,49 @@ class ProductControllerUpdateTest {
             .andExpect(status().isBadRequest());
     }
 
-    private ProductUpdateRequest createUpdateRequest() {
-        ProductUpdateRequest request = new ProductUpdateRequest();
-        // Reflection을 사용하여 private 필드 설정하거나, 
-        // 테스트용 생성자/빌더가 있다면 사용
-        return request;
-    }
-
     private ProductUpdateCommand createUpdateCommand(Long productId) {
         return ProductUpdateCommand.builder()
             .productId(productId)
             .name("업데이트된 상품명")
             .description("업데이트된 설명")
-            .price(new BigDecimal("15000"))
+            .basePrice(new BigDecimal("15000"))
             .build();
     }
 
     private ProductResponse createProductResponse() {
         return ProductResponse.builder()
             .id(1L)
-            .categoryId(ProductCategory.ELECTRONICS.getId())
+            .categoryId(1L)
             .sku("TEST-SKU")
             .name("업데이트된 상품명")
             .description("업데이트된 설명")
-            .price(new BigDecimal("15000"))
+            .basePrice(new BigDecimal("15000"))
             .status(ProductStatus.ACTIVE)
-            .visibility("PUBLIC")
             .isFeatured(false)
             .createdAt(LocalDateTime.now().minusDays(1))
             .updatedAt(LocalDateTime.now())
             .build();
     }
 
-}
+    private ProductUpdateCommand createMockUpdateCommand(Long productId) {
+        return ProductUpdateCommand.builder()
+            .productId(productId)
+            .name("업데이트된 상품명")
+            .description("업데이트된 설명")
+            .basePrice(new BigDecimal("15000"))
+            .build();
+    }
 
+    private ProductResponse createMockUpdatedProductResponse() {
+        return ProductResponse.builder()
+            .id(1L)
+            .sku("TEST-SKU-001")
+            .name("업데이트된 상품명")
+            .description("업데이트된 설명")
+            .basePrice(new BigDecimal("15000"))
+            .categoryId(1L)
+            .status(ProductStatus.ACTIVE)
+            .build();
+    }
+
+}

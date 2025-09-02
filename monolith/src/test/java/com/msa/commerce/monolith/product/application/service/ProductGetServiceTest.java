@@ -23,6 +23,7 @@ import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("상품 조회 서비스 테스트")
@@ -51,26 +52,75 @@ class ProductGetServiceTest {
         LocalDateTime now = LocalDateTime.now();
 
         activeProduct = Product.reconstitute(
-            1L, 1L, "TEST-SKU-001", "Test Product", "Test Description",
-            "Short desc", "Test Brand", "Test Model", new BigDecimal("100.00"),
-            new BigDecimal("120.00"), new BigDecimal("80.00"), new BigDecimal("1.0"),
-            "{}", ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
-            "Meta Title", "Meta Description", "test,product", true, now, now
+            1L,                          // id
+            "TEST-SKU-001",             // sku
+            "Test Product",             // name
+            "Short desc",               // shortDescription
+            "Test Description",         // description
+            1L,                          // categoryId
+            "Test Brand",               // brand
+            ProductType.PHYSICAL,        // productType
+            ProductStatus.ACTIVE,        // status
+            new BigDecimal("100.00"),    // basePrice
+            new BigDecimal("120.00"),    // salePrice
+            "KRW",                      // currency
+            1000,                        // weightGrams
+            true,                        // requiresShipping
+            true,                        // isTaxable
+            true,                        // isFeatured
+            "test-product",             // slug
+            "test,product",             // searchTags
+            null,                        // primaryImageUrl
+            now,                         // createdAt
+            now,                         // updatedAt
+            1L                           // version
         );
 
         archivedProduct = Product.reconstitute(
-            2L, 1L, "TEST-SKU-002", "Archived Product", "Archived Description",
-            "Archived short desc", "Test Brand", "Test Model", new BigDecimal("100.00"),
-            new BigDecimal("120.00"), new BigDecimal("80.00"), new BigDecimal("1.0"),
-            "{}", ProductStatus.ARCHIVED, "PUBLIC", "STANDARD",
-            "Meta Title", "Meta Description", "test,archived", false, now, now
+            2L,                          // id
+            "TEST-SKU-002",             // sku
+            "Archived Product",         // name
+            "Archived short desc",      // shortDescription
+            "Archived Description",     // description
+            1L,                          // categoryId
+            "Test Brand",               // brand
+            ProductType.PHYSICAL,        // productType
+            ProductStatus.ARCHIVED,      // status
+            new BigDecimal("100.00"),    // basePrice
+            new BigDecimal("120.00"),    // salePrice
+            "KRW",                      // currency
+            1000,                        // weightGrams
+            true,                        // requiresShipping
+            true,                        // isTaxable
+            false,                       // isFeatured
+            "archived-product",         // slug
+            "test,archived",            // searchTags
+            null,                        // primaryImageUrl
+            now,                         // createdAt
+            now,                         // updatedAt
+            1L                           // version
         );
 
         productResponse = ProductResponse.builder()
             .id(1L)
+            .sku("TEST-SKU-001")
             .name("Test Product")
-            .price(new BigDecimal("100.00"))
+            .description("Test Description")
+            .shortDescription("Short desc")
+            .categoryId(1L)
+            .brand("Test Brand")
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("100.00"))
+            .salePrice(new BigDecimal("120.00"))
+            .currency("KRW")
+            .weightGrams(1000)
+            .requiresShipping(true)
+            .isTaxable(true)
+            .isFeatured(true)
+            .slug("test-product")
+            .searchTags("test,product")
             .status(ProductStatus.ACTIVE)
+            .version(1L)
             .availableQuantity(100)
             .build();
     }
@@ -165,4 +215,3 @@ class ProductGetServiceTest {
     }
 
 }
-

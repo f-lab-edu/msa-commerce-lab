@@ -9,4 +9,3 @@ public interface ProductGetUseCase {
     ProductPageResponse searchProducts(ProductSearchCommand searchCommand);
 
 }
-

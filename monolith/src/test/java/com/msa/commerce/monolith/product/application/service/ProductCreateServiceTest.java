@@ -20,7 +20,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductCreateComman
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
+import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,36 +43,39 @@ class ProductCreateServiceTest {
     @BeforeEach
     void setUp() {
         validCommand = ProductCreateCommand.builder()
+            .sku("TEST-1234")
             .name("테스트 상품")
             .description("테스트 상품 설명")
-            .price(new BigDecimal("10000"))
-            .categoryId(ProductCategory.ELECTRONICS.getId())
-            .sku("TEST-1234")
+            .basePrice(new BigDecimal("10000"))
+            .categoryId(1L)
+            .slug("test-product")
+            .productType(ProductType.PHYSICAL)
+            .currency("KRW")
             .build();
 
         savedProduct = Product.reconstitute(
             1L,                                    // id
-            ProductCategory.ELECTRONICS.getId(),   // categoryId
-            "TEST1234",                           // sku
+            "TEST-1234",                         // sku
             "테스트 상품",                         // name
-            "테스트 상품 설명",                    // description
             null,                                 // shortDescription
+            "테스트 상품 설명",                    // description
+            1L,                                   // categoryId
             null,                                 // brand
-            null,                                 // model
-            new BigDecimal("10000"),              // price
-            null,                                 // comparePrice
-            null,                                 // costPrice
-            null,                                 // weight
-            null,                                 // productAttributes
+            ProductType.PHYSICAL,                 // productType
             ProductStatus.DRAFT,                  // status
-            "PUBLIC",                             // visibility
-            null,                                 // taxClass
-            null,                                 // metaTitle
-            null,                                 // metaDescription
-            null,                                 // searchKeywords
+            new BigDecimal("10000"),              // basePrice
+            null,                                 // salePrice
+            "KRW",                               // currency
+            null,                                 // weightGrams
+            true,                                 // requiresShipping
+            true,                                 // isTaxable
             false,                                // isFeatured
+            "test-product",                      // slug
+            null,                                 // searchTags
+            null,                                 // primaryImageUrl
             LocalDateTime.now(),                  // createdAt
-            LocalDateTime.now()                   // updatedAt
+            LocalDateTime.now(),                  // updatedAt
+            1L                                    // version
         );
     }
 
@@ -92,7 +95,7 @@ class ProductCreateServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getName()).isEqualTo(validCommand.getName());
         assertThat(response.getDescription()).isEqualTo(validCommand.getDescription());
-        assertThat(response.getPrice()).isEqualTo(validCommand.getPrice());
+        assertThat(response.getBasePrice()).isEqualTo(validCommand.getBasePrice());
         assertThat(response.getCategoryId()).isEqualTo(validCommand.getCategoryId());
         assertThat(response.getStatus()).isEqualTo(ProductStatus.DRAFT);
 
@@ -122,10 +125,11 @@ class ProductCreateServiceTest {
     void createProduct_InvalidCommand_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .name("") // 빈 문자열
-            .price(new BigDecimal("10000"))
-            .categoryId(ProductCategory.ELECTRONICS.getId())
             .sku("TEST-1234")
+            .name("") // 빈 문자열
+            .basePrice(new BigDecimal("10000"))
+            .categoryId(1L)
+            .slug("test-product")
             .build();
 
         // when & then
@@ -142,16 +146,17 @@ class ProductCreateServiceTest {
     void createProduct_NullPrice_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .name("테스트 상품")
-            .price(null) // null 가격
-            .categoryId(ProductCategory.ELECTRONICS.getId())
             .sku("TEST-1234")
+            .name("테스트 상품")
+            .basePrice(null) // null 가격
+            .categoryId(1L)
+            .slug("test-product")
             .build();
 
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Price is required.");
+            .hasMessage("Base price must be greater than 0.");
 
         verify(productRepository, never()).existsBySku(anyString());
         verify(productRepository, never()).save(any(Product.class));
@@ -162,10 +167,11 @@ class ProductCreateServiceTest {
     void createProduct_NullCategoryId_ThrowsException() {
         // given
         ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .name("테스트 상품")
-            .price(new BigDecimal("10000"))
-            .categoryId(null) // null 카테고리 ID
             .sku("TEST-1234")
+            .name("테스트 상품")
+            .basePrice(new BigDecimal("10000"))
+            .categoryId(null) // null 카테고리 ID
+            .slug("test-product")
             .build();
 
         // when & then
@@ -180,18 +186,22 @@ class ProductCreateServiceTest {
     private ProductResponse createProductResponse() {
         return ProductResponse.builder()
             .id(1L)
-            .categoryId(ProductCategory.ELECTRONICS.getId())
-            .sku("TEST1234")
+            .sku("TEST-1234")
             .name("테스트 상품")
             .description("테스트 상품 설명")
-            .price(new BigDecimal("10000"))
+            .categoryId(1L)
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("10000"))
+            .currency("KRW")
             .status(ProductStatus.DRAFT)
-            .visibility("PUBLIC")
+            .requiresShipping(true)
+            .isTaxable(true)
             .isFeatured(false)
+            .slug("test-product")
+            .version(1L)
             .createdAt(LocalDateTime.now())
             .updatedAt(LocalDateTime.now())
             .build();
     }
 
 }
-

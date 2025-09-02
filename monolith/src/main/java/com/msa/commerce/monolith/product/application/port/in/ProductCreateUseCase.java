@@ -5,4 +5,3 @@ public interface ProductCreateUseCase {
     ProductResponse createProduct(ProductCreateCommand command);
 
 }
-

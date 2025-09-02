@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 class ProductJpaEntityTest {
 
@@ -19,28 +20,28 @@ class ProductJpaEntityTest {
         // given
         LocalDateTime now = LocalDateTime.now();
         Product domainProduct = Product.reconstitute(
-            1L,
-            10L,                                    // categoryId
-            "TEST-SKU-001",                        // sku
-            "Test Product",                        // name
-            "Test Description",                    // description
-            "Short description",                   // shortDescription
-            "TestBrand",                          // brand
-            "TestModel",                          // model
-            new BigDecimal("29.99"),              // price
-            new BigDecimal("39.99"),              // comparePrice
-            new BigDecimal("19.99"),              // costPrice
-            new BigDecimal("1.5"),                // weight
-            "{\"color\": \"red\"}",               // productAttributes
-            ProductStatus.ACTIVE,                 // status
-            "PUBLIC",                             // visibility
-            "STANDARD",                           // taxClass
-            "Test Meta Title",                    // metaTitle
-            "Test meta description",              // metaDescription
-            "test, product, electronics",        // searchKeywords
-            true,                                 // isFeatured
-            now,                                  // createdAt
-            now                                   // updatedAt
+            1L,                                    // id
+            "TEST-SKU-001",                       // sku
+            "Test Product",                       // name
+            "Short description",                  // shortDescription
+            "Test Description",                   // description
+            10L,                                  // categoryId
+            "TestBrand",                         // brand
+            ProductType.PHYSICAL,                // productType
+            ProductStatus.ACTIVE,                // status
+            new BigDecimal("29.99"),             // basePrice
+            new BigDecimal("25.99"),             // salePrice
+            "KRW",                               // currency
+            1500,                                // weightGrams
+            true,                                // requiresShipping
+            true,                                // isTaxable
+            true,                                // isFeatured
+            "test-product",                      // slug
+            "test, product, electronics",        // searchTags
+            "https://example.com/image.jpg",     // primaryImageUrl
+            now,                                 // createdAt
+            now,                                 // updatedAt
+            1L                                   // version
         );
 
         // when
@@ -48,27 +49,27 @@ class ProductJpaEntityTest {
 
         // then
         assertThat(jpaEntity.getId()).isEqualTo(1L);
-        assertThat(jpaEntity.getCategoryId()).isEqualTo(10L);
         assertThat(jpaEntity.getSku()).isEqualTo("TEST-SKU-001");
         assertThat(jpaEntity.getName()).isEqualTo("Test Product");
-        assertThat(jpaEntity.getDescription()).isEqualTo("Test Description");
         assertThat(jpaEntity.getShortDescription()).isEqualTo("Short description");
+        assertThat(jpaEntity.getDescription()).isEqualTo("Test Description");
+        assertThat(jpaEntity.getCategoryId()).isEqualTo(10L);
         assertThat(jpaEntity.getBrand()).isEqualTo("TestBrand");
-        assertThat(jpaEntity.getModel()).isEqualTo("TestModel");
-        assertThat(jpaEntity.getPrice()).isEqualTo(new BigDecimal("29.99"));
-        assertThat(jpaEntity.getComparePrice()).isEqualTo(new BigDecimal("39.99"));
-        assertThat(jpaEntity.getCostPrice()).isEqualTo(new BigDecimal("19.99"));
-        assertThat(jpaEntity.getWeight()).isEqualTo(new BigDecimal("1.5"));
-        assertThat(jpaEntity.getProductAttributes()).isEqualTo("{\"color\": \"red\"}");
+        assertThat(jpaEntity.getProductType()).isEqualTo(ProductType.PHYSICAL);
         assertThat(jpaEntity.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-        assertThat(jpaEntity.getVisibility()).isEqualTo("PUBLIC");
-        assertThat(jpaEntity.getTaxClass()).isEqualTo("STANDARD");
-        assertThat(jpaEntity.getMetaTitle()).isEqualTo("Test Meta Title");
-        assertThat(jpaEntity.getMetaDescription()).isEqualTo("Test meta description");
-        assertThat(jpaEntity.getSearchKeywords()).isEqualTo("test, product, electronics");
+        assertThat(jpaEntity.getBasePrice()).isEqualTo(new BigDecimal("29.99"));
+        assertThat(jpaEntity.getSalePrice()).isEqualTo(new BigDecimal("25.99"));
+        assertThat(jpaEntity.getCurrency()).isEqualTo("KRW");
+        assertThat(jpaEntity.getWeightGrams()).isEqualTo(1500);
+        assertThat(jpaEntity.getRequiresShipping()).isTrue();
+        assertThat(jpaEntity.getIsTaxable()).isTrue();
         assertThat(jpaEntity.getIsFeatured()).isTrue();
+        assertThat(jpaEntity.getSlug()).isEqualTo("test-product");
+        assertThat(jpaEntity.getSearchTags()).isEqualTo("test, product, electronics");
+        assertThat(jpaEntity.getPrimaryImageUrl()).isEqualTo("https://example.com/image.jpg");
         assertThat(jpaEntity.getCreatedAt()).isEqualTo(now);
         assertThat(jpaEntity.getUpdatedAt()).isEqualTo(now);
+        assertThat(jpaEntity.getVersion()).isEqualTo(1L);
     }
 
     @Test
@@ -76,24 +77,23 @@ class ProductJpaEntityTest {
     void fromDomainEntityForCreation_ShouldMapCorrectly() {
         // given
         Product domainProduct = Product.builder()
-            .categoryId(5L)
             .sku("NEW-SKU-001")
             .name("New Product")
-            .description("New Description")
             .shortDescription("New short description")
+            .description("New Description")
+            .categoryId(5L)
             .brand("NewBrand")
-            .model("NewModel")
-            .price(new BigDecimal("19.99"))
-            .comparePrice(new BigDecimal("24.99"))
-            .costPrice(new BigDecimal("12.99"))
-            .weight(new BigDecimal("0.8"))
-            .productAttributes("{\"size\": \"M\"}")
-            .visibility("PUBLIC")
-            .taxClass("STANDARD")
-            .metaTitle("New Meta Title")
-            .metaDescription("New meta description")
-            .searchKeywords("new, product, test")
+            .productType(ProductType.DIGITAL)
+            .basePrice(new BigDecimal("19.99"))
+            .salePrice(new BigDecimal("15.99"))
+            .currency("USD")
+            .weightGrams(null)
+            .requiresShipping(false)
+            .isTaxable(true)
             .isFeatured(false)
+            .slug("new-product")
+            .searchTags("new, product, test")
+            .primaryImageUrl("https://example.com/new-image.jpg")
             .build();
 
         // when
@@ -101,25 +101,24 @@ class ProductJpaEntityTest {
 
         // then
         assertThat(jpaEntity.getId()).isNull();
-        assertThat(jpaEntity.getCategoryId()).isEqualTo(5L);
         assertThat(jpaEntity.getSku()).isEqualTo("NEW-SKU-001");
         assertThat(jpaEntity.getName()).isEqualTo("New Product");
-        assertThat(jpaEntity.getDescription()).isEqualTo("New Description");
         assertThat(jpaEntity.getShortDescription()).isEqualTo("New short description");
+        assertThat(jpaEntity.getDescription()).isEqualTo("New Description");
+        assertThat(jpaEntity.getCategoryId()).isEqualTo(5L);
         assertThat(jpaEntity.getBrand()).isEqualTo("NewBrand");
-        assertThat(jpaEntity.getModel()).isEqualTo("NewModel");
-        assertThat(jpaEntity.getPrice()).isEqualTo(new BigDecimal("19.99"));
-        assertThat(jpaEntity.getComparePrice()).isEqualTo(new BigDecimal("24.99"));
-        assertThat(jpaEntity.getCostPrice()).isEqualTo(new BigDecimal("12.99"));
-        assertThat(jpaEntity.getWeight()).isEqualTo(new BigDecimal("0.8"));
-        assertThat(jpaEntity.getProductAttributes()).isEqualTo("{\"size\": \"M\"}");
+        assertThat(jpaEntity.getProductType()).isEqualTo(ProductType.DIGITAL);
         assertThat(jpaEntity.getStatus()).isEqualTo(ProductStatus.DRAFT);
-        assertThat(jpaEntity.getVisibility()).isEqualTo("PUBLIC");
-        assertThat(jpaEntity.getTaxClass()).isEqualTo("STANDARD");
-        assertThat(jpaEntity.getMetaTitle()).isEqualTo("New Meta Title");
-        assertThat(jpaEntity.getMetaDescription()).isEqualTo("New meta description");
-        assertThat(jpaEntity.getSearchKeywords()).isEqualTo("new, product, test");
+        assertThat(jpaEntity.getBasePrice()).isEqualTo(new BigDecimal("19.99"));
+        assertThat(jpaEntity.getSalePrice()).isEqualTo(new BigDecimal("15.99"));
+        assertThat(jpaEntity.getCurrency()).isEqualTo("USD");
+        assertThat(jpaEntity.getWeightGrams()).isNull();
+        assertThat(jpaEntity.getRequiresShipping()).isFalse();
+        assertThat(jpaEntity.getIsTaxable()).isTrue();
         assertThat(jpaEntity.getIsFeatured()).isFalse();
+        assertThat(jpaEntity.getSlug()).isEqualTo("new-product");
+        assertThat(jpaEntity.getSearchTags()).isEqualTo("new, product, test");
+        assertThat(jpaEntity.getPrimaryImageUrl()).isEqualTo("https://example.com/new-image.jpg");
     }
 
     @Test
@@ -129,54 +128,54 @@ class ProductJpaEntityTest {
         LocalDateTime now = LocalDateTime.now();
         ProductJpaEntity jpaEntity = new ProductJpaEntity();
         setField(jpaEntity, "id", 2L);
-        setField(jpaEntity, "categoryId", 15L);
         setField(jpaEntity, "sku", "JPA-SKU-002");
         setField(jpaEntity, "name", "JPA Product");
-        setField(jpaEntity, "description", "JPA Description");
         setField(jpaEntity, "shortDescription", "JPA Short description");
+        setField(jpaEntity, "description", "JPA Description");
+        setField(jpaEntity, "categoryId", 15L);
         setField(jpaEntity, "brand", "JPABrand");
-        setField(jpaEntity, "model", "JPAModel");
-        setField(jpaEntity, "price", new BigDecimal("39.99"));
-        setField(jpaEntity, "comparePrice", new BigDecimal("49.99"));
-        setField(jpaEntity, "costPrice", new BigDecimal("29.99"));
-        setField(jpaEntity, "weight", new BigDecimal("2.1"));
-        setField(jpaEntity, "productAttributes", "{\"style\": \"modern\"}");
+        setField(jpaEntity, "productType", ProductType.SERVICE);
         setField(jpaEntity, "status", ProductStatus.INACTIVE);
-        setField(jpaEntity, "visibility", "PRIVATE");
-        setField(jpaEntity, "taxClass", "PREMIUM");
-        setField(jpaEntity, "metaTitle", "JPA Meta Title");
-        setField(jpaEntity, "metaDescription", "JPA meta description");
-        setField(jpaEntity, "searchKeywords", "jpa, test, product");
+        setField(jpaEntity, "basePrice", new BigDecimal("39.99"));
+        setField(jpaEntity, "salePrice", new BigDecimal("29.99"));
+        setField(jpaEntity, "currency", "EUR");
+        setField(jpaEntity, "weightGrams", 2100);
+        setField(jpaEntity, "requiresShipping", true);
+        setField(jpaEntity, "isTaxable", false);
         setField(jpaEntity, "isFeatured", true);
+        setField(jpaEntity, "slug", "jpa-product");
+        setField(jpaEntity, "searchTags", "jpa, test, product");
+        setField(jpaEntity, "primaryImageUrl", "https://example.com/jpa-image.jpg");
         setField(jpaEntity, "createdAt", now);
         setField(jpaEntity, "updatedAt", now);
+        setField(jpaEntity, "version", 2L);
 
         // when
         Product domainProduct = jpaEntity.toDomainEntity();
 
         // then
         assertThat(domainProduct.getId()).isEqualTo(2L);
-        assertThat(domainProduct.getCategoryId()).isEqualTo(15L);
         assertThat(domainProduct.getSku()).isEqualTo("JPA-SKU-002");
         assertThat(domainProduct.getName()).isEqualTo("JPA Product");
-        assertThat(domainProduct.getDescription()).isEqualTo("JPA Description");
         assertThat(domainProduct.getShortDescription()).isEqualTo("JPA Short description");
+        assertThat(domainProduct.getDescription()).isEqualTo("JPA Description");
+        assertThat(domainProduct.getCategoryId()).isEqualTo(15L);
         assertThat(domainProduct.getBrand()).isEqualTo("JPABrand");
-        assertThat(domainProduct.getModel()).isEqualTo("JPAModel");
-        assertThat(domainProduct.getPrice()).isEqualTo(new BigDecimal("39.99"));
-        assertThat(domainProduct.getComparePrice()).isEqualTo(new BigDecimal("49.99"));
-        assertThat(domainProduct.getCostPrice()).isEqualTo(new BigDecimal("29.99"));
-        assertThat(domainProduct.getWeight()).isEqualTo(new BigDecimal("2.1"));
-        assertThat(domainProduct.getProductAttributes()).isEqualTo("{\"style\": \"modern\"}");
+        assertThat(domainProduct.getProductType()).isEqualTo(ProductType.SERVICE);
         assertThat(domainProduct.getStatus()).isEqualTo(ProductStatus.INACTIVE);
-        assertThat(domainProduct.getVisibility()).isEqualTo("PRIVATE");
-        assertThat(domainProduct.getTaxClass()).isEqualTo("PREMIUM");
-        assertThat(domainProduct.getMetaTitle()).isEqualTo("JPA Meta Title");
-        assertThat(domainProduct.getMetaDescription()).isEqualTo("JPA meta description");
-        assertThat(domainProduct.getSearchKeywords()).isEqualTo("jpa, test, product");
+        assertThat(domainProduct.getBasePrice()).isEqualTo(new BigDecimal("39.99"));
+        assertThat(domainProduct.getSalePrice()).isEqualTo(new BigDecimal("29.99"));
+        assertThat(domainProduct.getCurrency()).isEqualTo("EUR");
+        assertThat(domainProduct.getWeightGrams()).isEqualTo(2100);
+        assertThat(domainProduct.getRequiresShipping()).isTrue();
+        assertThat(domainProduct.getIsTaxable()).isFalse();
         assertThat(domainProduct.getIsFeatured()).isTrue();
+        assertThat(domainProduct.getSlug()).isEqualTo("jpa-product");
+        assertThat(domainProduct.getSearchTags()).isEqualTo("jpa, test, product");
+        assertThat(domainProduct.getPrimaryImageUrl()).isEqualTo("https://example.com/jpa-image.jpg");
         assertThat(domainProduct.getCreatedAt()).isEqualTo(now);
         assertThat(domainProduct.getUpdatedAt()).isEqualTo(now);
+        assertThat(domainProduct.getVersion()).isEqualTo(2L);
     }
 
     private void setField(Object target, String fieldName, Object value) {
@@ -190,4 +189,3 @@ class ProductJpaEntityTest {
     }
 
 }
-

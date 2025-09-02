@@ -14,29 +14,43 @@ class ProductTest {
     @DisplayName("정상적인 상품 생성")
     void createProduct_Success() {
         // given
-        String name = "테스트 상품";
-        String description = "테스트 상품 설명";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "테스트 상품";
+        String shortDescription = "간단한 설명";
+        String description = "테스트 상품 설명";
+        Long categoryId = 1L;
+        String brand = "TestBrand";
+        ProductType productType = ProductType.PHYSICAL;
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when
         Product product = Product.builder()
-            .name(name)
-            .description(description)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .shortDescription(shortDescription)
+            .description(description)
+            .categoryId(categoryId)
+            .brand(brand)
+            .productType(productType)
+            .basePrice(basePrice)
+            .slug(slug)
             .build();
 
         // then
-        assertThat(product.getName()).isEqualTo(name);
-        assertThat(product.getDescription()).isEqualTo(description);
-        assertThat(product.getPrice()).isEqualTo(price);
-        assertThat(product.getCategoryId()).isEqualTo(categoryId);
         assertThat(product.getSku()).isEqualTo(sku);
+        assertThat(product.getName()).isEqualTo(name);
+        assertThat(product.getShortDescription()).isEqualTo(shortDescription);
+        assertThat(product.getDescription()).isEqualTo(description);
+        assertThat(product.getCategoryId()).isEqualTo(categoryId);
+        assertThat(product.getBrand()).isEqualTo(brand);
+        assertThat(product.getProductType()).isEqualTo(productType);
+        assertThat(product.getBasePrice()).isEqualTo(basePrice);
+        assertThat(product.getSlug()).isEqualTo(slug);
         assertThat(product.getStatus()).isEqualTo(ProductStatus.DRAFT);
-        assertThat(product.getVisibility()).isEqualTo("PUBLIC");
+        assertThat(product.getCurrency()).isEqualTo("KRW");
+        assertThat(product.getRequiresShipping()).isTrue();
+        assertThat(product.getIsTaxable()).isTrue();
         assertThat(product.getIsFeatured()).isFalse();
     }
 
@@ -44,17 +58,17 @@ class ProductTest {
     @DisplayName("상품명이 null인 경우 예외 발생")
     void createProduct_NameIsNull_ThrowsException() {
         // given
-        String name = null;
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = null;
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Product name is required.");
@@ -64,17 +78,17 @@ class ProductTest {
     @DisplayName("상품명이 빈 문자열인 경우 예외 발생")
     void createProduct_NameIsEmpty_ThrowsException() {
         // given
-        String name = "";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "";
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Product name is required.");
@@ -84,97 +98,77 @@ class ProductTest {
     @DisplayName("SKU가 null인 경우 예외 발생")
     void createProduct_SkuIsNull_ThrowsException() {
         // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = null;
+        String name = "테스트 상품";
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("SKU is required.");
     }
 
     @Test
-    @DisplayName("가격이 0 이하인 경우 예외 발생")
-    void createProduct_PriceIsZeroOrNegative_ThrowsException() {
+    @DisplayName("기본 가격이 0 이하인 경우 예외 발생")
+    void createProduct_BasePriceIsZeroOrNegative_ThrowsException() {
         // given
-        String name = "테스트 상품";
-        BigDecimal price = BigDecimal.ZERO;
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "테스트 상품";
+        BigDecimal basePrice = BigDecimal.ZERO;
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Price must be greater than 0.");
+            .hasMessage("Base price must be greater than 0.");
     }
 
     @Test
-    @DisplayName("가격이 99,999,999.99 초과인 경우 예외 발생")
-    void createProduct_PriceExceedsLimit_ThrowsException() {
+    @DisplayName("기본 가격이 최대 한도 초과인 경우 예외 발생")
+    void createProduct_BasePriceExceedsLimit_ThrowsException() {
         // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("100000000.00");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "테스트 상품";
+        BigDecimal basePrice = new BigDecimal("1000000000000.0000"); // 최대 한도 초과
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Price cannot exceed 99,999,999.99.");
-    }
-
-    @Test
-    @DisplayName("카테고리 ID가 null인 경우 예외 발생")
-    void createProduct_CategoryIdIsNull_ThrowsException() {
-        // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = null;
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
-            .sku(sku)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Category ID is required.");
+            .hasMessage("Base price cannot exceed 999,999,999,999.9999.");
     }
 
     @Test
     @DisplayName("상품명이 255자 초과인 경우 예외 발생")
     void createProduct_NameExceedsMaxLength_ThrowsException() {
         // given
-        String name = "a".repeat(256); // 256자
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "a".repeat(256); // 256자
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when & then
         assertThatThrownBy(() -> Product.builder()
-            .name(name)
-            .price(price)
-            .categoryId(categoryId)
             .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
             .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Product name cannot exceed 255 characters.");
@@ -227,26 +221,29 @@ class ProductTest {
         Product product = createValidProduct();
         String newName = "업데이트된 상품명";
         String newDescription = "업데이트된 설명";
-        BigDecimal newPrice = new BigDecimal("20000");
+        BigDecimal newBasePrice = new BigDecimal("20000");
 
         // when
-        product.updateProductInfo(newName, newDescription, newPrice);
+        product.updateProductInfo(newName, newDescription, newBasePrice);
 
         // then
         assertThat(product.getName()).isEqualTo(newName);
         assertThat(product.getDescription()).isEqualTo(newDescription);
-        assertThat(product.getPrice()).isEqualTo(newPrice);
+        assertThat(product.getBasePrice()).isEqualTo(newBasePrice);
     }
 
     private Product createValidProduct() {
         return Product.builder()
-            .name("테스트 상품")
-            .description("테스트 상품 설명")
-            .price(new BigDecimal("10000"))
-            .categoryId(ProductCategory.ELECTRONICS.getId())
             .sku("TEST1234")
+            .name("테스트 상품")
+            .shortDescription("간단한 설명")
+            .description("테스트 상품 설명")
+            .categoryId(1L)
+            .brand("TestBrand")
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("10000"))
+            .slug("test-product")
             .build();
     }
 
 }
-

@@ -1,6 +1,7 @@
 package com.msa.commerce.monolith.product.application.service;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,8 @@ import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCas
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,12 +31,13 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     private final ProductRepository productRepository;
 
     private final ProductResponseMapper productResponseMapper;
+    
+    private final Validator validator;
 
     @Override
     @ValidateCommand(errorPrefix = "Product update validation failed")
     public ProductResponse updateProduct(ProductUpdateCommand command) {
-        log.info("Updating product with ID: {}", command.getProductId());
-
+        validateCommand(command);
         Product existingProduct = findAndValidateProduct(command.getProductId());
         validateProductUpdatable(existingProduct, command.getProductId());
         validateUniqueConstraints(command, existingProduct);
@@ -88,12 +92,12 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private void updateProductData(Product product, ProductUpdateCommand command) {
         product.updatePartially(
-            command.getCategoryId(), command.getSku(), command.getName(),
-            command.getDescription(), command.getShortDescription(), command.getBrand(),
-            command.getModel(), command.getPrice(), command.getComparePrice(),
-            command.getCostPrice(), command.getWeight(), command.getProductAttributes(),
-            command.getVisibility(), command.getTaxClass(), command.getMetaTitle(),
-            command.getMetaDescription(), command.getSearchKeywords(), command.getIsFeatured()
+            command.getSku(), command.getName(), command.getShortDescription(),
+            command.getDescription(), command.getCategoryId(), command.getBrand(),
+            command.getProductType(), command.getBasePrice(), command.getSalePrice(),
+            command.getCurrency(), command.getWeightGrams(), command.getRequiresShipping(),
+            command.getIsTaxable(), command.getIsFeatured(), command.getSlug(),
+            command.getSearchTags(), command.getPrimaryImageUrl()
         );
     }
 
@@ -119,30 +123,29 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     }
 
     private void appendBasicFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
         appendFieldIfNotNull(description, command.getSku(), "sku");
         appendFieldIfNotNull(description, command.getName(), "name");
-        appendFieldIfNotNull(description, command.getDescription(), "description");
         appendFieldIfNotNull(description, command.getShortDescription(), "shortDescription");
+        appendFieldIfNotNull(description, command.getDescription(), "description");
+        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
         appendFieldIfNotNull(description, command.getBrand(), "brand");
-        appendFieldIfNotNull(description, command.getModel(), "model");
+        appendFieldIfNotNull(description, command.getProductType(), "productType");
     }
 
     private void appendPriceFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getPrice(), "price");
-        appendFieldIfNotNull(description, command.getComparePrice(), "comparePrice");
-        appendFieldIfNotNull(description, command.getCostPrice(), "costPrice");
-        appendFieldIfNotNull(description, command.getWeight(), "weight");
+        appendFieldIfNotNull(description, command.getBasePrice(), "basePrice");
+        appendFieldIfNotNull(description, command.getSalePrice(), "salePrice");
+        appendFieldIfNotNull(description, command.getCurrency(), "currency");
+        appendFieldIfNotNull(description, command.getWeightGrams(), "weightGrams");
     }
 
     private void appendMetadataFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getProductAttributes(), "productAttributes");
-        appendFieldIfNotNull(description, command.getVisibility(), "visibility");
-        appendFieldIfNotNull(description, command.getTaxClass(), "taxClass");
-        appendFieldIfNotNull(description, command.getMetaTitle(), "metaTitle");
-        appendFieldIfNotNull(description, command.getMetaDescription(), "metaDescription");
-        appendFieldIfNotNull(description, command.getSearchKeywords(), "searchKeywords");
+        appendFieldIfNotNull(description, command.getRequiresShipping(), "requiresShipping");
+        appendFieldIfNotNull(description, command.getIsTaxable(), "isTaxable");
         appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
+        appendFieldIfNotNull(description, command.getSlug(), "slug");
+        appendFieldIfNotNull(description, command.getSearchTags(), "searchTags");
+        appendFieldIfNotNull(description, command.getPrimaryImageUrl(), "primaryImageUrl");
     }
 
     private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
@@ -154,6 +157,20 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     private void invalidateProductCache(Long productId) {
         log.debug("Invalidating cache for product ID: {}", productId);
         log.info("Cache invalidation completed for product ID: {}", productId);
+    }
+    
+    private void validateCommand(ProductUpdateCommand command) {
+        Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
+        if (!violations.isEmpty()) {
+            StringBuilder sb = new StringBuilder("Product update validation failed: ");
+            violations.forEach(violation -> {
+                if (sb.length() > "Product update validation failed: ".length()) {
+                    sb.append(", ");
+                }
+                sb.append(violation.getMessage());
+            });
+            throw new IllegalArgumentException(sb.toString());
+        }
     }
 
 }

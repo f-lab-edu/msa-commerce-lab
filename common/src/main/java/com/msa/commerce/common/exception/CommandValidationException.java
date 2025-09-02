@@ -59,9 +59,6 @@ public class CommandValidationException extends RuntimeException {
         return new ArrayList<>(errors);
     }
 
-    /**
-     * Detailed validation error information
-     */
     public static class ValidationError {
 
         private final String propertyPath;

@@ -27,6 +27,7 @@ import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductSearchService 테스트")
@@ -53,21 +54,53 @@ class ProductSearchServiceTest {
     @BeforeEach
     void setUp() {
         testProduct1 = Product.reconstitute(
-            1L, 1L, "TEST-001", "Test Product 1", "Test Description 1",
-            "Short Description 1", "TestBrand", "Model1",
-            new BigDecimal("100.00"), new BigDecimal("120.00"), new BigDecimal("80.00"),
-            new BigDecimal("1.0"), null, ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
-            "SEO Title 1", "SEO Description 1", "test keywords", true,
-            LocalDateTime.now().minusDays(1), LocalDateTime.now()
+            1L,                                // id
+            "TEST-001",                       // sku
+            "Test Product 1",                // name
+            "Short Description 1",           // shortDescription
+            "Test Description 1",            // description
+            1L,                               // categoryId
+            "TestBrand",                     // brand
+            ProductType.PHYSICAL,             // productType
+            ProductStatus.ACTIVE,             // status
+            new BigDecimal("100.00"),         // basePrice
+            new BigDecimal("120.00"),         // salePrice
+            "KRW",                           // currency
+            1000,                             // weightGrams
+            true,                             // requiresShipping
+            true,                             // isTaxable
+            true,                             // isFeatured
+            "test-product-1",                // slug
+            "test keywords",                 // searchTags
+            null,                             // primaryImageUrl
+            LocalDateTime.now().minusDays(1), // createdAt
+            LocalDateTime.now(),              // updatedAt
+            1L                                // version
         );
 
         testProduct2 = Product.reconstitute(
-            2L, 1L, "TEST-002", "Test Product 2", "Test Description 2",
-            "Short Description 2", "TestBrand", "Model2",
-            new BigDecimal("200.00"), new BigDecimal("250.00"), new BigDecimal("150.00"),
-            new BigDecimal("2.0"), null, ProductStatus.ACTIVE, "PUBLIC", "STANDARD",
-            "SEO Title 2", "SEO Description 2", "test keywords", false,
-            LocalDateTime.now().minusDays(2), LocalDateTime.now()
+            2L,                                // id
+            "TEST-002",                       // sku
+            "Test Product 2",                // name
+            "Short Description 2",           // shortDescription
+            "Test Description 2",            // description
+            1L,                               // categoryId
+            "TestBrand",                     // brand
+            ProductType.PHYSICAL,             // productType
+            ProductStatus.ACTIVE,             // status
+            new BigDecimal("200.00"),         // basePrice
+            new BigDecimal("250.00"),         // salePrice
+            "KRW",                           // currency
+            2000,                             // weightGrams
+            true,                             // requiresShipping
+            true,                             // isTaxable
+            false,                            // isFeatured
+            "test-product-2",                // slug
+            "test keywords",                 // searchTags
+            null,                             // primaryImageUrl
+            LocalDateTime.now().minusDays(2), // createdAt
+            LocalDateTime.now(),              // updatedAt
+            1L                                // version
         );
 
         searchCommand = ProductSearchCommand.builder()
@@ -91,14 +124,48 @@ class ProductSearchServiceTest {
 
         ProductSearchResponse response1 = ProductSearchResponse.builder()
             .id(1L)
+            .sku("TEST-001")
             .name("Test Product 1")
-            .price(new BigDecimal("100.00"))
+            .shortDescription("Short Description 1")
+            .description("Test Description 1")
+            .categoryId(1L)
+            .brand("TestBrand")
+            .productType(ProductType.PHYSICAL)
+            .status(ProductStatus.ACTIVE)
+            .basePrice(new BigDecimal("100.00"))
+            .salePrice(new BigDecimal("120.00"))
+            .currency("KRW")
+            .weightGrams(1000)
+            .requiresShipping(true)
+            .isTaxable(true)
+            .isFeatured(true)
+            .slug("test-product-1")
+            .searchTags("test keywords")
+            .version(1L)
+            .viewCount(5L)
             .build();
 
         ProductSearchResponse response2 = ProductSearchResponse.builder()
             .id(2L)
+            .sku("TEST-002")
             .name("Test Product 2")
-            .price(new BigDecimal("200.00"))
+            .shortDescription("Short Description 2")
+            .description("Test Description 2")
+            .categoryId(1L)
+            .brand("TestBrand")
+            .productType(ProductType.PHYSICAL)
+            .status(ProductStatus.ACTIVE)
+            .basePrice(new BigDecimal("200.00"))
+            .salePrice(new BigDecimal("250.00"))
+            .currency("KRW")
+            .weightGrams(2000)
+            .requiresShipping(true)
+            .isTaxable(true)
+            .isFeatured(false)
+            .slug("test-product-2")
+            .searchTags("test keywords")
+            .version(1L)
+            .viewCount(5L)
             .build();
 
         Page<ProductSearchResponse> responsePage = new PageImpl<>(Arrays.asList(response1, response2));

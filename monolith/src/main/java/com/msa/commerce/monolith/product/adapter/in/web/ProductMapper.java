@@ -21,8 +21,17 @@ import com.msa.commerce.monolith.product.application.port.in.ProductUpdateComman
 public interface ProductMapper {
 
     @Mapping(target = "sku", ignore = true)
-    @Mapping(target = "visibility", ignore = true)
+    @Mapping(target = "slug", ignore = true)
     @Mapping(target = "isFeatured", ignore = true)
+    @Mapping(target = "productType", ignore = true)
+    @Mapping(target = "basePrice", source = "price")
+    @Mapping(target = "salePrice", source = "comparePrice")
+    @Mapping(target = "currency", ignore = true)
+    @Mapping(target = "weightGrams", ignore = true)
+    @Mapping(target = "requiresShipping", ignore = true)
+    @Mapping(target = "isTaxable", ignore = true)
+    @Mapping(target = "searchTags", ignore = true)
+    @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductCreateCommand toCommand(ProductCreateRequest request);
 
@@ -31,8 +40,17 @@ public interface ProductMapper {
 
     @Mapping(target = "productId", source = "productId")
     @Mapping(target = "sku", ignore = true)
-    @Mapping(target = "visibility", ignore = true)
+    @Mapping(target = "slug", ignore = true)
     @Mapping(target = "isFeatured", ignore = true)
+    @Mapping(target = "productType", ignore = true)
+    @Mapping(target = "basePrice", source = "request.price")
+    @Mapping(target = "salePrice", source = "request.comparePrice")
+    @Mapping(target = "currency", ignore = true)
+    @Mapping(target = "weightGrams", ignore = true)
+    @Mapping(target = "requiresShipping", ignore = true)
+    @Mapping(target = "isTaxable", ignore = true)
+    @Mapping(target = "searchTags", ignore = true)
+    @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
 
@@ -45,11 +63,8 @@ public interface ProductMapper {
             target.sku(request.getSku());
         }
 
-        if (request.getVisibility() == null) {
-            target.visibility("PUBLIC");
-        } else {
-            target.visibility(request.getVisibility());
-        }
+        // Generate slug from name since ProductCreateRequest doesn't have slug field yet
+        target.slug(generateSlugFromName(request.getName()));
 
         if (request.getIsFeatured() == null) {
             target.isFeatured(false);
@@ -80,6 +95,17 @@ public interface ProductMapper {
         }
 
         return cleanName + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private static String generateSlugFromName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "product-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        return name.toLowerCase()
+            .replaceAll("[^a-z0-9가-힣\\s]", "")
+            .trim()
+            .replaceAll("\\s+", "-");
     }
 
 }
