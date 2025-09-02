@@ -107,7 +107,7 @@ public class ProductRepositoryImpl implements ProductRepository {
         }
 
         return switch (sortProperty.toLowerCase()) {
-            case "price" -> "price";
+            case "price" -> "basePrice";
             case "name" -> "name";
             case "createdat", "created", "newest", "oldest" -> "createdAt";
             case "updatedat", "updated" -> "updatedAt";
@@ -116,4 +116,3 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
 }
-

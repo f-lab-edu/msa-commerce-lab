@@ -1,162 +1,308 @@
 package com.msa.commerce.common.aop;
 
-import com.msa.commerce.common.exception.CommandValidationException;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validator;
-import lombok.Builder;
-import lombok.Getter;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.lang.reflect.Method;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ValidationAspect - Unit Tests")
+@DisplayName("ValidationAspect Unit Tests")
 class ValidationAspectUnitTest {
 
     @Mock
     private Validator validator;
-
-    @InjectMocks
-    private ValidationAspect validationAspect;
-
+    
     @Mock
     private JoinPoint joinPoint;
-
+    
     @Mock
     private MethodSignature methodSignature;
-
-    private Method testMethod;
-
-    private TestCommand testCommand;
-
+    
+    @Mock
+    private Method method;
+    
+    @Mock
+    private ValidateResult validateResultAnnotation;
+    
+    @Mock
+    @SuppressWarnings("rawtypes")
+    private ConstraintViolation constraintViolation;
+    
+    private ValidationAspect validationAspect;
+    
     @BeforeEach
-    void setUp() throws Exception {
-        testMethod = TestService.class.getMethod("processCommand", TestCommand.class);
-        testCommand = TestCommand.builder()
-                .id(1L)
-                .name("Test")
-                .build();
-
-        when(joinPoint.getSignature()).thenReturn(methodSignature);
-        when(methodSignature.getMethod()).thenReturn(testMethod);
+    void setUp() {
+        validationAspect = new ValidationAspect(validator);
+        lenient().when(joinPoint.getSignature()).thenReturn(methodSignature);
+        lenient().when(methodSignature.getMethod()).thenReturn(method);
+        lenient().when(method.getAnnotation(ValidateResult.class)).thenReturn(validateResultAnnotation);
+        lenient().when(method.getName()).thenReturn("testMethod");
     }
-
+    
     @Test
-    @DisplayName("유효한 Command 객체는 검증을 통과한다")
-    void validCommandShouldPassValidation() throws Exception {
-        // Given
-        when(joinPoint.getArgs()).thenReturn(new Object[]{testCommand});
-
-        ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[]{});
-        when(annotation.groups()).thenReturn(new Class<?>[]{});
-        when(annotation.failFast()).thenReturn(false);
-        when(annotation.includeParameterNames()).thenReturn(true);
-        when(annotation.errorPrefix()).thenReturn("Test validation failed");
-
-        when(validator.validate(any(), any(Class[].class))).thenReturn(new HashSet<>()); // Mock validator.validate to return an empty set (no violations)
-
-        Method methodWithAnnotation = mock(Method.class);
-        when(methodWithAnnotation.getAnnotation(ValidateCommand.class)).thenReturn(annotation);
-
-        Parameter parameter = mock(Parameter.class);
-        when(parameter.getName()).thenReturn("testParam");
-        when(methodWithAnnotation.getParameters()).thenReturn(new Parameter[]{parameter});
-
-        when(methodSignature.getMethod()).thenReturn(methodWithAnnotation);
-
-        // When & Then
-        validationAspect.validateCommandParameters(joinPoint);
+    @DisplayName("Should skip validation when result is null")
+    void shouldSkipValidationWhenResultIsNull() {
+        // When
+        validationAspect.validateMethodResult(joinPoint, null);
+        
+        // Then
+        verify(validator, never()).validate(any());
+        verify(validator, never()).validate(any(), any(Class[].class));
     }
-
+    
     @Test
-    @DisplayName("검증 실패 시 CommandValidationException을 발생시킨다")
-    void invalidCommandShouldThrowException() throws Exception {
+    @DisplayName("Should validate result when no validation target specified")
+    void shouldValidateResultWhenNoValidationTargetSpecified() {
         // Given
-        when(joinPoint.getArgs()).thenReturn(new Object[]{testCommand});
-
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        when(validator.validate(testCommand)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand);
+    }
+    
+    @Test
+    @DisplayName("Should validate result when target class matches")
+    void shouldValidateResultWhenTargetClassMatches() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{TestCommand.class});
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        when(validator.validate(testCommand)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand);
+    }
+    
+    @Test
+    @DisplayName("Should skip validation when target class does not match")
+    void shouldSkipValidationWhenTargetClassDoesNotMatch() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{String.class});
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator, never()).validate(any());
+        verify(validator, never()).validate(any(), any(Class[].class));
+    }
+    
+    @Test
+    @DisplayName("Should validate with groups when groups specified")
+    void shouldValidateWithGroupsWhenGroupsSpecified() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        Class<?>[] groups = {TestValidationGroup.class};
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
+        when(validateResultAnnotation.groups()).thenReturn(groups);
+        when(validator.validate(testCommand, groups)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand, groups);
+    }
+    
+    @Test
+    @DisplayName("Should throw ConstraintViolationException when validation fails")
+    void shouldThrowConstraintViolationExceptionWhenValidationFails() {
+        // Given
+        TestCommand testCommand = new TestCommand("");
         @SuppressWarnings("unchecked")
         Set<ConstraintViolation<Object>> violations = new HashSet<>();
+        violations.add((ConstraintViolation<Object>) constraintViolation);
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        
         @SuppressWarnings("unchecked")
-        ConstraintViolation<Object> violation = mock(ConstraintViolation.class);
-        when(violation.getPropertyPath()).thenReturn(mock(jakarta.validation.Path.class));
-        when(violation.getMessage()).thenReturn("Test error");
-        when(violation.getInvalidValue()).thenReturn("invalid");
-        violations.add(violation);
-
-        @SuppressWarnings("unchecked")
-        Set<ConstraintViolation<Object>> mockViolations = (Set<ConstraintViolation<Object>>) (Set<?>) violations;
-        when(validator.validate(any())).thenReturn(mockViolations);
-
-        ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[]{});
-        when(annotation.groups()).thenReturn(new Class<?>[]{});
-        when(annotation.failFast()).thenReturn(false);
-        when(annotation.includeParameterNames()).thenReturn(true);
-        when(annotation.errorPrefix()).thenReturn("Test validation failed");
-
-        Method methodWithAnnotation = mock(Method.class);
-        when(methodWithAnnotation.getAnnotation(ValidateCommand.class)).thenReturn(annotation);
-        when(methodWithAnnotation.getParameters()).thenReturn(testMethod.getParameters());
-        when(methodSignature.getMethod()).thenReturn(methodWithAnnotation);
-
+        Set<ConstraintViolation<TestCommand>> mockViolations = (Set<ConstraintViolation<TestCommand>>) (Set<?>) violations;
+        when(validator.validate(testCommand)).thenReturn(mockViolations);
+        when(constraintViolation.getPropertyPath()).thenReturn(mock(jakarta.validation.Path.class));
+        when(constraintViolation.getMessage()).thenReturn("Test validation error");
+        
         // When & Then
-        assertThatThrownBy(() -> validationAspect.validateCommandParameters(joinPoint))
-                .isInstanceOf(CommandValidationException.class)
-                .hasMessageContaining("Command validation failed");
+        assertThatThrownBy(() -> validationAspect.validateMethodResult(joinPoint, testCommand))
+            .isInstanceOf(ConstraintViolationException.class);
+        
+        verify(validator).validate(testCommand);
     }
-
+    
     @Test
-    @DisplayName("Command가 아닌 객체는 검증에서 제외된다")
-    void nonCommandObjectShouldBeIgnored() throws Exception {
+    @DisplayName("Should validate with both target class and groups")
+    void shouldValidateWithBothTargetClassAndGroups() {
         // Given
-        String nonCommandObject = "not a command";
-        when(joinPoint.getArgs()).thenReturn(new Object[]{nonCommandObject});
-
-        ValidateCommand annotation = mock(ValidateCommand.class);
-        when(annotation.parameterIndices()).thenReturn(new int[]{});
-
-        Method methodWithAnnotation = mock(Method.class);
-        when(methodWithAnnotation.getAnnotation(ValidateCommand.class)).thenReturn(annotation);
-        when(methodSignature.getMethod()).thenReturn(methodWithAnnotation);
-
-        // When & Then - should not throw exception
-        validationAspect.validateCommandParameters(joinPoint);
+        TestCommand testCommand = new TestCommand("test");
+        Class<?>[] groups = {TestValidationGroup.class};
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{TestCommand.class});
+        when(validateResultAnnotation.groups()).thenReturn(groups);
+        when(validator.validate(testCommand, groups)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand, groups);
     }
-
-    static class TestService {
-
-        @ValidateCommand
-        public void processCommand(TestCommand command) {
-            // Test method
+    
+    @Test
+    @DisplayName("Should handle multiple target classes - first match")
+    void shouldHandleMultipleTargetClassesFirstMatch() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{TestCommand.class, String.class});
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        when(validator.validate(testCommand)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand);
+    }
+    
+    @Test
+    @DisplayName("Should handle multiple target classes - second match")
+    void shouldHandleMultipleTargetClassesSecondMatch() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{String.class, TestCommand.class});
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        when(validator.validate(testCommand)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand);
+    }
+    
+    @Test
+    @DisplayName("Should handle inheritance in target class matching")
+    void shouldHandleInheritanceInTargetClassMatching() {
+        // Given
+        ChildTestCommand childCommand = new ChildTestCommand("test", "extra");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{TestCommand.class});
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        when(validator.validate(childCommand)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, childCommand);
+        
+        // Then
+        verify(validator).validate(childCommand);
+    }
+    
+    @Test
+    @DisplayName("Should handle multiple violations")
+    void shouldHandleMultipleViolations() {
+        // Given
+        TestCommand testCommand = new TestCommand("");
+        @SuppressWarnings("rawtypes")
+        ConstraintViolation violation2 = mock(ConstraintViolation.class);
+        @SuppressWarnings("unchecked")
+        Set<ConstraintViolation<Object>> violations = new HashSet<>();
+        violations.add((ConstraintViolation<Object>) constraintViolation);
+        violations.add((ConstraintViolation<Object>) violation2);
+        
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
+        when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
+        
+        @SuppressWarnings("unchecked")
+        Set<ConstraintViolation<TestCommand>> mockViolations = (Set<ConstraintViolation<TestCommand>>) (Set<?>) violations;
+        when(validator.validate(testCommand)).thenReturn(mockViolations);
+        when(constraintViolation.getPropertyPath()).thenReturn(mock(jakarta.validation.Path.class));
+        when(constraintViolation.getMessage()).thenReturn("First validation error");
+        when(violation2.getPropertyPath()).thenReturn(mock(jakarta.validation.Path.class));
+        when(violation2.getMessage()).thenReturn("Second validation error");
+        
+        // When & Then
+        assertThatThrownBy(() -> validationAspect.validateMethodResult(joinPoint, testCommand))
+            .isInstanceOf(ConstraintViolationException.class);
+        
+        verify(validator).validate(testCommand);
+    }
+    
+    @Test
+    @DisplayName("Should not validate when target does not match - multiple targets")
+    void shouldNotValidateWhenTargetDoesNotMatchMultipleTargets() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{String.class, Integer.class});
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator, never()).validate(any());
+        verify(validator, never()).validate(any(), any(Class[].class));
+    }
+    
+    @Test
+    @DisplayName("Should validate with groups when target matches and groups specified")
+    void shouldValidateWithGroupsWhenTargetMatchesAndGroupsSpecified() {
+        // Given
+        TestCommand testCommand = new TestCommand("test");
+        Class<?>[] groups = {TestValidationGroup.class, AnotherValidationGroup.class};
+        when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[]{TestCommand.class});
+        when(validateResultAnnotation.groups()).thenReturn(groups);
+        when(validator.validate(testCommand, groups)).thenReturn(new HashSet<>());
+        
+        // When
+        validationAspect.validateMethodResult(joinPoint, testCommand);
+        
+        // Then
+        verify(validator).validate(testCommand, groups);
+    }
+    
+    // Test helper classes
+    public static class TestCommand {
+        @SuppressWarnings("unused")
+        private final String value;
+        
+        public TestCommand(String value) {
+            this.value = value;
         }
-
     }
-
-    @Getter
-    @Builder
-    static class TestCommand {
-
-        private final Long id;
-
-        private final String name;
-
+    
+    public static class ChildTestCommand extends TestCommand {
+        @SuppressWarnings("unused")
+        private final String extraValue;
+        
+        public ChildTestCommand(String value, String extraValue) {
+            super(value);
+            this.extraValue = extraValue;
+        }
     }
-
+    
+    public interface TestValidationGroup {
+    }
+    
+    public interface AnotherValidationGroup {
+    }
 }

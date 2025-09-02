@@ -6,7 +6,9 @@ import static org.mockito.BDDMockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,8 +25,11 @@ import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
+
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductUpdateService 테스트")
@@ -35,6 +40,9 @@ class ProductUpdateServiceTest {
 
     @Mock
     private ProductResponseMapper productResponseMapper;
+    
+    @Mock
+    private Validator validator;
 
     @InjectMocks
     private ProductUpdateService productUpdateService;
@@ -49,46 +57,51 @@ class ProductUpdateServiceTest {
     void setUp() {
         existingProduct = Product.reconstitute(
             1L,                                    // id
-            ProductCategory.ELECTRONICS.getId(),   // categoryId
             "ORIGINAL-SKU",                       // sku
             "원본 상품명",                         // name
-            "원본 상품 설명",                      // description
             "원본 짧은 설명",                      // shortDescription
+            "원본 상품 설명",                      // description
+            1L,                                   // categoryId
             "원본 브랜드",                         // brand
-            "원본 모델",                          // model
-            new BigDecimal("10000"),              // price
-            new BigDecimal("12000"),              // comparePrice
-            new BigDecimal("8000"),               // costPrice
-            new BigDecimal("1.5"),                // weight
-            "{}",                                 // productAttributes
+            ProductType.PHYSICAL,                 // productType
             ProductStatus.ACTIVE,                 // status
-            "PUBLIC",                             // visibility
-            "STANDARD",                           // taxClass
-            "원본 메타 제목",                      // metaTitle
-            "원본 메타 설명",                      // metaDescription
-            "검색 키워드",                         // searchKeywords
+            new BigDecimal("10000"),              // basePrice
+            new BigDecimal("12000"),              // salePrice
+            "KRW",                               // currency
+            1500,                                 // weightGrams
+            true,                                 // requiresShipping
+            true,                                 // isTaxable
             false,                                // isFeatured
+            "original-product",                  // slug
+            "검색 키워드",                         // searchTags
+            null,                                 // primaryImageUrl
             LocalDateTime.now().minusDays(1),     // createdAt
-            LocalDateTime.now().minusDays(1)      // updatedAt
+            LocalDateTime.now().minusDays(1),     // updatedAt
+            1L                                    // version
         );
 
         updateCommand = ProductUpdateCommand.builder()
             .productId(1L)
             .name("업데이트된 상품명")
             .description("업데이트된 상품 설명")
-            .price(new BigDecimal("15000"))
+            .basePrice(new BigDecimal("15000"))
             .build();
 
         expectedResponse = ProductResponse.builder()
             .id(1L)
-            .categoryId(ProductCategory.ELECTRONICS.getId())
             .sku("ORIGINAL-SKU")
             .name("업데이트된 상품명")
             .description("업데이트된 상품 설명")
-            .price(new BigDecimal("15000"))
+            .categoryId(1L)
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("15000"))
+            .currency("KRW")
             .status(ProductStatus.ACTIVE)
-            .visibility("PUBLIC")
+            .requiresShipping(true)
+            .isTaxable(true)
             .isFeatured(false)
+            .slug("original-product")
+            .version(1L)
             .createdAt(LocalDateTime.now().minusDays(1))
             .updatedAt(LocalDateTime.now())
             .build();
@@ -98,6 +111,7 @@ class ProductUpdateServiceTest {
     @DisplayName("정상적인 상품 업데이트")
     void updateProduct_Success() {
         // given
+        given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
         given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
@@ -109,7 +123,7 @@ class ProductUpdateServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getName()).isEqualTo("업데이트된 상품명");
         assertThat(response.getDescription()).isEqualTo("업데이트된 상품 설명");
-        assertThat(response.getPrice()).isEqualTo(new BigDecimal("15000"));
+        assertThat(response.getBasePrice()).isEqualTo(new BigDecimal("15000"));
 
         verify(productRepository).findById(1L);
         verify(productRepository).save(any(Product.class));
@@ -120,6 +134,7 @@ class ProductUpdateServiceTest {
     @DisplayName("존재하지 않는 상품 업데이트 시 예외 발생")
     void updateProduct_ProductNotFound_ThrowsException() {
         // given
+        given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
         given(productRepository.findById(1L)).willReturn(Optional.empty());
 
         // when & then
@@ -136,11 +151,11 @@ class ProductUpdateServiceTest {
     void updateProduct_ProductNotUpdatable_ThrowsException() {
         // given
         Product archivedProduct = Product.reconstitute(
-            1L, ProductCategory.ELECTRONICS.getId(), "ARCHIVED-SKU", "보관된 상품",
-            "설명", null, null, null, new BigDecimal("10000"),
-            null, null, null, null, ProductStatus.ARCHIVED,
-            "PUBLIC", null, null, null, null, false,
-            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1)
+            1L, "ARCHIVED-SKU", "보관된 상품", null, "설명",
+            1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
+            new BigDecimal("10000"), null, "KRW", null, true,
+            true, false, "archived-product", null, null,
+            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), 1L
         );
 
         given(productRepository.findById(1L)).willReturn(Optional.of(archivedProduct));
@@ -241,7 +256,6 @@ class ProductUpdateServiceTest {
         verify(productRepository).save(any(Product.class));
     }
 
-
     @Test
     @DisplayName("유효하지 않은 업데이트 명령 시 예외 발생")
     void updateProduct_InvalidCommand_ThrowsException() {
@@ -249,13 +263,17 @@ class ProductUpdateServiceTest {
         ProductUpdateCommand invalidCommand = ProductUpdateCommand.builder()
             .productId(1L)
             .name("") // 빈 문자열
-            .price(new BigDecimal("15000"))
+            .basePrice(new BigDecimal("15000"))
             .build();
+
+        ConstraintViolation<ProductUpdateCommand> violation = mock(ConstraintViolation.class);
+        given(violation.getMessage()).willReturn("Product name must not be empty");
+        given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Set.of(violation));
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(invalidCommand))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product name must not be empty and cannot exceed 255 characters.");
+            .hasMessage("Product update validation failed: Product name must not be empty");
 
         verify(productRepository, never()).findById(anyLong());
     }
@@ -266,13 +284,17 @@ class ProductUpdateServiceTest {
         // given
         ProductUpdateCommand invalidCommand = ProductUpdateCommand.builder()
             .productId(1L)
-            .price(BigDecimal.ZERO) // 0 가격
+            .basePrice(BigDecimal.ZERO) // 0 가격
             .build();
+
+        ConstraintViolation<ProductUpdateCommand> violation = mock(ConstraintViolation.class);
+        given(violation.getMessage()).willReturn("Base price must be greater than 0");
+        given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Set.of(violation));
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(invalidCommand))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Price must be between 0.01 and 99,999,999.99.");
+            .hasMessage("Product update validation failed: Base price must be greater than 0");
 
         verify(productRepository, never()).findById(anyLong());
     }
@@ -308,7 +330,7 @@ class ProductUpdateServiceTest {
         ProductUpdateCommand commandWithSameName = ProductUpdateCommand.builder()
             .productId(1L)
             .name("원본 상품명") // 기존과 동일한 이름
-            .price(new BigDecimal("15000"))
+            .basePrice(new BigDecimal("15000"))
             .build();
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
@@ -326,4 +348,3 @@ class ProductUpdateServiceTest {
     }
 
 }
-

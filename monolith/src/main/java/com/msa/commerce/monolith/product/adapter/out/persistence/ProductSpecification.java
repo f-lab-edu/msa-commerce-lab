@@ -22,11 +22,11 @@ public class ProductSpecification {
             }
 
             if (command.getMinPrice() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), command.getMinPrice()));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("basePrice"), command.getMinPrice()));
             }
 
             if (command.getMaxPrice() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), command.getMaxPrice()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("basePrice"), command.getMaxPrice()));
             }
 
             if (command.getStatus() != null) {
@@ -51,11 +51,11 @@ public class ProductSpecification {
             List<Predicate> predicates = new ArrayList<>();
 
             if (minPrice != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("basePrice"), minPrice));
             }
 
             if (maxPrice != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("price"), maxPrice));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("basePrice"), maxPrice));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
@@ -72,4 +72,3 @@ public class ProductSpecification {
     }
 
 }
-

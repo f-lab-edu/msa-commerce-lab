@@ -8,4 +8,3 @@ public enum ProductStatus {
     ARCHIVED
 
 }
-

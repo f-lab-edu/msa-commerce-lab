@@ -9,6 +9,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +20,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,63 +36,61 @@ public class ProductJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
-
     @Column(nullable = false, unique = true, length = 100)
     private String sku;
 
     @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(name = "short_description", length = 500)
+    private String shortDescription;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "short_description", length = 500)
-    private String shortDescription;
+    @Column(name = "category_id")
+    private Long categoryId;
 
     @Column(length = 100)
     private String brand;
 
-    @Column(length = 100)
-    private String model;
-
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal price;
-
-    @Column(name = "compare_price", precision = 10, scale = 2)
-    private BigDecimal comparePrice;
-
-    @Column(name = "cost_price", precision = 10, scale = 2)
-    private BigDecimal costPrice;
-
-    @Column(precision = 8, scale = 3)
-    private BigDecimal weight;
-
-    @Column(name = "product_attributes", columnDefinition = "JSON")
-    private String productAttributes;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type", nullable = false, length = 20)
+    private ProductType productType;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ProductStatus status;
 
-    @Column(length = 20)
-    private String visibility;
+    @Column(name = "base_price", nullable = false, precision = 12, scale = 4)
+    private BigDecimal basePrice;
 
-    @Column(name = "tax_class", length = 50)
-    private String taxClass;
+    @Column(name = "sale_price", precision = 12, scale = 4)
+    private BigDecimal salePrice;
 
-    @Column(name = "meta_title", length = 255)
-    private String metaTitle;
+    @Column(nullable = false, length = 3)
+    private String currency = "KRW";
 
-    @Column(name = "meta_description", columnDefinition = "TEXT")
-    private String metaDescription;
+    @Column(name = "weight_grams")
+    private Integer weightGrams;
 
-    @Column(name = "search_keywords", columnDefinition = "TEXT")
-    private String searchKeywords;
+    @Column(name = "requires_shipping", nullable = false)
+    private Boolean requiresShipping = true;
 
-    @Column(name = "is_featured")
-    private Boolean isFeatured;
+    @Column(name = "is_taxable", nullable = false)
+    private Boolean isTaxable = true;
+
+    @Column(name = "is_featured", nullable = false)
+    private Boolean isFeatured = false;
+
+    @Column(nullable = false, unique = true, length = 300)
+    private String slug;
+
+    @Column(name = "search_tags", columnDefinition = "TEXT")
+    private String searchTags;
+
+    @Column(name = "primary_image_url", length = 500)
+    private String primaryImageUrl;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -100,83 +100,85 @@ public class ProductJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version = 1L;
+
     public static ProductJpaEntity fromDomainEntity(Product product) {
         ProductJpaEntity jpaEntity = new ProductJpaEntity();
         jpaEntity.id = product.getId();
-        jpaEntity.categoryId = product.getCategoryId();
         jpaEntity.sku = product.getSku();
         jpaEntity.name = product.getName();
-        jpaEntity.description = product.getDescription();
         jpaEntity.shortDescription = product.getShortDescription();
+        jpaEntity.description = product.getDescription();
+        jpaEntity.categoryId = product.getCategoryId();
         jpaEntity.brand = product.getBrand();
-        jpaEntity.model = product.getModel();
-        jpaEntity.price = product.getPrice();
-        jpaEntity.comparePrice = product.getComparePrice();
-        jpaEntity.costPrice = product.getCostPrice();
-        jpaEntity.weight = product.getWeight();
-        jpaEntity.productAttributes = product.getProductAttributes();
+        jpaEntity.productType = product.getProductType();
         jpaEntity.status = product.getStatus();
-        jpaEntity.visibility = product.getVisibility();
-        jpaEntity.taxClass = product.getTaxClass();
-        jpaEntity.metaTitle = product.getMetaTitle();
-        jpaEntity.metaDescription = product.getMetaDescription();
-        jpaEntity.searchKeywords = product.getSearchKeywords();
+        jpaEntity.basePrice = product.getBasePrice();
+        jpaEntity.salePrice = product.getSalePrice();
+        jpaEntity.currency = product.getCurrency();
+        jpaEntity.weightGrams = product.getWeightGrams();
+        jpaEntity.requiresShipping = product.getRequiresShipping();
+        jpaEntity.isTaxable = product.getIsTaxable();
         jpaEntity.isFeatured = product.getIsFeatured();
+        jpaEntity.slug = product.getSlug();
+        jpaEntity.searchTags = product.getSearchTags();
+        jpaEntity.primaryImageUrl = product.getPrimaryImageUrl();
         jpaEntity.createdAt = product.getCreatedAt();
         jpaEntity.updatedAt = product.getUpdatedAt();
+        jpaEntity.version = product.getVersion();
         return jpaEntity;
     }
 
     public static ProductJpaEntity fromDomainEntityForCreation(Product product) {
         ProductJpaEntity jpaEntity = new ProductJpaEntity();
-        jpaEntity.categoryId = product.getCategoryId();
         jpaEntity.sku = product.getSku();
         jpaEntity.name = product.getName();
-        jpaEntity.description = product.getDescription();
         jpaEntity.shortDescription = product.getShortDescription();
+        jpaEntity.description = product.getDescription();
+        jpaEntity.categoryId = product.getCategoryId();
         jpaEntity.brand = product.getBrand();
-        jpaEntity.model = product.getModel();
-        jpaEntity.price = product.getPrice();
-        jpaEntity.comparePrice = product.getComparePrice();
-        jpaEntity.costPrice = product.getCostPrice();
-        jpaEntity.weight = product.getWeight();
-        jpaEntity.productAttributes = product.getProductAttributes();
+        jpaEntity.productType = product.getProductType();
         jpaEntity.status = product.getStatus();
-        jpaEntity.visibility = product.getVisibility();
-        jpaEntity.taxClass = product.getTaxClass();
-        jpaEntity.metaTitle = product.getMetaTitle();
-        jpaEntity.metaDescription = product.getMetaDescription();
-        jpaEntity.searchKeywords = product.getSearchKeywords();
+        jpaEntity.basePrice = product.getBasePrice();
+        jpaEntity.salePrice = product.getSalePrice();
+        jpaEntity.currency = product.getCurrency();
+        jpaEntity.weightGrams = product.getWeightGrams();
+        jpaEntity.requiresShipping = product.getRequiresShipping();
+        jpaEntity.isTaxable = product.getIsTaxable();
         jpaEntity.isFeatured = product.getIsFeatured();
+        jpaEntity.slug = product.getSlug();
+        jpaEntity.searchTags = product.getSearchTags();
+        jpaEntity.primaryImageUrl = product.getPrimaryImageUrl();
         return jpaEntity;
     }
 
     public Product toDomainEntity() {
         return Product.reconstitute(
             this.id,
-            this.categoryId,
             this.sku,
             this.name,
-            this.description,
             this.shortDescription,
+            this.description,
+            this.categoryId,
             this.brand,
-            this.model,
-            this.price,
-            this.comparePrice,
-            this.costPrice,
-            this.weight,
-            this.productAttributes,
+            this.productType,
             this.status,
-            this.visibility,
-            this.taxClass,
-            this.metaTitle,
-            this.metaDescription,
-            this.searchKeywords,
+            this.basePrice,
+            this.salePrice,
+            this.currency,
+            this.weightGrams,
+            this.requiresShipping,
+            this.isTaxable,
             this.isFeatured,
+            this.slug,
+            this.searchTags,
+            this.primaryImageUrl,
             this.createdAt,
-            this.updatedAt
+            this.updatedAt,
+            this.version
         );
     }
 
 }
-

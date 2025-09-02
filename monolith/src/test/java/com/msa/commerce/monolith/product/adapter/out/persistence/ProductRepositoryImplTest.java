@@ -3,7 +3,6 @@ package com.msa.commerce.monolith.product.adapter.out.persistence;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +17,7 @@ import com.msa.commerce.monolith.config.TestBeansConfiguration;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @DataJpaTest
 @Import({ProductRepositoryImpl.class, TestBeansConfiguration.class})
@@ -27,9 +27,6 @@ class ProductRepositoryImplTest {
 
     @Autowired
     private ProductRepositoryImpl productRepository;
-
-    @Autowired
-    private ProductJpaRepository productJpaRepository;
 
     @Test
     @DisplayName("카테고리별 상품 검색이 정상적으로 동작한다")
@@ -68,7 +65,7 @@ class ProductRepositoryImplTest {
             .maxPrice(new BigDecimal("150.00"))
             .page(0)
             .size(10)
-            .sortProperty("price")
+            .sortProperty("basePrice")
             .sortDirection(Sort.Direction.DESC)
             .build();
 
@@ -79,7 +76,7 @@ class ProductRepositoryImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getContent()).isNotEmpty();
         assertThat(result.getContent())
-            .extracting(Product::getPrice)
+            .extracting(Product::getBasePrice)
             .allMatch(price -> price.compareTo(new BigDecimal("50.00")) >= 0 &&
                 price.compareTo(new BigDecimal("150.00")) <= 0);
     }
@@ -121,7 +118,7 @@ class ProductRepositoryImplTest {
             .status(ProductStatus.ACTIVE)
             .page(0)
             .size(10)
-            .sortProperty("price")
+            .sortProperty("basePrice")
             .sortDirection(Sort.Direction.DESC)
             .build();
 
@@ -132,8 +129,8 @@ class ProductRepositoryImplTest {
         assertThat(result).isNotNull();
         assertThat(result.getContent()).allMatch(product ->
             product.getCategoryId().equals(1L) &&
-                product.getPrice().compareTo(new BigDecimal("90.00")) >= 0 &&
-                product.getPrice().compareTo(new BigDecimal("150.00")) <= 0 &&
+                product.getBasePrice().compareTo(new BigDecimal("90.00")) >= 0 &&
+                product.getBasePrice().compareTo(new BigDecimal("150.00")) <= 0 &&
                 product.getStatus() == ProductStatus.ACTIVE
         );
     }
@@ -170,14 +167,14 @@ class ProductRepositoryImplTest {
         ProductSearchCommand commandAsc = ProductSearchCommand.builder()
             .page(0)
             .size(10)
-            .sortProperty("price")
+            .sortProperty("basePrice")
             .sortDirection(Sort.Direction.ASC)
             .build();
 
         ProductSearchCommand commandDesc = ProductSearchCommand.builder()
             .page(0)
             .size(10)
-            .sortProperty("price")
+            .sortProperty("basePrice")
             .sortDirection(Sort.Direction.DESC)
             .build();
 
@@ -190,52 +187,59 @@ class ProductRepositoryImplTest {
         assertThat(resultDesc.getContent()).isNotEmpty();
 
         if (resultAsc.getContent().size() > 1) {
-            assertThat(resultAsc.getContent().get(0).getPrice())
-                .isLessThanOrEqualTo(resultAsc.getContent().get(1).getPrice());
+            assertThat(resultAsc.getContent().get(0).getBasePrice())
+                .isLessThanOrEqualTo(resultAsc.getContent().get(1).getBasePrice());
         }
 
         if (resultDesc.getContent().size() > 1) {
-            assertThat(resultDesc.getContent().get(0).getPrice())
-                .isGreaterThanOrEqualTo(resultDesc.getContent().get(1).getPrice());
+            assertThat(resultDesc.getContent().get(0).getBasePrice())
+                .isGreaterThanOrEqualTo(resultDesc.getContent().get(1).getBasePrice());
         }
     }
 
     private void createTestProducts() {
-        LocalDateTime now = LocalDateTime.now();
-
         Product product1 = Product.builder()
-            .categoryId(1L)
             .sku("TEST-001")
             .name("Test Product 1")
             .description("Test Description 1")
-            .price(new BigDecimal("100.00"))
-            .visibility("PUBLIC")
+            .categoryId(1L)
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("100.00"))
+            .slug("test-product-1")
             .isFeatured(false)
             .build();
 
         Product product2 = Product.builder()
-            .categoryId(1L)
             .sku("TEST-002")
             .name("Test Product 2")
             .description("Test Description 2")
-            .price(new BigDecimal("200.00"))
-            .visibility("PUBLIC")
+            .categoryId(1L)
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("200.00"))
+            .slug("test-product-2")
             .isFeatured(true)
             .build();
 
         Product product3 = Product.builder()
-            .categoryId(2L)
             .sku("TEST-003")
             .name("Test Product 3")
             .description("Test Description 3")
-            .price(new BigDecimal("300.00"))
-            .visibility("PRIVATE")
+            .categoryId(2L)
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("300.00"))
+            .slug("test-product-3")
             .isFeatured(false)
             .build();
 
-        productRepository.save(product1);
-        productRepository.save(product2);
+        Product savedProduct1 = productRepository.save(product1);
+        Product savedProduct2 = productRepository.save(product2);
         Product savedProduct3 = productRepository.save(product3);
+
+        // Set product1 and product2 to active for status filtering tests
+        savedProduct1.activate();
+        savedProduct2.activate();
+        productRepository.save(savedProduct1);
+        productRepository.save(savedProduct2);
 
         // Set product3 to inactive after saving to test status filtering
         savedProduct3.deactivate();
@@ -243,4 +247,3 @@ class ProductRepositoryImplTest {
     }
 
 }
-

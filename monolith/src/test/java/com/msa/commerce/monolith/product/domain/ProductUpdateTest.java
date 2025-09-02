@@ -12,33 +12,37 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Product 업데이트 메소드 테스트")
 class ProductUpdateTest {
 
+    // Note: This test class tests the old Product.updatePartially method
+    // which no longer exists in the current Product domain model.
+    // These tests should be updated to use the new field structure.
+
     private Product product;
 
     @BeforeEach
     void setUp() {
         product = Product.reconstitute(
             1L,                                    // id
-            ProductCategory.ELECTRONICS.getId(),   // categoryId
             "ORIGINAL-SKU",                       // sku
             "원본 상품명",                         // name
-            "원본 상품 설명",                      // description
             "원본 짧은 설명",                      // shortDescription
+            "원본 상품 설명",                      // description
+            1L,                                   // categoryId
             "원본 브랜드",                         // brand
-            "원본 모델",                          // model
-            new BigDecimal("10000"),              // price
-            new BigDecimal("12000"),              // comparePrice
-            new BigDecimal("8000"),               // costPrice
-            new BigDecimal("1.5"),                // weight
-            "{}",                                 // productAttributes
+            ProductType.PHYSICAL,                 // productType
             ProductStatus.ACTIVE,                 // status
-            "PUBLIC",                             // visibility
-            "STANDARD",                           // taxClass
-            "원본 메타 제목",                      // metaTitle
-            "원본 메타 설명",                      // metaDescription
-            "검색 키워드",                         // searchKeywords
+            new BigDecimal("10000"),              // basePrice
+            new BigDecimal("12000"),              // salePrice
+            "KRW",                               // currency
+            1500,                                 // weightGrams
+            true,                                 // requiresShipping
+            true,                                 // isTaxable
             false,                                // isFeatured
+            "original-product",                  // slug
+            "검색 키워드",                         // searchTags
+            null,                                 // primaryImageUrl
             LocalDateTime.now().minusDays(1),     // createdAt
-            LocalDateTime.now().minusDays(1)      // updatedAt
+            LocalDateTime.now().minusDays(1),     // updatedAt
+            1L                                    // version
         );
     }
 
@@ -50,44 +54,42 @@ class ProductUpdateTest {
 
         // when
         product.updatePartially(
-            ProductCategory.CLOTHING.getId(),     // categoryId
             "NEW-SKU",                            // sku
             "새로운 상품명",                       // name
-            "새로운 상품 설명",                    // description
             "새로운 짧은 설명",                    // shortDescription
+            "새로운 상품 설명",                    // description
+            2L,                                   // categoryId
             "새로운 브랜드",                       // brand
-            "새로운 모델",                        // model
-            new BigDecimal("20000"),              // price
-            new BigDecimal("25000"),              // comparePrice
-            new BigDecimal("15000"),              // costPrice
-            new BigDecimal("2.0"),                // weight
-            "{\"new\": \"attributes\"}",          // productAttributes
-            "PRIVATE",                            // visibility
-            "LUXURY",                             // taxClass
-            "새로운 메타 제목",                    // metaTitle
-            "새로운 메타 설명",                    // metaDescription
-            "새로운 검색 키워드",                  // searchKeywords
-            true                                  // isFeatured
+            ProductType.DIGITAL,                  // productType
+            new BigDecimal("20000"),              // basePrice
+            new BigDecimal("25000"),              // salePrice
+            "USD",                               // currency
+            2000,                                 // weightGrams
+            false,                                // requiresShipping
+            false,                                // isTaxable
+            true,                                 // isFeatured
+            "new-product",                       // slug
+            "새로운 검색 키워드",                  // searchTags
+            "http://example.com/image.jpg"       // primaryImageUrl
         );
 
         // then
-        assertThat(product.getCategoryId()).isEqualTo(ProductCategory.CLOTHING.getId());
+        assertThat(product.getCategoryId()).isEqualTo(2L);
         assertThat(product.getSku()).isEqualTo("NEW-SKU");
         assertThat(product.getName()).isEqualTo("새로운 상품명");
         assertThat(product.getDescription()).isEqualTo("새로운 상품 설명");
         assertThat(product.getShortDescription()).isEqualTo("새로운 짧은 설명");
         assertThat(product.getBrand()).isEqualTo("새로운 브랜드");
-        assertThat(product.getModel()).isEqualTo("새로운 모델");
-        assertThat(product.getPrice()).isEqualTo(new BigDecimal("20000"));
-        assertThat(product.getComparePrice()).isEqualTo(new BigDecimal("25000"));
-        assertThat(product.getCostPrice()).isEqualTo(new BigDecimal("15000"));
-        assertThat(product.getWeight()).isEqualTo(new BigDecimal("2.0"));
-        assertThat(product.getProductAttributes()).isEqualTo("{\"new\": \"attributes\"}");
-        assertThat(product.getVisibility()).isEqualTo("PRIVATE");
-        assertThat(product.getTaxClass()).isEqualTo("LUXURY");
-        assertThat(product.getMetaTitle()).isEqualTo("새로운 메타 제목");
-        assertThat(product.getMetaDescription()).isEqualTo("새로운 메타 설명");
-        assertThat(product.getSearchKeywords()).isEqualTo("새로운 검색 키워드");
+        assertThat(product.getProductType()).isEqualTo(ProductType.DIGITAL);
+        assertThat(product.getBasePrice()).isEqualTo(new BigDecimal("20000"));
+        assertThat(product.getSalePrice()).isEqualTo(new BigDecimal("25000"));
+        assertThat(product.getCurrency()).isEqualTo("USD");
+        assertThat(product.getWeightGrams()).isEqualTo(2000);
+        assertThat(product.getRequiresShipping()).isFalse();
+        assertThat(product.getIsTaxable()).isFalse();
+        assertThat(product.getSearchTags()).isEqualTo("새로운 검색 키워드");
+        assertThat(product.getSlug()).isEqualTo("new-product");
+        assertThat(product.getPrimaryImageUrl()).isEqualTo("http://example.com/image.jpg");
         assertThat(product.getIsFeatured()).isTrue();
         assertThat(product.getUpdatedAt()).isAfter(beforeUpdate);
     }
@@ -98,28 +100,27 @@ class ProductUpdateTest {
         // given
         String originalSku = product.getSku();
         String originalDescription = product.getDescription();
-        BigDecimal originalPrice = product.getPrice();
+        BigDecimal originalPrice = product.getBasePrice();
 
         // when - name과 brand만 업데이트
         product.updatePartially(
-            null,           // categoryId - 변경 안함
-            null,           // sku - 변경 안함
-            "새로운 상품명", // name - 변경
-            null,           // description - 변경 안함
-            null,           // shortDescription - 변경 안함
-            "새로운 브랜드", // brand - 변경
-            null,           // model - 변경 안함
-            null,           // price - 변경 안함
-            null,           // comparePrice - 변경 안함
-            null,           // costPrice - 변경 안함
-            null,           // weight - 변경 안함
-            null,           // productAttributes - 변경 안함
-            null,           // visibility - 변경 안함
-            null,           // taxClass - 변경 안함
-            null,           // metaTitle - 변경 안함
-            null,           // metaDescription - 변경 안함
-            null,           // searchKeywords - 변경 안함
-            null            // isFeatured - 변경 안함
+            null,             // sku - 변경 안함
+            "새로운 상품명",   // name - 변경
+            null,             // shortDescription - 변경 안함
+            null,             // description - 변경 안함
+            null,             // categoryId - 변경 안함
+            "새로운 브랜드",   // brand - 변경
+            null,             // productType - 변경 안함
+            null,             // basePrice - 변경 안함
+            null,             // salePrice - 변경 안함
+            null,             // currency - 변경 안함
+            null,             // weightGrams - 변경 안함
+            null,             // requiresShipping - 변경 안함
+            null,             // isTaxable - 변경 안함
+            null,             // isFeatured - 변경 안함
+            null,             // slug - 변경 안함
+            null,             // searchTags - 변경 안함
+            null              // primaryImageUrl - 변경 안함
         );
 
         // then
@@ -129,7 +130,7 @@ class ProductUpdateTest {
         // 변경되지 않은 필드들 확인
         assertThat(product.getSku()).isEqualTo(originalSku);
         assertThat(product.getDescription()).isEqualTo(originalDescription);
-        assertThat(product.getPrice()).isEqualTo(originalPrice);
+        assertThat(product.getBasePrice()).isEqualTo(originalPrice);
     }
 
     @Test
@@ -137,17 +138,17 @@ class ProductUpdateTest {
     void updatePartially_NullFields_NoChange() {
         // given
         String originalName = product.getName();
-        BigDecimal originalPrice = product.getPrice();
+        BigDecimal originalPrice = product.getBasePrice();
 
         // when - 모든 필드를 null로 업데이트 시도
         product.updatePartially(
             null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null, null
+            null, null, null, null, null, null, null, null, null
         );
 
         // then
         assertThat(product.getName()).isEqualTo(originalName);
-        assertThat(product.getPrice()).isEqualTo(originalPrice);
+        assertThat(product.getBasePrice()).isEqualTo(originalPrice);
     }
 
     @Test
@@ -155,10 +156,11 @@ class ProductUpdateTest {
     void isUpdatable_ActiveProduct_ReturnsTrue() {
         // given
         Product activeProduct = Product.reconstitute(
-            1L, ProductCategory.ELECTRONICS.getId(), "SKU", "이름", "설명",
-            null, null, null, new BigDecimal("10000"), null, null, null, null,
-            ProductStatus.ACTIVE, "PUBLIC", null, null, null, null, false,
-            LocalDateTime.now(), LocalDateTime.now()
+            1L, "SKU", "이름", null, "설명",
+            1L, null, ProductType.PHYSICAL, ProductStatus.ACTIVE,
+            new BigDecimal("10000"), null, "KRW", null, true,
+            true, false, "active-product", null, null,
+            LocalDateTime.now(), LocalDateTime.now(), 1L
         );
 
         // when & then
@@ -170,10 +172,11 @@ class ProductUpdateTest {
     void isUpdatable_ArchivedProduct_ReturnsFalse() {
         // given
         Product archivedProduct = Product.reconstitute(
-            1L, ProductCategory.ELECTRONICS.getId(), "SKU", "이름", "설명",
-            null, null, null, new BigDecimal("10000"), null, null, null, null,
-            ProductStatus.ARCHIVED, "PUBLIC", null, null, null, null, false,
-            LocalDateTime.now(), LocalDateTime.now()
+            1L, "SKU", "이름", null, "설명",
+            1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
+            new BigDecimal("10000"), null, "KRW", null, true,
+            true, false, "archived-product", null, null,
+            LocalDateTime.now(), LocalDateTime.now(), 1L
         );
 
         // when & then
@@ -204,8 +207,7 @@ class ProductUpdateTest {
         // then
         assertThat(product.getName()).isEqualTo(newName);
         assertThat(product.getDescription()).isEqualTo(newDescription);
-        assertThat(product.getPrice()).isEqualTo(newPrice);
+        assertThat(product.getBasePrice()).isEqualTo(newPrice);
     }
 
 }
-

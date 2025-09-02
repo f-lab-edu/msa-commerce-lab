@@ -28,6 +28,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchRespon
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @WebMvcTest(ProductController.class)
 @DisplayName("ProductController 검색 API 테스트")
@@ -59,55 +60,8 @@ class ProductControllerSearchTest {
     @WithMockUser
     void getProducts_Success() throws Exception {
         // Given
-        ProductSearchResponse product1 = ProductSearchResponse.builder()
-            .id(1L)
-            .categoryId(1L)
-            .sku("TEST-001")
-            .name("Test Product 1")
-            .description("Test Description 1")
-            .price(new BigDecimal("100.00"))
-            .status(ProductStatus.ACTIVE)
-            .visibility("PUBLIC")
-            .isFeatured(false)
-            .viewCount(5L)
-            .createdAt(LocalDateTime.now().minusDays(1))
-            .updatedAt(LocalDateTime.now())
-            .build();
-
-        ProductSearchResponse product2 = ProductSearchResponse.builder()
-            .id(2L)
-            .categoryId(1L)
-            .sku("TEST-002")
-            .name("Test Product 2")
-            .description("Test Description 2")
-            .price(new BigDecimal("200.00"))
-            .status(ProductStatus.ACTIVE)
-            .visibility("PUBLIC")
-            .isFeatured(true)
-            .viewCount(10L)
-            .createdAt(LocalDateTime.now().minusDays(2))
-            .updatedAt(LocalDateTime.now())
-            .build();
-
-        ProductPageResponse pageResponse = ProductPageResponse.builder()
-            .content(Arrays.asList(product1, product2))
-            .page(0)
-            .size(20)
-            .totalElements(2L)
-            .totalPages(1)
-            .first(true)
-            .last(true)
-            .hasNext(false)
-            .hasPrevious(false)
-            .build();
-
-        ProductSearchCommand searchCommand = ProductSearchCommand.builder()
-            .categoryId(1L)
-            .page(0)
-            .size(20)
-            .sortProperty("createdAt")
-            .sortDirection(Sort.Direction.DESC)
-            .build();
+        ProductPageResponse pageResponse = createMockProductPageResponse();
+        ProductSearchCommand searchCommand = createMockSearchCommand();
 
         given(productMapper.toSearchCommand(any(ProductSearchRequest.class))).willReturn(searchCommand);
         given(productGetUseCase.searchProducts(any(ProductSearchCommand.class))).willReturn(pageResponse);
@@ -121,24 +75,29 @@ class ProductControllerSearchTest {
                 .param("sortDirection", "DESC"))
             .andDo(print())
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content").isArray())
-            .andExpect(jsonPath("$.content.length()").value(2))
-            .andExpect(jsonPath("$.content[0].id").value(1))
-            .andExpect(jsonPath("$.content[0].name").value("Test Product 1"))
-            .andExpect(jsonPath("$.content[0].price").value(100.00))
-            .andExpect(jsonPath("$.content[0].viewCount").value(5))
-            .andExpect(jsonPath("$.content[1].id").value(2))
-            .andExpect(jsonPath("$.content[1].name").value("Test Product 2"))
-            .andExpect(jsonPath("$.content[1].price").value(200.00))
-            .andExpect(jsonPath("$.content[1].viewCount").value(10))
-            .andExpect(jsonPath("$.page").value(0))
-            .andExpect(jsonPath("$.size").value(20))
-            .andExpect(jsonPath("$.totalElements").value(2))
-            .andExpect(jsonPath("$.totalPages").value(1))
-            .andExpect(jsonPath("$.first").value(true))
-            .andExpect(jsonPath("$.last").value(true))
-            .andExpect(jsonPath("$.hasNext").value(false))
-            .andExpect(jsonPath("$.hasPrevious").value(false));
+            .andExpectAll(
+                jsonPath("$.content").isArray(),
+                jsonPath("$.content.length()").value(2),
+                // Product 1 검증
+                jsonPath("$.content[0].id").value(1),
+                jsonPath("$.content[0].name").value("Test Product 1"),
+                jsonPath("$.content[0].basePrice").value(100.00), // price -> basePrice 수정
+                jsonPath("$.content[0].viewCount").value(5),
+                // Product 2 검증
+                jsonPath("$.content[1].id").value(2),
+                jsonPath("$.content[1].name").value("Test Product 2"),
+                jsonPath("$.content[1].basePrice").value(200.00), // price -> basePrice 수정
+                jsonPath("$.content[1].viewCount").value(10),
+                // 페이징 정보 검증
+                jsonPath("$.page").value(0),
+                jsonPath("$.size").value(20),
+                jsonPath("$.totalElements").value(2),
+                jsonPath("$.totalPages").value(1),
+                jsonPath("$.first").value(true),
+                jsonPath("$.last").value(true),
+                jsonPath("$.hasNext").value(false),
+                jsonPath("$.hasPrevious").value(false)
+            );
     }
 
     @Test
@@ -248,5 +207,56 @@ class ProductControllerSearchTest {
             .andExpect(status().isOk());
     }
 
-}
+    private ProductPageResponse createMockProductPageResponse() {
+        return ProductPageResponse.builder()
+            .content(Arrays.asList(
+                createMockProduct(1L, "TEST-001", "Test Product 1", "100.00", 5L, 1),
+                createMockProduct(2L, "TEST-002", "Test Product 2", "200.00", 10L, 2)
+            ))
+            .page(0)
+            .size(20)
+            .totalElements(2L)
+            .totalPages(1)
+            .first(true)
+            .last(true)
+            .hasNext(false)
+            .hasPrevious(false)
+            .build();
+    }
 
+    private ProductSearchResponse createMockProduct(Long id, String sku, String name,
+        String price, Long viewCount, int daysAgo) {
+        return ProductSearchResponse.builder()
+            .id(id)
+            .sku(sku)
+            .name(name)
+            .shortDescription("Short description " + id)
+            .description("Test Description " + id)
+            .categoryId(1L)
+            .brand("TestBrand")
+            .productType(ProductType.PHYSICAL)
+            .status(ProductStatus.ACTIVE)
+            .basePrice(new BigDecimal(price))
+            .currency("KRW")
+            .requiresShipping(true)
+            .isTaxable(true)
+            .isFeatured(id == 2L)
+            .slug("test-product-" + id)
+            .version(1L)
+            .viewCount(viewCount)
+            .createdAt(LocalDateTime.now().minusDays(daysAgo))
+            .updatedAt(LocalDateTime.now())
+            .build();
+    }
+
+    private ProductSearchCommand createMockSearchCommand() {
+        return ProductSearchCommand.builder()
+            .categoryId(1L)
+            .page(0)
+            .size(20)
+            .sortProperty("createdAt")
+            .sortDirection(Sort.Direction.DESC)
+            .build();
+    }
+
+}
