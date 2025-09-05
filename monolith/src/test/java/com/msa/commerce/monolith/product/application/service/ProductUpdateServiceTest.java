@@ -40,7 +40,7 @@ class ProductUpdateServiceTest {
 
     @Mock
     private ProductResponseMapper productResponseMapper;
-    
+
     @Mock
     private Validator validator;
 
@@ -77,6 +77,7 @@ class ProductUpdateServiceTest {
             null,                                 // primaryImageUrl
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
 
@@ -155,7 +156,7 @@ class ProductUpdateServiceTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
-            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), 1L
+            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), null, 1L
         );
 
         given(productRepository.findById(1L)).willReturn(Optional.of(archivedProduct));

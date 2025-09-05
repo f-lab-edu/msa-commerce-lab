@@ -20,8 +20,8 @@ import com.msa.commerce.monolith.product.application.port.in.ProductCreateComman
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductCreateService 테스트")
@@ -75,6 +75,7 @@ class ProductCreateServiceTest {
             null,                                 // primaryImageUrl
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
+            null,                                 // deletedAt
             1L                                    // version
         );
     }
