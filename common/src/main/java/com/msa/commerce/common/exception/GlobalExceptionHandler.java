@@ -118,8 +118,26 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler(ValidationException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
+        ValidationException ex, HttpServletRequest request) {
+
+        log.warn("Validation exception: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .code(ex.getErrorCode())
+            .timestamp(LocalDateTime.now())
+            .path(request.getRequestURI())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
+            .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
         MethodArgumentNotValidException ex, HttpServletRequest request) {
 
         log.warn("Validation exception occurred: {}", ex.getMessage());

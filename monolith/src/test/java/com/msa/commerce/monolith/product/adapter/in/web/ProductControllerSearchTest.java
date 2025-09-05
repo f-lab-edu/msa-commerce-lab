@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.msa.commerce.common.monitoring.MetricsCollector;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
@@ -45,6 +46,9 @@ class ProductControllerSearchTest {
 
     @MockitoBean
     private ProductUpdateUseCase productUpdateUseCase;
+
+    @MockitoBean
+    private ProductDeleteUseCase productDeleteUseCase;
 
     @MockitoBean
     private ProductSearchUseCase productSearchUseCase;

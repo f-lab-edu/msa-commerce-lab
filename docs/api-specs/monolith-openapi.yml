@@ -581,6 +581,85 @@ paths:
                     path: "/api/v1/products/1"
                     status: 500
 
+    delete:
+      tags:
+        - Products
+      summary: Delete product
+      description: |
+        Delete a product using soft delete pattern.
+        
+        The product is not physically removed but marked as deleted with a timestamp.
+        Validates that the product doesn't have active orders or items in shopping carts.
+        
+        Business Rules:
+        - Product status changes to ARCHIVED
+        - Related data handling (images, inventory)
+        - Cache invalidation for deleted products
+        - Domain event publishing for product deletion
+      operationId: deleteProduct
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Product ID to delete
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 1
+      responses:
+        '204':
+          description: Product successfully deleted (soft delete)
+        '400':
+          description: Cannot delete product due to business constraints
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                product_in_use:
+                  summary: Product has active orders
+                  value:
+                    message: "Product cannot be deleted due to active orders"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+                product_in_cart:
+                  summary: Product exists in shopping carts
+                  value:
+                    message: "Product cannot be deleted as it exists in shopping carts"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 400
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                not_found:
+                  summary: Product not found
+                  value:
+                    message: "Product not found with id: 1"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 404
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                server_error:
+                  summary: Server error
+                  value:
+                    message: "Internal server error occurred"
+                    timestamp: "2024-01-15T14:25:00"
+                    path: "/api/v1/products/1"
+                    status: 500
+
 components:
   schemas:
     ProductCreateRequest:

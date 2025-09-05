@@ -47,6 +47,7 @@ class ProductResponseMapperTest {
             null,                                 // primaryImageUrl
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
     }
@@ -108,6 +109,7 @@ class ProductResponseMapperTest {
             null,                               // primaryImageUrl null
             LocalDateTime.now(),                // createdAt
             LocalDateTime.now(),                // updatedAt
+            null,                         // deletedAt
             1L                                  // version
         );
 

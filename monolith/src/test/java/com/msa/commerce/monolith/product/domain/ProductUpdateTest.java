@@ -42,6 +42,7 @@ class ProductUpdateTest {
             null,                                 // primaryImageUrl
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
     }
@@ -160,7 +161,7 @@ class ProductUpdateTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ACTIVE,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "active-product", null, null,
-            LocalDateTime.now(), LocalDateTime.now(), 1L
+            LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
         // when & then
@@ -176,7 +177,7 @@ class ProductUpdateTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
-            LocalDateTime.now(), LocalDateTime.now(), 1L
+            LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
         // when & then
