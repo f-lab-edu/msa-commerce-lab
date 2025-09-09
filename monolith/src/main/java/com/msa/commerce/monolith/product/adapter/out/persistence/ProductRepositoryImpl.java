@@ -76,6 +76,14 @@ public class ProductRepositoryImpl implements ProductRepository {
             .map(ProductJpaEntity::toDomainEntity)
             .collect(Collectors.toList());
     }
+    
+    @Override
+    public List<Product> findAllByIds(List<Long> ids) {
+        return productJpaRepository.findAllById(ids)
+            .stream()
+            .map(ProductJpaEntity::toDomainEntity)
+            .collect(Collectors.toList());
+    }
 
     @Override
     public Page<Product> searchProducts(ProductSearchCommand command) {

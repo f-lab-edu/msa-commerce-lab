@@ -16,6 +16,8 @@ import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,8 @@ public class ProductController {
     private final ProductGetUseCase productGetUseCase;
 
     private final ProductUpdateUseCase productUpdateUseCase;
+    
+    private final ProductVerifyUseCase productVerifyUseCase;
 
     private final ProductMapper productMapper;
 
@@ -54,6 +58,11 @@ public class ProductController {
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable("id") Long productId,
         @Valid @RequestBody ProductUpdateRequest request) {
         return ResponseEntity.ok(productUpdateUseCase.updateProduct(productMapper.toUpdateCommand(productId, request)));
+    }
+    
+    @PostMapping("/verify")
+    public ResponseEntity<ProductVerifyResponse> verifyProducts(@Valid @RequestBody ProductVerifyRequest request) {
+        return ResponseEntity.ok(productVerifyUseCase.verifyProducts(productMapper.toVerifyCommand(request)));
     }
 
 }
