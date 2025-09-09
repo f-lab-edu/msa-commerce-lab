@@ -44,8 +44,6 @@ public class ProductVerifyResponse {
 
         private BigDecimal originalPrice;
 
-        private boolean priceChanged;
-
         private String unavailableReason;
 
         private Integer minOrderQuantity;

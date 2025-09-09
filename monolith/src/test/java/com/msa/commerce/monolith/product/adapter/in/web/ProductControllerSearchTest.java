@@ -27,6 +27,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchComman
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
@@ -48,6 +49,9 @@ class ProductControllerSearchTest {
 
     @MockitoBean
     private ProductSearchUseCase productSearchUseCase;
+
+    @MockitoBean
+    private ProductVerifyUseCase productVerifyUseCase;
 
     @MockitoBean
     private ProductMapper productMapper;
