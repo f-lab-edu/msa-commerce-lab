@@ -23,7 +23,7 @@ public interface ProductRepository {
     List<Product> findByCategoryId(Long categoryId);
 
     List<Product> findFeaturedProducts();
-    
+
     List<Product> findAllByIds(List<Long> ids);
 
     Page<Product> searchProducts(ProductSearchCommand command);
