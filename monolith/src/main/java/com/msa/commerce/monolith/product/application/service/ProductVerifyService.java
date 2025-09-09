@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,8 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductVerifyService implements ProductVerifyUseCase {
 
     private final ProductRepository productRepository;
-
-    private final Random random = new Random();
 
     @Override
     public ProductVerifyResponse verifyProducts(ProductVerifyCommand command) {
@@ -72,7 +69,7 @@ public class ProductVerifyService implements ProductVerifyUseCase {
         // Check product status
         if (product.getStatus() != ProductStatus.ACTIVE) {
             available = false;
-            unavailableReason = "Product is not active (status: " + product.getStatus() + ")";
+            unavailableReason = String.format("Product is not active (status: %s)", product.getStatus());
         }
 
         // TODO: 재고쪽 구현 시 가능 수량 Check 로직 추가
@@ -81,24 +78,10 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             unavailableReason = "Insufficient stock";
         }
 
-        // Simulate price change detection (10% chance)
-        boolean priceChanged = random.nextDouble() < 0.1;
         BigDecimal currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getBasePrice();
         BigDecimal originalPrice = product.getBasePrice();
 
-        // Simulate order quantity limits
-        Integer minOrderQuantity = 1;
-        Integer maxOrderQuantity = 100;
-
-        if (available && requestedQuantity < minOrderQuantity) {
-            available = false;
-            unavailableReason = "Quantity below minimum order quantity";
-        }
-
-        if (available && requestedQuantity > maxOrderQuantity) {
-            available = false;
-            unavailableReason = "Quantity exceeds maximum order quantity";
-        }
+        // TODO: InventorySnapshots 구현 시 실제 상품별 주문 수량 제한 적용
 
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(product.getId())
@@ -110,14 +93,12 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .availableStock(1)
             .currentPrice(currentPrice)
             .originalPrice(originalPrice)
-            .priceChanged(priceChanged)
             .unavailableReason(unavailableReason)
-            .minOrderQuantity(minOrderQuantity)
-            .maxOrderQuantity(maxOrderQuantity)
             .build();
     }
 
-    private ProductVerifyResponse.ProductVerifyResult buildUnavailableResult(Long productId, Integer requestedQuantity, String reason) {
+    private ProductVerifyResponse.ProductVerifyResult buildUnavailableResult(Long productId, Integer requestedQuantity,
+        String reason) {
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(productId)
             .available(false)

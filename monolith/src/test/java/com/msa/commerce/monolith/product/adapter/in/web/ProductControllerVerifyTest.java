@@ -1,11 +1,10 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -33,26 +32,26 @@ import com.msa.commerce.monolith.product.domain.ProductStatus;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductController 검증 API 테스트")
 class ProductControllerVerifyTest {
-    
+
     private MockMvc mockMvc;
-    
+
     private ObjectMapper objectMapper;
-    
+
     @Mock
     private ProductCreateUseCase productCreateUseCase;
-    
+
     @Mock
     private ProductGetUseCase productGetUseCase;
-    
+
     @Mock
     private ProductUpdateUseCase productUpdateUseCase;
-    
+
     @Mock
     private ProductVerifyUseCase productVerifyUseCase;
-    
+
     @Mock
     private ProductMapper productMapper;
-    
+
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
@@ -62,7 +61,7 @@ class ProductControllerVerifyTest {
             .build();
         objectMapper = new ObjectMapper();
     }
-    
+
     @Test
     @DisplayName("상품 검증 API - 모든 상품 검증 성공")
     void verifyProducts_AllAvailable() throws Exception {
@@ -79,7 +78,7 @@ class ProductControllerVerifyTest {
                     .build()
             ))
             .build();
-        
+
         ProductVerifyCommand command = ProductVerifyCommand.builder()
             .items(Arrays.asList(
                 ProductVerifyCommand.ProductVerifyItem.builder()
@@ -92,7 +91,7 @@ class ProductControllerVerifyTest {
                     .build()
             ))
             .build();
-        
+
         ProductVerifyResponse response = ProductVerifyResponse.builder()
             .allAvailable(true)
             .results(Arrays.asList(
@@ -106,7 +105,6 @@ class ProductControllerVerifyTest {
                     .availableStock(100)
                     .currentPrice(BigDecimal.valueOf(10000))
                     .originalPrice(BigDecimal.valueOf(10000))
-                    .priceChanged(false)
                     .minOrderQuantity(1)
                     .maxOrderQuantity(100)
                     .build(),
@@ -120,16 +118,15 @@ class ProductControllerVerifyTest {
                     .availableStock(50)
                     .currentPrice(BigDecimal.valueOf(20000))
                     .originalPrice(BigDecimal.valueOf(20000))
-                    .priceChanged(false)
                     .minOrderQuantity(1)
                     .maxOrderQuantity(100)
                     .build()
             ))
             .build();
-        
+
         when(productMapper.toVerifyCommand(any(ProductVerifyRequest.class))).thenReturn(command);
         when(productVerifyUseCase.verifyProducts(any(ProductVerifyCommand.class))).thenReturn(response);
-        
+
         // When & Then
         mockMvc.perform(post("/api/v1/products/verify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +141,7 @@ class ProductControllerVerifyTest {
             .andExpect(jsonPath("$.results[1].productId").value(2))
             .andExpect(jsonPath("$.results[1].available").value(true));
     }
-    
+
     @Test
     @DisplayName("상품 검증 API - 일부 상품 검증 실패")
     void verifyProducts_SomeUnavailable() throws Exception {
@@ -161,7 +158,7 @@ class ProductControllerVerifyTest {
                     .build()
             ))
             .build();
-        
+
         ProductVerifyCommand command = ProductVerifyCommand.builder()
             .items(Arrays.asList(
                 ProductVerifyCommand.ProductVerifyItem.builder()
@@ -174,7 +171,7 @@ class ProductControllerVerifyTest {
                     .build()
             ))
             .build();
-        
+
         ProductVerifyResponse response = ProductVerifyResponse.builder()
             .allAvailable(false)
             .results(Arrays.asList(
@@ -188,7 +185,6 @@ class ProductControllerVerifyTest {
                     .availableStock(100)
                     .currentPrice(BigDecimal.valueOf(10000))
                     .originalPrice(BigDecimal.valueOf(10000))
-                    .priceChanged(false)
                     .minOrderQuantity(1)
                     .maxOrderQuantity(100)
                     .build(),
@@ -202,17 +198,16 @@ class ProductControllerVerifyTest {
                     .availableStock(50)
                     .currentPrice(BigDecimal.valueOf(20000))
                     .originalPrice(BigDecimal.valueOf(20000))
-                    .priceChanged(false)
                     .unavailableReason("Insufficient stock")
                     .minOrderQuantity(1)
                     .maxOrderQuantity(100)
                     .build()
             ))
             .build();
-        
+
         when(productMapper.toVerifyCommand(any(ProductVerifyRequest.class))).thenReturn(command);
         when(productVerifyUseCase.verifyProducts(any(ProductVerifyCommand.class))).thenReturn(response);
-        
+
         // When & Then
         mockMvc.perform(post("/api/v1/products/verify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -224,7 +219,7 @@ class ProductControllerVerifyTest {
             .andExpect(jsonPath("$.results[1].available").value(false))
             .andExpect(jsonPath("$.results[1].unavailableReason").value("Insufficient stock"));
     }
-    
+
     @Test
     @DisplayName("상품 검증 API - 빈 요청 검증 실패")
     void verifyProducts_EmptyRequest() throws Exception {
@@ -232,7 +227,7 @@ class ProductControllerVerifyTest {
         ProductVerifyRequest request = ProductVerifyRequest.builder()
             .items(List.of())
             .build();
-        
+
         // When & Then
         mockMvc.perform(post("/api/v1/products/verify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -240,7 +235,7 @@ class ProductControllerVerifyTest {
             .andDo(print())
             .andExpect(status().isBadRequest());
     }
-    
+
     @Test
     @DisplayName("상품 검증 API - 잘못된 상품 ID")
     void verifyProducts_InvalidProductId() throws Exception {
@@ -255,7 +250,7 @@ class ProductControllerVerifyTest {
                 ]
             }
             """;
-        
+
         // When & Then
         mockMvc.perform(post("/api/v1/products/verify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -263,7 +258,7 @@ class ProductControllerVerifyTest {
             .andDo(print())
             .andExpect(status().isBadRequest());
     }
-    
+
     @Test
     @DisplayName("상품 검증 API - 잘못된 수량")
     void verifyProducts_InvalidQuantity() throws Exception {
@@ -278,7 +273,7 @@ class ProductControllerVerifyTest {
                 ]
             }
             """;
-        
+
         // When & Then
         mockMvc.perform(post("/api/v1/products/verify")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -286,4 +281,5 @@ class ProductControllerVerifyTest {
             .andDo(print())
             .andExpect(status().isBadRequest());
     }
+
 }
