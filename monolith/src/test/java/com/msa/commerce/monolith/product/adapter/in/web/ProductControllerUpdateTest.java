@@ -24,7 +24,6 @@ import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
@@ -46,28 +45,15 @@ class ProductControllerUpdateTest {
     private ProductUpdateUseCase productUpdateUseCase;
 
     @Mock
-    private ProductSearchUseCase productSearchUseCase;
-    
-    @Mock
     private ProductVerifyUseCase productVerifyUseCase;
 
     @Mock
     private ProductMapper productMapper;
 
-    // private final ProductCreateUseCase productCreateUseCase;
-    //
-    // private final ProductGetUseCase productGetUseCase;
-    //
-    // private final ProductUpdateUseCase productUpdateUseCase;
-    //
-    // private final ProductSearchUseCase productSearchUseCase;
-    //
-    // private final ProductMapper productMapper;
-
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
-                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase, 
+                new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase,
                     productVerifyUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();

@@ -46,7 +46,7 @@ class ProductControllerTest {
 
     @Mock
     private ProductSearchUseCase productSearchUseCase;
-    
+
     @Mock
     private ProductVerifyUseCase productVerifyUseCase;
 
