@@ -5,3 +5,4 @@ public interface ProductVerifyUseCase {
     ProductVerifyResponse verifyProducts(ProductVerifyCommand command);
 
 }
+
