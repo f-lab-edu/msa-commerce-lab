@@ -12,6 +12,7 @@ import com.msa.commerce.common.aop.ValidateResult;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
@@ -53,6 +54,9 @@ public interface ProductMapper {
     @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
+    
+    @ValidateResult
+    ProductVerifyCommand toVerifyCommand(ProductVerifyRequest request);
 
     @AfterMapping
     default void applyCreateDefaults(@MappingTarget ProductCreateCommand.ProductCreateCommandBuilder target,
