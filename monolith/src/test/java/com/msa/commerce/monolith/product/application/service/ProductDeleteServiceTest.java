@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
@@ -23,6 +24,7 @@ import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
+import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductDeleteService 단위 테스트")
@@ -32,7 +34,7 @@ class ProductDeleteServiceTest {
     private ProductRepository productRepository;
 
     @Mock
-    private ProductEventPublisher productEventPublisher;
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ProductDeleteService productDeleteService;
@@ -84,7 +86,7 @@ class ProductDeleteServiceTest {
         // then
         verify(productRepository).findById(productId);
         verify(productRepository).save(any(Product.class));
-        verify(productEventPublisher).publishProductDeletedEvent(any(Product.class));
+        verify(applicationEventPublisher).publishEvent(any(ProductEvent.class));
     }
 
     @Test
