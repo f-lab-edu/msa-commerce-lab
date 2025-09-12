@@ -34,9 +34,6 @@ class ProductDeleteServiceTest {
     @Mock
     private ProductEventPublisher productEventPublisher;
 
-    @Mock
-    private ProductCacheManager productCacheManager;
-
     @InjectMocks
     private ProductDeleteService productDeleteService;
 
@@ -87,8 +84,6 @@ class ProductDeleteServiceTest {
         // then
         verify(productRepository).findById(productId);
         verify(productRepository).save(any(Product.class));
-        verify(productCacheManager).evictProduct(productId);
-        verify(productCacheManager).evictProductLists();
         verify(productEventPublisher).publishProductDeletedEvent(any(Product.class));
     }
 
@@ -107,7 +102,6 @@ class ProductDeleteServiceTest {
 
         verify(productRepository).findById(productId);
         verify(productRepository, never()).save(any());
-        verify(productCacheManager, never()).evictProduct(any());
     }
 
     @Test
