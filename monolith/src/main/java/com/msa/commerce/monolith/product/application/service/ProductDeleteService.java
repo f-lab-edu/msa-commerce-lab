@@ -2,6 +2,7 @@ package com.msa.commerce.monolith.product.application.service;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,7 @@ import com.msa.commerce.common.exception.ValidationException;
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,7 @@ public class ProductDeleteService implements ProductDeleteUseCase {
 
     private final ProductRepository productRepository;
 
-    private final ProductEventPublisher productEventPublisher;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @Caching(evict = {
@@ -41,7 +43,9 @@ public class ProductDeleteService implements ProductDeleteUseCase {
 
         handleProductDeletion(productId);
 
-        productEventPublisher.publishProductDeletedEvent(deletedProduct);
+        applicationEventPublisher.publishEvent(
+            ProductEvent.productDeleted(deletedProduct)
+        );
     }
 
     private void validateProductDeletable(Product product) {
