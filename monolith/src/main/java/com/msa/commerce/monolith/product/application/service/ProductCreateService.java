@@ -1,5 +1,6 @@
 package com.msa.commerce.monolith.product.application.service;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class ProductCreateService implements ProductCreateUseCase {
 
     @Override
     @ValidateCommand(errorPrefix = "Product creation validation failed")
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(ProductCreateCommand command) {
         validateCommand(command);
         validateDuplicateSku(command.getSku());
