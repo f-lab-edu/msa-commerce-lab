@@ -3,6 +3,8 @@ package com.msa.commerce.monolith.product.application.service;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +38,10 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     @Override
     @ValidateCommand(errorPrefix = "Product update validation failed")
+    @Caching(evict = {
+        @CacheEvict(value = "product", key = "#command.productId"),
+        @CacheEvict(value = "products", allEntries = true)
+    })
     public ProductResponse updateProduct(ProductUpdateCommand command) {
         validateCommand(command);
         Product existingProduct = findAndValidateProduct(command.getProductId());
@@ -103,7 +109,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command,
         Product originalProduct) {
-        invalidateProductCache(updatedProduct.getId());
         logProductChanges(originalProduct, updatedProduct, command);
     }
 
@@ -154,10 +159,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         }
     }
 
-    private void invalidateProductCache(Long productId) {
-        log.debug("Invalidating cache for product ID: {}", productId);
-        log.info("Cache invalidation completed for product ID: {}", productId);
-    }
     
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
