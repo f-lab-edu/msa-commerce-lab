@@ -1,6 +1,7 @@
 package com.msa.commerce.monolith.product.application.service;
 
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCas
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +25,8 @@ public class ProductCreateService implements ProductCreateUseCase {
     private final ProductRepository productRepository;
 
     private final ProductResponseMapper productResponseMapper;
+
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @ValidateCommand(errorPrefix = "Product creation validation failed")
@@ -55,6 +59,13 @@ public class ProductCreateService implements ProductCreateUseCase {
             .build();
 
         Product savedProduct = productRepository.save(product);
+
+        // 통합 이벤트 발행 (트랜잭션 커밋 후 처리됨)
+        // 캐시 무효화를 한 번에 처리
+        applicationEventPublisher.publishEvent(
+            ProductEvent.productCreated(savedProduct)
+        );
+
         return productResponseMapper.toResponse(savedProduct);
     }
 
@@ -72,23 +83,23 @@ public class ProductCreateService implements ProductCreateUseCase {
         if (command.getSku() == null || command.getSku().trim().isEmpty()) {
             throw new IllegalArgumentException("SKU is required");
         }
-        
+
         if (command.getName() == null || command.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Product name is required.");
         }
-        
+
         if (command.getBasePrice() == null) {
             throw new IllegalArgumentException("Base price must be greater than 0.");
         }
-        
+
         if (command.getBasePrice().signum() <= 0) {
             throw new IllegalArgumentException("Base price must be greater than 0.");
         }
-        
+
         if (command.getSlug() == null || command.getSlug().trim().isEmpty()) {
             throw new IllegalArgumentException("Slug is required");
         }
-        
+
         // Optional validation for categoryId - based on business logic, it might be required
         // The test expects exception when categoryId is null, but the annotation doesn't mark it as @NotNull
         // Let's check if this validation is needed based on the failing test

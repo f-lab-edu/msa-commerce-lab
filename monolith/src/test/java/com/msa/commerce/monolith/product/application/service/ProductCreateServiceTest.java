@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
@@ -32,6 +33,9 @@ class ProductCreateServiceTest {
 
     @Mock
     private ProductResponseMapper productResponseMapper;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ProductCreateService productCreateService;

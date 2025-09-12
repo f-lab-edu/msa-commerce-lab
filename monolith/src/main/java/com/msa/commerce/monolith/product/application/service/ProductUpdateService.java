@@ -5,6 +5,7 @@ import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductUpdateComman
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -33,8 +35,10 @@ public class ProductUpdateService implements ProductUpdateUseCase {
     private final ProductRepository productRepository;
 
     private final ProductResponseMapper productResponseMapper;
-    
+
     private final Validator validator;
+
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     @ValidateCommand(errorPrefix = "Product update validation failed")
@@ -52,6 +56,12 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         Product updatedProduct = productRepository.save(existingProduct);
 
         performPostUpdateOperations(updatedProduct, command, existingProduct);
+
+        // 통합 이벤트 발행 (트랜잭션 커밋 후 처리됨)
+        // 캐시 무효화를 한 번에 처리
+        applicationEventPublisher.publishEvent(
+            ProductEvent.productUpdated(updatedProduct)
+        );
 
         log.info("Product updated successfully with ID: {}", updatedProduct.getId());
         return productResponseMapper.toResponse(updatedProduct);
@@ -159,7 +169,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         }
     }
 
-    
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
         if (!violations.isEmpty()) {
