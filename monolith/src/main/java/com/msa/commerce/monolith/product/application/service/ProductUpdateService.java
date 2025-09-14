@@ -49,12 +49,8 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         updateProductData(existingProduct, command);
         Product updatedProduct = productRepository.save(existingProduct);
 
-        performPostUpdateOperations(updatedProduct, command, existingProduct);
-
         // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
-        applicationEventPublisher.publishEvent(
-            ProductEvent.productUpdated(updatedProduct)
-        );
+        applicationEventPublisher.publishEvent(ProductEvent.productUpdated(updatedProduct));
 
         return productResponseMapper.toResponse(updatedProduct);
     }
@@ -107,58 +103,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
             command.getIsTaxable(), command.getIsFeatured(), command.getSlug(),
             command.getSearchTags(), command.getPrimaryImageUrl()
         );
-    }
-
-    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command,
-        Product originalProduct) {
-        logProductChanges(originalProduct, updatedProduct, command);
-    }
-
-    private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
-        log.info("Product changes for ID: {} - Updated fields: {}",
-            after.getId(), getUpdatedFieldsDescription(command));
-    }
-
-    private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
-        StringBuilder description = new StringBuilder();
-
-        appendBasicFieldUpdates(description, command);
-        appendPriceFieldUpdates(description, command);
-        appendMetadataFieldUpdates(description, command);
-
-        return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
-    }
-
-    private void appendBasicFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getSku(), "sku");
-        appendFieldIfNotNull(description, command.getName(), "name");
-        appendFieldIfNotNull(description, command.getShortDescription(), "shortDescription");
-        appendFieldIfNotNull(description, command.getDescription(), "description");
-        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
-        appendFieldIfNotNull(description, command.getBrand(), "brand");
-        appendFieldIfNotNull(description, command.getProductType(), "productType");
-    }
-
-    private void appendPriceFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getBasePrice(), "basePrice");
-        appendFieldIfNotNull(description, command.getSalePrice(), "salePrice");
-        appendFieldIfNotNull(description, command.getCurrency(), "currency");
-        appendFieldIfNotNull(description, command.getWeightGrams(), "weightGrams");
-    }
-
-    private void appendMetadataFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getRequiresShipping(), "requiresShipping");
-        appendFieldIfNotNull(description, command.getIsTaxable(), "isTaxable");
-        appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
-        appendFieldIfNotNull(description, command.getSlug(), "slug");
-        appendFieldIfNotNull(description, command.getSearchTags(), "searchTags");
-        appendFieldIfNotNull(description, command.getPrimaryImageUrl(), "primaryImageUrl");
-    }
-
-    private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
-        if (field != null) {
-            description.append(fieldName).append(",");
-        }
     }
 
     private void validateCommand(ProductUpdateCommand command) {
