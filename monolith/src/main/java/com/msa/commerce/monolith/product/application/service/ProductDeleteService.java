@@ -1,7 +1,5 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +26,6 @@ public class ProductDeleteService implements ProductDeleteUseCase {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
-    @Caching(evict = {
-        @CacheEvict(value = "product", key = "#productId"),
-        @CacheEvict(value = "products", allEntries = true)
-    })
     public void deleteProduct(Long productId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId, ErrorCode.PRODUCT_NOT_FOUND.getCode()));

@@ -3,8 +3,6 @@ package com.msa.commerce.monolith.product.application.service;
 import java.util.Optional;
 import java.util.Set;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,10 +40,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     @Override
     @ValidateCommand(errorPrefix = "Product update validation failed")
-    @Caching(evict = {
-        @CacheEvict(value = "product", key = "#command.productId"),
-        @CacheEvict(value = "products", allEntries = true)
-    })
     public ProductResponse updateProduct(ProductUpdateCommand command) {
         validateCommand(command);
         Product existingProduct = findAndValidateProduct(command.getProductId());
@@ -57,13 +51,11 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
         performPostUpdateOperations(updatedProduct, command, existingProduct);
 
-        // 통합 이벤트 발행 (트랜잭션 커밋 후 처리됨)
-        // 캐시 무효화를 한 번에 처리
+        // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
         applicationEventPublisher.publishEvent(
             ProductEvent.productUpdated(updatedProduct)
         );
 
-        log.info("Product updated successfully with ID: {}", updatedProduct.getId());
         return productResponseMapper.toResponse(updatedProduct);
     }
 

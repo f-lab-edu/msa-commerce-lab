@@ -26,21 +26,24 @@ public class ProductEventListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleProductEvent(ProductEvent event) {
-        for (ProductEvent.EventAction action : event.actions()) {
-            switch (action) {
-                case EVICT_SINGLE_CACHE:
-                    evictSingleProduct(event.productId());
-                    break;
-                case EVICT_ALL_CACHE:
-                    evictAllProducts();
-                    break;
-                case PUBLISH_EXTERNAL_EVENT:
-                    publishExternalEvent(event);
-                    break;
-                case ADDITIONAL_CLEANUP:
-                    handleAdditionalCacheCleanup(event.productId());
-                    break;
-            }
+        // 캐시 무효화 처리
+        invalidateCache(event);
+
+        // 외부 이벤트 발행
+        publishExternalEvent(event);
+    }
+
+    private void invalidateCache(ProductEvent event) {
+        switch (event.eventType()) {
+            case PRODUCT_CREATED:
+                evictProductsCache();
+                break;
+
+            case PRODUCT_UPDATED:
+            case PRODUCT_DELETED:
+                evictProductCache(event.productId());
+                evictProductsCache();
+                break;
         }
     }
 
@@ -49,16 +52,18 @@ public class ProductEventListener {
             case PRODUCT_DELETED:
                 productEventPublisher.publishProductDeletedEvent(event.product());
                 break;
+
             case PRODUCT_CREATED:
-                // TODO: 상품 생성 이벤트 발행
+                log.debug("Product created event for productId: {}", event.productId());
                 break;
+
             case PRODUCT_UPDATED:
-                // TODO: 상품 수정 이벤트 발행
+                log.debug("Product updated event for productId: {}", event.productId());
                 break;
         }
     }
 
-    private void evictSingleProduct(Long productId) {
+    private void evictProductCache(Long productId) {
         if (productId != null) {
             var cache = cacheManager.getCache(PRODUCT_CACHE);
             if (cache != null) {
@@ -68,17 +73,12 @@ public class ProductEventListener {
         }
     }
 
-    private void evictAllProducts() {
+    private void evictProductsCache() {
         var cache = cacheManager.getCache(PRODUCTS_CACHE);
         if (cache != null) {
             cache.clear();
             log.debug("Cleared all products cache");
         }
-    }
-
-    private void handleAdditionalCacheCleanup(Long productId) {
-        // TODO: 추가적인 캐시 정리 로직
-        //  e.g. 카테고리별 상품 목록 캐시, 검색 결과 캐시 등
     }
 
 }
