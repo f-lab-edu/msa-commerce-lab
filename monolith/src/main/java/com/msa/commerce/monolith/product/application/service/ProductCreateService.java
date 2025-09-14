@@ -1,6 +1,5 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,6 @@ public class ProductCreateService implements ProductCreateUseCase {
 
     @Override
     @ValidateCommand(errorPrefix = "Product creation validation failed")
-    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(ProductCreateCommand command) {
         validateCommand(command);
         validateDuplicateSku(command.getSku());
@@ -60,8 +58,7 @@ public class ProductCreateService implements ProductCreateUseCase {
 
         Product savedProduct = productRepository.save(product);
 
-        // 통합 이벤트 발행 (트랜잭션 커밋 후 처리됨)
-        // 캐시 무효화를 한 번에 처리
+        // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
         applicationEventPublisher.publishEvent(
             ProductEvent.productCreated(savedProduct)
         );
@@ -100,9 +97,6 @@ public class ProductCreateService implements ProductCreateUseCase {
             throw new IllegalArgumentException("Slug is required");
         }
 
-        // Optional validation for categoryId - based on business logic, it might be required
-        // The test expects exception when categoryId is null, but the annotation doesn't mark it as @NotNull
-        // Let's check if this validation is needed based on the failing test
         if (command.getCategoryId() == null) {
             throw new IllegalArgumentException("Category ID is required.");
         }
