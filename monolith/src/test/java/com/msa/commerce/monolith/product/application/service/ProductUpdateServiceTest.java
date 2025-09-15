@@ -266,6 +266,7 @@ class ProductUpdateServiceTest {
             .basePrice(new BigDecimal("15000"))
             .build();
 
+        @SuppressWarnings("unchecked")
         ConstraintViolation<ProductUpdateCommand> violation = mock(ConstraintViolation.class);
         given(violation.getMessage()).willReturn("Product name must not be empty");
         given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Set.of(violation));
@@ -287,6 +288,7 @@ class ProductUpdateServiceTest {
             .basePrice(BigDecimal.ZERO) // 0 가격
             .build();
 
+        @SuppressWarnings("unchecked")
         ConstraintViolation<ProductUpdateCommand> violation = mock(ConstraintViolation.class);
         given(violation.getMessage()).willReturn("Base price must be greater than 0");
         given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Set.of(violation));
