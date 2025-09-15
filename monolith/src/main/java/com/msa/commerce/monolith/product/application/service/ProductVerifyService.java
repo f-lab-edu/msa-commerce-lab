@@ -2,7 +2,6 @@ package com.msa.commerce.monolith.product.application.service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductVerifyService implements ProductVerifyUseCase {
 
     private final ProductRepository productRepository;
-
-    private final Random random = new Random();
 
     @Override
     public ProductVerifyResponse verifyProducts(ProductVerifyCommand command) {
@@ -98,7 +95,7 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             return "Insufficient stock";
         }
 
-        return product.validateQuantity(requestedQuantity);
+        return product.isValidateOrderQuantity(requestedQuantity) ? null : "Invalid order quantity";
     }
 
     private boolean isStockAvailable() {
