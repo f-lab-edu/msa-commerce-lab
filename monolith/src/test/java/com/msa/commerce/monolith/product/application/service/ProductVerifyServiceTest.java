@@ -140,12 +140,12 @@ class ProductVerifyServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.isAllAvailable()).isFalse();
+        assertThat(response.getAllAvailable()).isFalse();
         assertThat(response.getResults()).hasSize(1);
 
         ProductVerifyResponse.ProductVerifyResult result = response.getResults().get(0);
         assertThat(result.getProductId()).isEqualTo(2L);
-        assertThat(result.isAvailable()).isFalse();
+        assertThat(result.getAvailable()).isFalse();
         assertThat(result.getUnavailableReason()).contains("not active");
         assertThat(result.getStatus()).isEqualTo(ProductStatus.INACTIVE);
     }
@@ -170,12 +170,12 @@ class ProductVerifyServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.isAllAvailable()).isFalse();
+        assertThat(response.getAllAvailable()).isFalse();
         assertThat(response.getResults()).hasSize(1);
 
         ProductVerifyResponse.ProductVerifyResult result = response.getResults().get(0);
         assertThat(result.getProductId()).isEqualTo(999L);
-        assertThat(result.isAvailable()).isFalse();
+        assertThat(result.getAvailable()).isFalse();
         assertThat(result.getUnavailableReason()).isEqualTo("Product not found");
     }
 
@@ -208,7 +208,7 @@ class ProductVerifyServiceTest {
 
         // Then
         assertThat(response).isNotNull();
-        assertThat(response.isAllAvailable()).isFalse();
+        assertThat(response.getAllAvailable()).isFalse();
         assertThat(response.getResults()).hasSize(3);
 
         // Check for inactive product
@@ -217,7 +217,7 @@ class ProductVerifyServiceTest {
             .findFirst()
             .orElse(null);
         assertThat(inactiveResult).isNotNull();
-        assertThat(inactiveResult.isAvailable()).isFalse();
+        assertThat(inactiveResult.getAvailable()).isFalse();
 
         // Check for non-existent product
         ProductVerifyResponse.ProductVerifyResult nonExistentResult = response.getResults().stream()
@@ -225,7 +225,7 @@ class ProductVerifyServiceTest {
             .findFirst()
             .orElse(null);
         assertThat(nonExistentResult).isNotNull();
-        assertThat(nonExistentResult.isAvailable()).isFalse();
+        assertThat(nonExistentResult.getAvailable()).isFalse();
         assertThat(nonExistentResult.getUnavailableReason()).isEqualTo("Product not found");
     }
 

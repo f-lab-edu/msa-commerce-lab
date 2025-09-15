@@ -27,6 +27,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCas
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -283,3 +284,4 @@ class ProductControllerVerifyTest {
     }
 
 }
+

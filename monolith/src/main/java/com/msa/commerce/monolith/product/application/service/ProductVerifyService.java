@@ -1,9 +1,9 @@
 package com.msa.commerce.monolith.product.application.service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,33 +28,13 @@ public class ProductVerifyService implements ProductVerifyUseCase {
 
     private final ProductRepository productRepository;
 
+    private final Random random = new Random();
+
     @Override
     public ProductVerifyResponse verifyProducts(ProductVerifyCommand command) {
-        List<Long> productIds = command.getItems().stream()
-            .map(ProductVerifyCommand.ProductVerifyItem::getProductId)
-            .toList();
-
-        Map<Long, Product> productMap = productRepository.findAllByIds(productIds).stream()
-            .collect(Collectors.toMap(Product::getId, Function.identity()));
-
-        List<ProductVerifyResponse.ProductVerifyResult> results = new ArrayList<>();
-        boolean allAvailable = true;
-
-        for (ProductVerifyCommand.ProductVerifyItem item : command.getItems()) {
-            Product product = productMap.get(item.getProductId());
-
-            if (product == null) {
-                results.add(buildUnavailableResult(item.getProductId(), item.getQuantity(), "Product not found"));
-                allAvailable = false;
-
-            } else {
-                ProductVerifyResponse.ProductVerifyResult result = verifyProduct(product, item.getQuantity());
-                results.add(result);
-                if (!result.isAvailable()) {
-                    allAvailable = false;
-                }
-            }
-        }
+        Map<Long, Product> productMap = retrieveProductMap(command);
+        List<ProductVerifyResponse.ProductVerifyResult> results = processVerificationItems(command, productMap);
+        Boolean allAvailable = calculateAllAvailable(results);
 
         return ProductVerifyResponse.builder()
             .allAvailable(allAvailable)
@@ -62,26 +42,43 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .build();
     }
 
+    private Map<Long, Product> retrieveProductMap(ProductVerifyCommand command) {
+        List<Long> productIds = command.getItems().stream()
+            .map(ProductVerifyCommand.ProductVerifyItem::getProductId)
+            .toList();
+
+        return productRepository.findAllByIds(productIds).stream()
+            .collect(Collectors.toMap(Product::getId, Function.identity()));
+    }
+
+    private List<ProductVerifyResponse.ProductVerifyResult> processVerificationItems(
+        ProductVerifyCommand command, Map<Long, Product> productMap) {
+        return command.getItems().stream()
+            .map(item -> verifyItem(item, productMap))
+            .toList();
+    }
+
+    private ProductVerifyResponse.ProductVerifyResult verifyItem(
+        ProductVerifyCommand.ProductVerifyItem item, Map<Long, Product> productMap) {
+        Product product = productMap.get(item.getProductId());
+        
+        if (product == null) {
+            return buildUnavailableResult(item.getProductId(), item.getQuantity(), "Product not found");
+        }
+        
+        return verifyProduct(product, item.getQuantity());
+    }
+
+    private Boolean calculateAllAvailable(List<ProductVerifyResponse.ProductVerifyResult> results) {
+        return results.stream().allMatch(ProductVerifyResponse.ProductVerifyResult::getAvailable);
+    }
+
     private ProductVerifyResponse.ProductVerifyResult verifyProduct(Product product, Integer requestedQuantity) {
-        boolean available = true;
-        String unavailableReason = null;
-
-        // Check product status
-        if (product.getStatus() != ProductStatus.ACTIVE) {
-            available = false;
-            unavailableReason = String.format("Product is not active (status: %s)", product.getStatus());
-        }
-
-        // TODO: 재고쪽 구현 시 가능 수량 Check 로직 추가
-        if (available) {
-            available = false;
-            unavailableReason = "Insufficient stock";
-        }
-
-        BigDecimal currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getBasePrice();
-        BigDecimal originalPrice = product.getBasePrice();
-
-        // TODO: InventorySnapshots 구현 시 실제 상품별 주문 수량 제한 적용
+        String unavailableReason = checkProductAvailability(product, requestedQuantity);
+        Boolean available = unavailableReason == null;
+        
+        PriceInfo priceInfo = calculatePriceInfo(product);
+        OrderLimits orderLimits = getOrderLimits();
 
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(product.getId())
@@ -91,14 +88,74 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .status(product.getStatus())
             .requestedQuantity(requestedQuantity)
             .availableStock(1)
-            .currentPrice(currentPrice)
-            .originalPrice(originalPrice)
+            .currentPrice(priceInfo.currentPrice())
+            .originalPrice(priceInfo.originalPrice())
+            .priceChanged(priceInfo.priceChanged())
             .unavailableReason(unavailableReason)
+            .minOrderQuantity(orderLimits.minQuantity())
+            .maxOrderQuantity(orderLimits.maxQuantity())
             .build();
     }
 
-    private ProductVerifyResponse.ProductVerifyResult buildUnavailableResult(Long productId, Integer requestedQuantity,
-        String reason) {
+    private String checkProductAvailability(Product product, Integer requestedQuantity) {
+        String statusReason = checkProductStatus(product.getStatus());
+        if (statusReason != null) {
+            return statusReason;
+        }
+
+        // TODO: 재고쪽 구현 시 가능 수량 Check 로직 추가
+        String stockReason = checkStockAvailability();
+        if (stockReason != null) {
+            return stockReason;
+        }
+
+        return checkQuantityLimits(requestedQuantity);
+    }
+
+    private String checkProductStatus(ProductStatus status) {
+        return switch (status) {
+            case ACTIVE -> null;
+            case INACTIVE -> "Product is not active (status: INACTIVE)";
+            case DRAFT -> "Product is still in draft status";
+            case ARCHIVED -> "Product is archived";
+        };
+    }
+
+    private String checkStockAvailability() {
+        return "Insufficient stock";
+    }
+
+    private String checkQuantityLimits(Integer requestedQuantity) {
+        OrderLimits limits = getOrderLimits();
+        
+        if (requestedQuantity < limits.minQuantity()) {
+            return "Quantity below minimum order quantity";
+        }
+        
+        if (requestedQuantity > limits.maxQuantity()) {
+            return "Quantity exceeds maximum order quantity";
+        }
+        
+        return null;
+    }
+
+    private PriceInfo calculatePriceInfo(Product product) {
+        Boolean priceChanged = random.nextDouble() < 0.1;
+        BigDecimal currentPrice = product.getSalePrice() != null ? product.getSalePrice() : product.getBasePrice();
+        BigDecimal originalPrice = product.getBasePrice();
+        
+        return new PriceInfo(currentPrice, originalPrice, priceChanged);
+    }
+
+    private OrderLimits getOrderLimits() {
+        return new OrderLimits(1, 100);
+    }
+
+    private record PriceInfo(BigDecimal currentPrice, BigDecimal originalPrice, Boolean priceChanged) {}
+    
+    private record OrderLimits(Integer minQuantity, Integer maxQuantity) {}
+
+    private ProductVerifyResponse.ProductVerifyResult buildUnavailableResult(Long productId, Integer requestedQuantity, String reason) {
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(productId)
             .available(false)
@@ -106,5 +163,4 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .unavailableReason(reason)
             .build();
     }
-
 }
