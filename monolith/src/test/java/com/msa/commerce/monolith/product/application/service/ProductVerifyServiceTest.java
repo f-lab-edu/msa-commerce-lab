@@ -146,7 +146,7 @@ class ProductVerifyServiceTest {
         ProductVerifyResponse.ProductVerifyResult result = response.getResults().get(0);
         assertThat(result.getProductId()).isEqualTo(2L);
         assertThat(result.getAvailable()).isFalse();
-        assertThat(result.getUnavailableReason()).contains("not active");
+        assertThat(result.getUnavailableReason()).contains("INACTIVE");
         assertThat(result.getStatus()).isEqualTo(ProductStatus.INACTIVE);
     }
 
