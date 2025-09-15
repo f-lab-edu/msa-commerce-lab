@@ -52,6 +52,8 @@ class ProductTest {
         assertThat(product.getRequiresShipping()).isTrue();
         assertThat(product.getIsTaxable()).isTrue();
         assertThat(product.getIsFeatured()).isFalse();
+        assertThat(product.getMinOrderQuantity()).isEqualTo(1);
+        assertThat(product.getMaxOrderQuantity()).isEqualTo(100);
     }
 
     @Test
@@ -230,6 +232,123 @@ class ProductTest {
         assertThat(product.getName()).isEqualTo(newName);
         assertThat(product.getDescription()).isEqualTo(newDescription);
         assertThat(product.getBasePrice()).isEqualTo(newBasePrice);
+    }
+
+    @Test
+    @DisplayName("사용자 정의 최소/최대 주문 수량으로 상품 생성")
+    void createProduct_WithCustomOrderQuantities_Success() {
+        // given
+        String sku = "TEST1234";
+        String name = "테스트 상품";
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
+        Integer minOrderQuantity = 5;
+        Integer maxOrderQuantity = 50;
+
+        // when
+        Product product = Product.builder()
+            .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
+            .minOrderQuantity(minOrderQuantity)
+            .maxOrderQuantity(maxOrderQuantity)
+            .build();
+
+        // then
+        assertThat(product.getMinOrderQuantity()).isEqualTo(minOrderQuantity);
+        assertThat(product.getMaxOrderQuantity()).isEqualTo(maxOrderQuantity);
+    }
+
+    @Test
+    @DisplayName("유효한 수량 검증 - 성공")
+    void isValidateOrderQuantity_ValidQuantity_ReturnsNull() {
+        // given
+        Product product = Product.builder()
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .basePrice(new BigDecimal("10000"))
+            .slug("test-product")
+            .minOrderQuantity(2)
+            .maxOrderQuantity(10)
+            .build();
+        Integer requestedQuantity = 5;
+
+        // when
+        String validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isNull();
+    }
+
+    @Test
+    @DisplayName("최소 주문 수량 미만인 경우 검증 실패")
+    void isValidateOrderQuantity_BelowMinimum_ReturnsErrorMessage() {
+        // given
+        Product product = Product.builder()
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .basePrice(new BigDecimal("10000"))
+            .slug("test-product")
+            .minOrderQuantity(5)
+            .maxOrderQuantity(20)
+            .build();
+        Integer requestedQuantity = 3;
+
+        // when
+        String validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isEqualTo("Quantity below minimum order quantity of 5");
+    }
+
+    @Test
+    @DisplayName("최대 주문 수량 초과인 경우 검증 실패")
+    void isValidateOrderQuantity_ExceedsMaximum_ReturnsErrorMessage() {
+        // given
+        Product product = Product.builder()
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .basePrice(new BigDecimal("10000"))
+            .slug("test-product")
+            .minOrderQuantity(1)
+            .maxOrderQuantity(10)
+            .build();
+        Integer requestedQuantity = 15;
+
+        // when
+        String validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isEqualTo("Quantity exceeds maximum order quantity of 10");
+    }
+
+    @Test
+    @DisplayName("주문 수량이 null인 경우 검증 실패")
+    void isValidateOrderQuantity_NullQuantity_ReturnsErrorMessage() {
+        // given
+        Product product = createValidProduct();
+        Integer requestedQuantity = null;
+
+        // when
+        String validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isEqualTo("Quantity must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("주문 수량이 0 이하인 경우 검증 실패")
+    void isValidateOrderQuantity_ZeroOrNegativeQuantity_ReturnsErrorMessage() {
+        // given
+        Product product = createValidProduct();
+        Integer requestedQuantity = 0;
+
+        // when
+        String validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isEqualTo("Quantity must be greater than 0");
     }
 
     private Product createValidProduct() {

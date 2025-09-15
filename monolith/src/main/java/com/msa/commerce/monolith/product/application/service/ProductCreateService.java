@@ -50,6 +50,8 @@ public class ProductCreateService implements ProductCreateUseCase {
             .slug(command.getSlug())
             .searchTags(command.getSearchTags())
             .primaryImageUrl(command.getPrimaryImageUrl())
+            .minOrderQuantity(command.getMinOrderQuantity())
+            .maxOrderQuantity(command.getMaxOrderQuantity())
             .build();
 
         Product savedProduct = productRepository.save(product);

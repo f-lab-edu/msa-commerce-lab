@@ -138,6 +138,10 @@ CREATE TABLE IF NOT EXISTS products
     -- 미디어
     primary_image_url VARCHAR(500),
 
+    -- 주문 수량 제한
+    min_order_quantity INT                                                                 NOT NULL DEFAULT 1 CHECK (min_order_quantity > 0) COMMENT 'Minimum quantity allowed for a single order',
+    max_order_quantity INT                                                                 NOT NULL DEFAULT 100 CHECK (max_order_quantity > 0) COMMENT 'Maximum quantity allowed for a single order',
+
     created_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version           BIGINT                                                               NOT NULL DEFAULT 1,
@@ -149,9 +153,12 @@ CREATE TABLE IF NOT EXISTS products
     INDEX idx_products_featured (is_featured, status),
     INDEX idx_products_status_created (status, created_at DESC),
     INDEX idx_products_featured_created (is_featured, status, created_at DESC),
+    INDEX idx_products_min_order_qty (min_order_quantity),
+    INDEX idx_products_max_order_qty (max_order_quantity),
     FULLTEXT (name, short_description, description, search_tags),
     CONSTRAINT chk_products_sale_price CHECK (sale_price IS NULL OR sale_price <= base_price),
     CONSTRAINT chk_products_slug_format CHECK (slug REGEXP '^[a-z0-9]+(-[a-z0-9]+)*$' AND CHAR_LENGTH(slug) > 0),
+    CONSTRAINT chk_products_order_quantity CHECK (max_order_quantity >= min_order_quantity),
     FOREIGN KEY (category_id) REFERENCES product_categories (id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
