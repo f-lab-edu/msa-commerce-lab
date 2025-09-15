@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProductVerifyResponse {
 
-    private boolean allAvailable;
+    private Boolean allAvailable;
 
     private List<ProductVerifyResult> results;
 
@@ -32,7 +32,7 @@ public class ProductVerifyResponse {
 
         private String name;
 
-        private boolean available;
+        private Boolean available;
 
         private ProductStatus status;
 
@@ -43,6 +43,8 @@ public class ProductVerifyResponse {
         private BigDecimal currentPrice;
 
         private BigDecimal originalPrice;
+
+        private Boolean priceChanged;
 
         private String unavailableReason;
 
