@@ -134,9 +134,10 @@ class ValidationAspectUnitTest {
     void shouldThrowConstraintViolationExceptionWhenValidationFails() {
         // Given
         TestCommand testCommand = new TestCommand("");
-        @SuppressWarnings("unchecked")
         Set<ConstraintViolation<Object>> violations = new HashSet<>();
-        violations.add((ConstraintViolation<Object>) constraintViolation);
+        @SuppressWarnings("unchecked")
+        ConstraintViolation<Object> typedConstraintViolation = (ConstraintViolation<Object>) constraintViolation;
+        violations.add(typedConstraintViolation);
         when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
         when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
         
@@ -225,10 +226,13 @@ class ValidationAspectUnitTest {
         TestCommand testCommand = new TestCommand("");
         @SuppressWarnings("rawtypes")
         ConstraintViolation violation2 = mock(ConstraintViolation.class);
-        @SuppressWarnings("unchecked")
         Set<ConstraintViolation<Object>> violations = new HashSet<>();
-        violations.add((ConstraintViolation<Object>) constraintViolation);
-        violations.add((ConstraintViolation<Object>) violation2);
+        @SuppressWarnings("unchecked")
+        ConstraintViolation<Object> typedConstraintViolation = (ConstraintViolation<Object>) constraintViolation;
+        @SuppressWarnings("unchecked")
+        ConstraintViolation<Object> typedViolation2 = (ConstraintViolation<Object>) violation2;
+        violations.add(typedConstraintViolation);
+        violations.add(typedViolation2);
         
         when(validateResultAnnotation.validationTarget()).thenReturn(new Class<?>[0]);
         when(validateResultAnnotation.groups()).thenReturn(new Class<?>[0]);
