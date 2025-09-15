@@ -92,6 +92,12 @@ public class ProductJpaEntity {
     @Column(name = "primary_image_url", length = 500)
     private String primaryImageUrl;
 
+    @Column(name = "min_order_quantity", nullable = false)
+    private Integer minOrderQuantity = 1;
+
+    @Column(name = "max_order_quantity", nullable = false)
+    private Integer maxOrderQuantity = 100;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -125,6 +131,8 @@ public class ProductJpaEntity {
         jpaEntity.slug = product.getSlug();
         jpaEntity.searchTags = product.getSearchTags();
         jpaEntity.primaryImageUrl = product.getPrimaryImageUrl();
+        jpaEntity.minOrderQuantity = product.getMinOrderQuantity();
+        jpaEntity.maxOrderQuantity = product.getMaxOrderQuantity();
         jpaEntity.createdAt = product.getCreatedAt();
         jpaEntity.updatedAt = product.getUpdatedAt();
         jpaEntity.version = product.getVersion();
@@ -151,6 +159,8 @@ public class ProductJpaEntity {
         jpaEntity.slug = product.getSlug();
         jpaEntity.searchTags = product.getSearchTags();
         jpaEntity.primaryImageUrl = product.getPrimaryImageUrl();
+        jpaEntity.minOrderQuantity = product.getMinOrderQuantity();
+        jpaEntity.maxOrderQuantity = product.getMaxOrderQuantity();
         return jpaEntity;
     }
 
@@ -175,6 +185,8 @@ public class ProductJpaEntity {
             this.slug,
             this.searchTags,
             this.primaryImageUrl,
+            this.minOrderQuantity,
+            this.maxOrderQuantity,
             this.createdAt,
             this.updatedAt,
             this.version

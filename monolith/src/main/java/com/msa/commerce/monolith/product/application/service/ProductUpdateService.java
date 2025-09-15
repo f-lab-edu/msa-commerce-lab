@@ -97,7 +97,8 @@ public class ProductUpdateService implements ProductUpdateUseCase {
             command.getProductType(), command.getBasePrice(), command.getSalePrice(),
             command.getCurrency(), command.getWeightGrams(), command.getRequiresShipping(),
             command.getIsTaxable(), command.getIsFeatured(), command.getSlug(),
-            command.getSearchTags(), command.getPrimaryImageUrl()
+            command.getSearchTags(), command.getPrimaryImageUrl(),
+            command.getMinOrderQuantity(), command.getMaxOrderQuantity()
         );
     }
 
@@ -146,6 +147,8 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         appendFieldIfNotNull(description, command.getSlug(), "slug");
         appendFieldIfNotNull(description, command.getSearchTags(), "searchTags");
         appendFieldIfNotNull(description, command.getPrimaryImageUrl(), "primaryImageUrl");
+        appendFieldIfNotNull(description, command.getMinOrderQuantity(), "minOrderQuantity");
+        appendFieldIfNotNull(description, command.getMaxOrderQuantity(), "maxOrderQuantity");
     }
 
     private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
