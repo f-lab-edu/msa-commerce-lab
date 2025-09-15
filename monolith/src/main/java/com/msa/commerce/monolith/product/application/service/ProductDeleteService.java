@@ -37,9 +37,7 @@ public class ProductDeleteService implements ProductDeleteUseCase {
 
         handleProductDeletion(productId);
 
-        applicationEventPublisher.publishEvent(
-            ProductEvent.productDeleted(deletedProduct)
-        );
+        applicationEventPublisher.publishEvent(ProductEvent.productDeleted(deletedProduct));
     }
 
     private void validateProductDeletable(Product product) {
