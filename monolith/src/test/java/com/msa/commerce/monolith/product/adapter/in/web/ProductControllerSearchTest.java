@@ -26,6 +26,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;

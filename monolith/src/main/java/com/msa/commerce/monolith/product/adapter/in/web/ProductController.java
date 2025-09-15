@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
@@ -50,12 +51,12 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProduct(@PathVariable("id") Long productId) {
+    public ResponseEntity<ProductResponse> retrieveProduct(@PathVariable("id") Long productId) {
         return ResponseEntity.ok(productGetUseCase.getProduct(productId));
     }
 
     @GetMapping
-    public ResponseEntity<ProductPageResponse> getProducts(@Valid ProductSearchRequest request) {
+    public ResponseEntity<ProductPageResponse> retrieveProducts(@Valid ProductSearchRequest request) {
         return ResponseEntity.ok(productGetUseCase.searchProducts(productMapper.toSearchCommand(request)));
     }
 
