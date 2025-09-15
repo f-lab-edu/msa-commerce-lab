@@ -214,6 +214,42 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public String validateQuantity(Integer requestedQuantity) {
+        if (requestedQuantity == null || requestedQuantity <= 0) {
+            return "Quantity must be greater than 0";
+        }
+
+        Integer minOrderQuantity = getMinOrderQuantity();
+        Integer maxOrderQuantity = getMaxOrderQuantity();
+
+        if (requestedQuantity < minOrderQuantity) {
+            return String.format("Quantity below minimum order quantity of %d", minOrderQuantity);
+        }
+
+        if (requestedQuantity > maxOrderQuantity) {
+            return String.format("Quantity exceeds maximum order quantity of %d", maxOrderQuantity);
+        }
+
+        return null;
+    }
+
+    public Integer getMinOrderQuantity() {
+        // TODO: 추후 Product 엔티티에 minOrderQuantity 필드 추가 시 실제 값 반환
+        return 1;
+    }
+
+    public Integer getMaxOrderQuantity() {
+        // TODO: 추후 Product 엔티티에 maxOrderQuantity 필드 추가 시 실제 값 반환
+        return 100;
+    }
+
+    public boolean isProductInactive() {
+        return switch (status) {
+            case ACTIVE -> false;
+            case INACTIVE, DRAFT, ARCHIVED -> true;
+        };
+    }
+
     private void validateProduct(String sku, String name, BigDecimal basePrice) {
         if (sku == null || sku.trim().isEmpty()) {
             throw new IllegalArgumentException("SKU is required.");
@@ -234,6 +270,14 @@ public class Product {
         if (basePrice.compareTo(new BigDecimal("999999999999.9999")) > 0) {
             throw new IllegalArgumentException("Base price cannot exceed 999,999,999,999.9999.");
         }
+    }
+
+    public BigDecimal getCurrnectPrice() {
+        return this.salePrice != null ? this.salePrice : this.basePrice;
+    }
+
+    public BigDecimal getOriginalPrice() {
+        return this.basePrice;
     }
 
 }
