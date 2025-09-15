@@ -59,9 +59,7 @@ public class ProductCreateService implements ProductCreateUseCase {
         Product savedProduct = productRepository.save(product);
 
         // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
-        applicationEventPublisher.publishEvent(
-            ProductEvent.productCreated(savedProduct)
-        );
+        applicationEventPublisher.publishEvent(ProductEvent.productCreated(savedProduct));
 
         return productResponseMapper.toResponse(savedProduct);
     }
