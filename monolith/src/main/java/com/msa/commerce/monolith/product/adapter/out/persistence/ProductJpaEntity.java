@@ -2,6 +2,8 @@ package com.msa.commerce.monolith.product.adapter.out.persistence;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -11,14 +13,20 @@ import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import lombok.AccessLevel;
@@ -26,7 +34,20 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "products")
+@Table(
+    name = "products",
+    indexes = {
+        @Index(name = "idx_products_sku", columnList = "sku"),
+        @Index(name = "idx_products_status", columnList = "status"),
+        @Index(name = "idx_products_category", columnList = "category_id, status"),
+        @Index(name = "idx_products_brand", columnList = "brand, status"),
+        @Index(name = "idx_products_featured", columnList = "is_featured, status"),
+        @Index(name = "idx_products_status_created", columnList = "status, created_at DESC"),
+        @Index(name = "idx_products_featured_created", columnList = "is_featured, status, created_at DESC"),
+        @Index(name = "idx_products_min_order_qty", columnList = "min_order_quantity"),
+        @Index(name = "idx_products_max_order_qty", columnList = "max_order_quantity")
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -48,7 +69,11 @@ public class ProductJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "category_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ProductCategoryJpaEntity category;
+
+    @Column(name = "category_id", insertable = false, updatable = false)
     private Long categoryId;
 
     @Column(length = 100)
@@ -92,11 +117,20 @@ public class ProductJpaEntity {
     @Column(name = "primary_image_url", length = 500)
     private String primaryImageUrl;
 
-    @Column(name = "min_order_quantity", nullable = false)
-    private Integer minOrderQuantity = 1;
+    @Column(name = "min_order_quantity")
+    private Integer minOrderQuantity;
 
-    @Column(name = "max_order_quantity", nullable = false)
-    private Integer maxOrderQuantity = 100;
+    @Column(name = "max_order_quantity")
+    private Integer maxOrderQuantity;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ProductVariantJpaEntity> variants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<InventorySnapshotJpaEntity> inventorySnapshots = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<InventoryEventJpaEntity> inventoryEvents = new ArrayList<>();
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
