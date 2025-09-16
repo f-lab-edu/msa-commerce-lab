@@ -6,10 +6,30 @@ spring:
     name: monolith-service
 
   datasource:
-    url: jdbc:mysql://localhost:3306/db_platform
-    username: app_rw
-    password: 1q2w3e4r!
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    writer:
+      jdbc-url: jdbc:mysql://localhost:3306/db_platform
+      username: app_rw
+      password: 1q2w3e4r!
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: WriterCP
+        maximum-pool-size: 20
+        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 300000
+        max-lifetime: 1800000
+    reader:
+      jdbc-url: jdbc:mysql://localhost:3306/db_platform
+      username: app_ro
+      password: 1q2w3e4r!
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      hikari:
+        pool-name: ReaderCP
+        maximum-pool-size: 30
+        minimum-idle: 5
+        connection-timeout: 30000
+        idle-timeout: 300000
+        max-lifetime: 1800000
 
   jpa:
     hibernate:
