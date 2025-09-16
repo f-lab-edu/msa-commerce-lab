@@ -40,9 +40,9 @@ CREATE TABLE IF NOT EXISTS users
     email_verified    BOOLEAN                                             NOT NULL DEFAULT FALSE,
     phone_verified    BOOLEAN                                             NOT NULL DEFAULT FALSE,
     profile_image_url VARCHAR(500),
-    last_login_at     TIMESTAMP                                           NULL,
-    created_at        TIMESTAMP                                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP                                           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_login_at     DATETIME                                            NULL,
+    created_at        DATETIME                                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME                                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_users_email (email),
     INDEX idx_users_username (username),
@@ -70,8 +70,8 @@ CREATE TABLE IF NOT EXISTS user_addresses
     latitude       DECIMAL(10, 8),
     longitude      DECIMAL(11, 8),
     is_active      BOOLEAN                                               NOT NULL DEFAULT TRUE,
-    created_at     TIMESTAMP                                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP                                             NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at     DATETIME                                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at     DATETIME                                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_user_addresses_user_id (user_id),
     INDEX idx_user_addresses_type (address_type),
@@ -92,8 +92,8 @@ CREATE TABLE IF NOT EXISTS product_categories
     is_active     BOOLEAN             NOT NULL DEFAULT TRUE,
     is_featured   BOOLEAN             NOT NULL DEFAULT FALSE,
     image_url     VARCHAR(500),
-    created_at    TIMESTAMP           NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at    DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    DATETIME            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_categories_parent_id (parent_id),
     INDEX idx_categories_slug (slug),
@@ -138,8 +138,12 @@ CREATE TABLE IF NOT EXISTS products
     -- 미디어
     primary_image_url VARCHAR(500),
 
-    created_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    -- 주문 수량 제한
+    min_order_quantity INT                                                                  NULL,
+    max_order_quantity INT                                                                  NULL,
+
+    created_at        DATETIME                                                             NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME                                                             NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version           BIGINT                                                               NOT NULL DEFAULT 1,
 
     INDEX idx_products_sku (sku),
@@ -149,9 +153,12 @@ CREATE TABLE IF NOT EXISTS products
     INDEX idx_products_featured (is_featured, status),
     INDEX idx_products_status_created (status, created_at DESC),
     INDEX idx_products_featured_created (is_featured, status, created_at DESC),
+    INDEX idx_products_min_order_qty (min_order_quantity),
+    INDEX idx_products_max_order_qty (max_order_quantity),
     FULLTEXT (name, short_description, description, search_tags),
     CONSTRAINT chk_products_sale_price CHECK (sale_price IS NULL OR sale_price <= base_price),
     CONSTRAINT chk_products_slug_format CHECK (slug REGEXP '^[a-z0-9]+(-[a-z0-9]+)*$' AND CHAR_LENGTH(slug) > 0),
+    CONSTRAINT chk_products_order_quantity CHECK (max_order_quantity >= min_order_quantity),
     FOREIGN KEY (category_id) REFERENCES product_categories (id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -172,8 +179,8 @@ CREATE TABLE IF NOT EXISTS product_variants
     options          JSON, -- {"color": "red", "size": "XL"}
     color            VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options -> '$.color')) STORED,
     size             VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options -> '$.size')) STORED,
-    created_at       TIMESTAMP                                   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP                                   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at       DATETIME                                    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       DATETIME                                    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_variants_product (product_id, status),
     INDEX idx_variants_sku (variant_sku),
@@ -202,7 +209,7 @@ CREATE TABLE IF NOT EXISTS inventory_snapshots
             ELSE 'IN_STOCK'
             END
         ) STORED,
-    last_updated_at     TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    last_updated_at     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     version             BIGINT      NOT NULL DEFAULT 1,
 
     INDEX idx_inventory_product (product_id),
@@ -232,7 +239,7 @@ CREATE TABLE IF NOT EXISTS inventory_events
     reference_id      VARCHAR(100),
     event_data        JSON,
     correlation_id    CHAR(36),
-    occurred_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_inventory_events_occurred_at (occurred_at),
     INDEX idx_inventory_events_product (product_id, occurred_at),
@@ -256,9 +263,9 @@ CREATE TABLE IF NOT EXISTS shopping_carts
     status       ENUM ('ACTIVE', 'ABANDONED', 'CONVERTED') NOT NULL DEFAULT 'ACTIVE',
     total_amount DECIMAL(10, 2)                            NOT NULL DEFAULT 0.00,
     currency     VARCHAR(3)                                NOT NULL DEFAULT 'KRW',
-    created_at   TIMESTAMP                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMP                                 NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    expires_at   TIMESTAMP                                 NULL,
+    created_at   DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    expires_at   DATETIME                                  NULL,
 
     INDEX idx_shopping_carts_user_id (user_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE SET NULL
@@ -276,8 +283,8 @@ CREATE TABLE IF NOT EXISTS shopping_cart_items
     quantity           INT            NOT NULL DEFAULT 1 CHECK (quantity > 0),
     unit_price         DECIMAL(10, 2) NOT NULL CHECK (unit_price > 0),
     total_price        DECIMAL(10, 2) NOT NULL CHECK (total_price > 0),
-    added_at           TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    added_at           DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_cart_items_cart_id (cart_id),
     FOREIGN KEY (cart_id) REFERENCES shopping_carts (id) ON DELETE CASCADE,
@@ -297,13 +304,13 @@ CREATE TABLE IF NOT EXISTS notifications
     message    TEXT                                     NOT NULL,
     data       JSON,
     is_read    BOOLEAN                                  NOT NULL DEFAULT FALSE,
-    read_at    TIMESTAMP                                NULL,
+    read_at    DATETIME                                 NULL,
     is_sent    BOOLEAN                                  NOT NULL DEFAULT FALSE,
-    sent_at    TIMESTAMP                                NULL,
+    sent_at    DATETIME                                 NULL,
     channel    VARCHAR(20)                              NOT NULL DEFAULT 'WEB',
     priority   ENUM ('LOW', 'NORMAL', 'HIGH', 'URGENT') NOT NULL DEFAULT 'NORMAL',
-    expires_at TIMESTAMP                                NULL,
-    created_at TIMESTAMP                                NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME                                 NULL,
+    created_at DATETIME                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_notifications_user_id (user_id),
     INDEX idx_notifications_type (type),
@@ -322,7 +329,7 @@ CREATE TABLE IF NOT EXISTS event_store
     event_version   INT          NOT NULL DEFAULT 1,
     event_data      JSON         NOT NULL,
     metadata        JSON,
-    occurred_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sequence_number BIGINT       NOT NULL,
 
     INDEX idx_event_store_aggregate_id (aggregate_id),
@@ -353,9 +360,9 @@ CREATE TABLE IF NOT EXISTS cross_domain_events
     retry_count       INT                                                NOT NULL DEFAULT 0,
     max_retries       INT                                                NOT NULL DEFAULT 3,
     error_message     TEXT,
-    occurred_at       TIMESTAMP                                          NOT NULL,
-    published_at      TIMESTAMP                                          NULL,
-    created_at        TIMESTAMP                                          NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at       DATETIME                                           NOT NULL,
+    published_at      DATETIME                                           NULL,
+    created_at        DATETIME                                           NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_cross_domain_events_occurred_at (occurred_at),
     INDEX idx_cross_domain_events_status (publishing_status, retry_count),
@@ -401,18 +408,18 @@ CREATE TABLE IF NOT EXISTS orders
     shipping_address     JSON                                      NOT NULL,
 
     -- 날짜 정보
-    order_date           TIMESTAMP                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    confirmed_at         TIMESTAMP                                 NULL,
-    payment_completed_at TIMESTAMP                                 NULL,
-    shipped_at           TIMESTAMP                                 NULL,
-    delivered_at         TIMESTAMP                                 NULL,
-    cancelled_at         TIMESTAMP                                 NULL,
+    order_date           DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    confirmed_at         DATETIME                                  NULL,
+    payment_completed_at DATETIME                                  NULL,
+    shipped_at           DATETIME                                  NULL,
+    delivered_at         DATETIME                                  NULL,
+    cancelled_at         DATETIME                                  NULL,
 
     -- 시스템 정보
     source_channel       VARCHAR(50)                                        DEFAULT 'WEB',
     version              BIGINT                                    NOT NULL DEFAULT 1,
-    created_at           TIMESTAMP                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP                                 NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at           DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at           DATETIME                                  NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_orders_user_id (user_id),
     INDEX idx_orders_status (status),
@@ -440,7 +447,7 @@ CREATE TABLE IF NOT EXISTS order_items
     unit_price         DECIMAL(10, 4) NOT NULL CHECK (unit_price >= 0),
     total_price        DECIMAL(12, 4) NOT NULL CHECK (total_price >= 0),
 
-    created_at         TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         DATETIME       NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX idx_order_items_order_id (order_id),
     INDEX idx_order_items_product_id (product_id),
@@ -459,7 +466,7 @@ CREATE TABLE IF NOT EXISTS event_store
     event_version   INT          NOT NULL DEFAULT 1,
     event_data      JSON         NOT NULL,
     metadata        JSON,
-    occurred_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sequence_number BIGINT       NOT NULL,
 
     INDEX idx_event_store_aggregate_id (aggregate_id),
@@ -513,15 +520,15 @@ CREATE TABLE IF NOT EXISTS payments
     payment_details        JSON,
 
     -- 시간 정보
-    authorized_at          TIMESTAMP                                      NULL,
-    captured_at            TIMESTAMP                                      NULL,
-    cancelled_at           TIMESTAMP                                      NULL,
-    failed_at              TIMESTAMP                                      NULL,
-    refunded_at            TIMESTAMP                                      NULL,
+    authorized_at          DATETIME                                       NULL,
+    captured_at            DATETIME                                       NULL,
+    cancelled_at           DATETIME                                       NULL,
+    failed_at              DATETIME                                       NULL,
+    refunded_at            DATETIME                                       NULL,
 
     version                BIGINT                                         NOT NULL DEFAULT 1,
-    created_at             TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at             TIMESTAMP                                      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at             DATETIME                                       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at             DATETIME                                       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     INDEX idx_payments_order_id (order_id),
     INDEX idx_payments_user_id (user_id),
@@ -542,7 +549,7 @@ CREATE TABLE IF NOT EXISTS event_store
     event_version   INT          NOT NULL DEFAULT 1,
     event_data      JSON         NOT NULL,
     metadata        JSON,
-    occurred_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sequence_number BIGINT       NOT NULL,
 
     INDEX idx_event_store_aggregate_id (aggregate_id),
@@ -583,8 +590,8 @@ CREATE TABLE IF NOT EXISTS product_sales_summary
     period_start_date     DATE                                            NULL,
     period_end_date       DATE                                            NULL,
     
-    last_updated_at       TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at            TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at       DATETIME                               NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at            DATETIME                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     INDEX idx_product_sales_product_id (product_id),
     INDEX idx_product_sales_sku (product_sku),
@@ -625,8 +632,8 @@ CREATE TABLE IF NOT EXISTS user_order_summary
     period_start_date     DATE                                            NULL,
     period_end_date       DATE                                            NULL,
     
-    last_updated_at       TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at            TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_updated_at       DATETIME                               NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at            DATETIME                               NOT NULL DEFAULT CURRENT_TIMESTAMP,
     
     INDEX idx_user_order_user_id (user_id),
     INDEX idx_user_order_period (summary_period, period_start_date),
@@ -691,7 +698,7 @@ CREATE TABLE IF NOT EXISTS event_store
     event_version   INT          NOT NULL DEFAULT 1,
     event_data      JSON         NOT NULL,
     metadata        JSON,
-    occurred_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    occurred_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     sequence_number BIGINT       NOT NULL,
 
     INDEX idx_event_store_aggregate_id (aggregate_id),
