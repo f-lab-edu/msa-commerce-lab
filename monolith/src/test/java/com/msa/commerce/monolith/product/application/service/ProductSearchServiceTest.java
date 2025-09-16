@@ -73,6 +73,8 @@ class ProductSearchServiceTest {
             "test-product-1",                // slug
             "test keywords",                 // searchTags
             null,                             // primaryImageUrl
+            1,                                // minOrderQuantity
+            100,                              // maxOrderQuantity
             LocalDateTime.now().minusDays(1), // createdAt
             LocalDateTime.now(),              // updatedAt
             1L                                // version
@@ -98,6 +100,8 @@ class ProductSearchServiceTest {
             "test-product-2",                // slug
             "test keywords",                 // searchTags
             null,                             // primaryImageUrl
+            1,                                // minOrderQuantity
+            100,                              // maxOrderQuantity
             LocalDateTime.now().minusDays(2), // createdAt
             LocalDateTime.now(),              // updatedAt
             1L                                // version
