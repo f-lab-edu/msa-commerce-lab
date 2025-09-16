@@ -73,6 +73,8 @@ class ProductCreateServiceTest {
             "test-product",                      // slug
             null,                                 // searchTags
             null,                                 // primaryImageUrl
+            1,                                    // minOrderQuantity
+            100,                                  // maxOrderQuantity
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
             1L                                    // version

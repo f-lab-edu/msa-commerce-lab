@@ -75,6 +75,8 @@ class ProductUpdateServiceTest {
             "original-product",                  // slug
             "검색 키워드",                         // searchTags
             null,                                 // primaryImageUrl
+            1,                                    // minOrderQuantity
+            100,                                  // maxOrderQuantity
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
             1L                                    // version
@@ -155,6 +157,7 @@ class ProductUpdateServiceTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
+            1, 100,
             LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), 1L
         );
 
