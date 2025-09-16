@@ -27,6 +27,7 @@ import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
+import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
@@ -40,7 +41,7 @@ class ProductUpdateServiceTest {
 
     @Mock
     private ProductResponseMapper productResponseMapper;
-    
+
     @Mock
     private Validator validator;
 
@@ -82,12 +83,7 @@ class ProductUpdateServiceTest {
             1L                                    // version
         );
 
-        updateCommand = ProductUpdateCommand.builder()
-            .productId(1L)
-            .name("업데이트된 상품명")
-            .description("업데이트된 상품 설명")
-            .basePrice(new BigDecimal("15000"))
-            .build();
+        updateCommand = ProductCommandFixture.validProductUpdateCommand();
 
         expectedResponse = ProductResponse.builder()
             .id(1L)
@@ -176,22 +172,18 @@ class ProductUpdateServiceTest {
     @DisplayName("중복된 SKU로 업데이트 시 예외 발생")
     void updateProduct_DuplicateSku_ThrowsException() {
         // given
-        ProductUpdateCommand commandWithDuplicateSku = ProductUpdateCommand.builder()
-            .productId(1L)
-            .sku("DUPLICATE-SKU")
-            .name("업데이트된 상품명")
-            .build();
+        ProductUpdateCommand commandWithDuplicateSku = ProductCommandFixture.duplicateSkuUpdateCommand();
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.existsBySku("DUPLICATE-SKU")).willReturn(true);
+        given(productRepository.existsBySku(commandWithDuplicateSku.getSku())).willReturn(true);
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(commandWithDuplicateSku))
             .isInstanceOf(DuplicateResourceException.class)
-            .hasMessage("SKU already exists: DUPLICATE-SKU");
+            .hasMessage("SKU already exists: " + commandWithDuplicateSku.getSku());
 
         verify(productRepository).findById(1L);
-        verify(productRepository).existsBySku("DUPLICATE-SKU");
+        verify(productRepository).existsBySku(commandWithDuplicateSku.getSku());
         verify(productRepository, never()).save(any(Product.class));
     }
 
@@ -199,18 +191,15 @@ class ProductUpdateServiceTest {
     @DisplayName("중복된 상품명으로 업데이트 시 예외 발생")
     void updateProduct_DuplicateName_ThrowsException() {
         // given
-        ProductUpdateCommand commandWithDuplicateName = ProductUpdateCommand.builder()
-            .productId(1L)
-            .name("중복된 상품명")
-            .build();
+        ProductUpdateCommand commandWithDuplicateName = ProductCommandFixture.duplicateNameUpdateCommand();
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.existsByName("중복된 상품명")).willReturn(true);
+        given(productRepository.existsByName(commandWithDuplicateName.getName())).willReturn(true);
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(commandWithDuplicateName))
             .isInstanceOf(DuplicateResourceException.class)
-            .hasMessage("Product name already exists: 중복된 상품명");
+            .hasMessage("Product name already exists: " + commandWithDuplicateName.getName());
 
         verify(productRepository).findById(1L);
         verify(productRepository).existsByName("중복된 상품명");
