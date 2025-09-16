@@ -40,6 +40,8 @@ class ProductUpdateTest {
             "original-product",                  // slug
             "검색 키워드",                         // searchTags
             null,                                 // primaryImageUrl
+            1,                                    // minOrderQuantity
+            100,                                  // maxOrderQuantity
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
             1L                                    // version
@@ -70,7 +72,9 @@ class ProductUpdateTest {
             true,                                 // isFeatured
             "new-product",                       // slug
             "새로운 검색 키워드",                  // searchTags
-            "http://example.com/image.jpg"       // primaryImageUrl
+            "http://example.com/image.jpg",      // primaryImageUrl
+            2,                                    // minOrderQuantity
+            50                                    // maxOrderQuantity
         );
 
         // then
@@ -120,7 +124,9 @@ class ProductUpdateTest {
             null,             // isFeatured - 변경 안함
             null,             // slug - 변경 안함
             null,             // searchTags - 변경 안함
-            null              // primaryImageUrl - 변경 안함
+            null,             // primaryImageUrl - 변경 안함
+            null,             // minOrderQuantity - 변경 안함
+            null              // maxOrderQuantity - 변경 안함
         );
 
         // then
@@ -143,7 +149,8 @@ class ProductUpdateTest {
         // when - 모든 필드를 null로 업데이트 시도
         product.updatePartially(
             null, null, null, null, null, null, null, null,
-            null, null, null, null, null, null, null, null, null
+            null, null, null, null, null, null, null, null, null,
+            null, null
         );
 
         // then
@@ -160,6 +167,7 @@ class ProductUpdateTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ACTIVE,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "active-product", null, null,
+            1, 100,
             LocalDateTime.now(), LocalDateTime.now(), 1L
         );
 
@@ -176,6 +184,7 @@ class ProductUpdateTest {
             1L, null, ProductType.PHYSICAL, ProductStatus.ARCHIVED,
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
+            1, 100,
             LocalDateTime.now(), LocalDateTime.now(), 1L
         );
 

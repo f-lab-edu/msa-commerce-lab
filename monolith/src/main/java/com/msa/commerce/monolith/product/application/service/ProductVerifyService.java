@@ -14,6 +14,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCas
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +57,12 @@ public class ProductVerifyService implements ProductVerifyUseCase {
         Product product = productMap.get(item.getProductId());
 
         if (product == null) {
-            return buildUnavailableResult(item.getProductId(), item.getQuantity(), "Product not found");
+            return ProductVerifyResponse.ProductVerifyResult.builder()
+                .productId(item.getProductId())
+                .available(false)
+                .requestedQuantity(item.getQuantity())
+                .unavailableReason("Product not found")
+                .build();
         }
 
         return verifyProduct(product, item.getQuantity());
@@ -68,9 +74,8 @@ public class ProductVerifyService implements ProductVerifyUseCase {
 
     private ProductVerifyResponse.ProductVerifyResult verifyProduct(Product product, Integer requestedQuantity) {
         String unavailableReason = checkProductAvailability(product, requestedQuantity);
-        Boolean available = unavailableReason == null;
+        Boolean available = StringUtils.isBlank(unavailableReason);
 
-        // TODO: InventorySnapshots 구현 시 실제 상품별 주문 수량 제한 적용
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(product.getId())
             .sku(product.getSku())
@@ -90,7 +95,7 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             return String.format("Product is not active (status: %s )", product.getStatus());
         }
 
-        // TODO: 재고쪽 구현 시 가능 수량 Check 로직 추가
+        // TODO: InventorySnapshots 구현 시 실제 상품별 주문 수량 제한 적용
         if (!isStockAvailable()) {
             return "Insufficient stock";
         }
@@ -102,14 +107,4 @@ public class ProductVerifyService implements ProductVerifyUseCase {
         return true;
     }
 
-    private ProductVerifyResponse.ProductVerifyResult buildUnavailableResult(Long productId, Integer requestedQuantity, String reason) {
-        return ProductVerifyResponse.ProductVerifyResult.builder()
-            .productId(productId)
-            .available(false)
-            .requestedQuantity(requestedQuantity)
-            .unavailableReason(reason)
-            .build();
-    }
-
 }
-

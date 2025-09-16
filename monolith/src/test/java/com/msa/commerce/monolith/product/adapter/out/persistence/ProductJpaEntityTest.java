@@ -39,6 +39,8 @@ class ProductJpaEntityTest {
             "test-product",                      // slug
             "test, product, electronics",        // searchTags
             "https://example.com/image.jpg",     // primaryImageUrl
+            1,                                   // minOrderQuantity
+            100,                                 // maxOrderQuantity
             now,                                 // createdAt
             now,                                 // updatedAt
             1L                                   // version
