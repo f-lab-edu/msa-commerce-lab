@@ -3,9 +3,14 @@ package com.msa.commerce.monolith.product.domain;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.function.Supplier;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
 
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
@@ -56,124 +61,14 @@ class ProductTest {
         assertThat(product.getMaxOrderQuantity()).isEqualTo(100);
     }
 
-    @Test
-    @DisplayName("상품명이 null인 경우 예외 발생")
-    void createProduct_NameIsNull_ThrowsException() {
-        // given
-        String sku = "TEST1234";
-        String name = null;
-        BigDecimal basePrice = new BigDecimal("10000");
-        String slug = "test-product";
-
+    @ParameterizedTest(name = "{0} - Product 생성자 검증 실패")
+    @MethodSource("com.msa.commerce.monolith.product.fixture.ProductCommandFixture#invalidProductBuilderScenarios")
+    @DisplayName("Product 생성자 검증 실패 시나리오")
+    void createProduct_ValidationFailures_ThrowsException(String scenario, Supplier<Product> productSupplier, String expectedMessage) {
         // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
+        assertThatThrownBy(productSupplier::get)
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product name is required.");
-    }
-
-    @Test
-    @DisplayName("상품명이 빈 문자열인 경우 예외 발생")
-    void createProduct_NameIsEmpty_ThrowsException() {
-        // given
-        String sku = "TEST1234";
-        String name = "";
-        BigDecimal basePrice = new BigDecimal("10000");
-        String slug = "test-product";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product name is required.");
-    }
-
-    @Test
-    @DisplayName("SKU가 null인 경우 예외 발생")
-    void createProduct_SkuIsNull_ThrowsException() {
-        // given
-        String sku = null;
-        String name = "테스트 상품";
-        BigDecimal basePrice = new BigDecimal("10000");
-        String slug = "test-product";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("SKU is required.");
-    }
-
-    @Test
-    @DisplayName("기본 가격이 0 이하인 경우 예외 발생")
-    void createProduct_BasePriceIsZeroOrNegative_ThrowsException() {
-        // given
-        String sku = "TEST1234";
-        String name = "테스트 상품";
-        BigDecimal basePrice = BigDecimal.ZERO;
-        String slug = "test-product";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Base price must be greater than 0.");
-    }
-
-    @Test
-    @DisplayName("기본 가격이 최대 한도 초과인 경우 예외 발생")
-    void createProduct_BasePriceExceedsLimit_ThrowsException() {
-        // given
-        String sku = "TEST1234";
-        String name = "테스트 상품";
-        BigDecimal basePrice = new BigDecimal("1000000000000.0000"); // 최대 한도 초과
-        String slug = "test-product";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Base price cannot exceed 999,999,999,999.9999.");
-    }
-
-    @Test
-    @DisplayName("상품명이 255자 초과인 경우 예외 발생")
-    void createProduct_NameExceedsMaxLength_ThrowsException() {
-        // given
-        String sku = "TEST1234";
-        String name = "a".repeat(256); // 256자
-        BigDecimal basePrice = new BigDecimal("10000");
-        String slug = "test-product";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-            .sku(sku)
-            .name(name)
-            .basePrice(basePrice)
-            .slug(slug)
-            .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product name cannot exceed 255 characters.");
+            .hasMessage(expectedMessage);
     }
 
     @Test
@@ -260,95 +155,15 @@ class ProductTest {
         assertThat(product.getMaxOrderQuantity()).isEqualTo(maxOrderQuantity);
     }
 
-    @Test
-    @DisplayName("유효한 수량 검증 - 성공")
-    void isValidateOrderQuantity_ValidQuantity_ReturnsTrue() {
-        // given
-        Product product = Product.builder()
-            .sku("TEST1234")
-            .name("테스트 상품")
-            .basePrice(new BigDecimal("10000"))
-            .slug("test-product")
-            .minOrderQuantity(2)
-            .maxOrderQuantity(10)
-            .build();
-        Integer requestedQuantity = 5;
-
+    @ParameterizedTest(name = "{0} - 주문 수량 검증")
+    @MethodSource("com.msa.commerce.monolith.product.fixture.ProductCommandFixture#orderQuantityValidationScenarios")
+    @DisplayName("주문 수량 검증 시나리오")
+    void isValidateOrderQuantity_VariousScenarios(String scenario, Product product, Integer requestedQuantity, boolean expected) {
         // when
         boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
 
         // then
-        assertThat(validationResult).isTrue();
-    }
-
-    @Test
-    @DisplayName("최소 주문 수량 미만인 경우 검증 실패")
-    void isValidateOrderQuantity_BelowMinimum_ReturnsFalse() {
-        // given
-        Product product = Product.builder()
-            .sku("TEST1234")
-            .name("테스트 상품")
-            .basePrice(new BigDecimal("10000"))
-            .slug("test-product")
-            .minOrderQuantity(5)
-            .maxOrderQuantity(20)
-            .build();
-        Integer requestedQuantity = 3;
-
-        // when
-        boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
-
-        // then
-        assertThat(validationResult).isFalse();
-    }
-
-    @Test
-    @DisplayName("최대 주문 수량 초과인 경우 검증 실패")
-    void isValidateOrderQuantity_ExceedsMaximum_ReturnsFalse() {
-        // given
-        Product product = Product.builder()
-            .sku("TEST1234")
-            .name("테스트 상품")
-            .basePrice(new BigDecimal("10000"))
-            .slug("test-product")
-            .minOrderQuantity(1)
-            .maxOrderQuantity(10)
-            .build();
-        Integer requestedQuantity = 15;
-
-        // when
-        boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
-
-        // then
-        assertThat(validationResult).isFalse();
-    }
-
-    @Test
-    @DisplayName("주문 수량이 null인 경우 검증 실패")
-    void isValidateOrderQuantity_NullQuantity_ReturnsFalse() {
-        // given
-        Product product = createValidProduct();
-        Integer requestedQuantity = null;
-
-        // when
-        boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
-
-        // then
-        assertThat(validationResult).isFalse();
-    }
-
-    @Test
-    @DisplayName("주문 수량이 0 이하인 경우 검증 실패")
-    void isValidateOrderQuantity_ZeroOrNegativeQuantity_ReturnsFalse() {
-        // given
-        Product product = createValidProduct();
-        Integer requestedQuantity = 0;
-
-        // when
-        boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
-
-        // then
-        assertThat(validationResult).isFalse();
+        assertThat(validationResult).isEqualTo(expected);
     }
 
     private Product createValidProduct() {
