@@ -81,7 +81,8 @@ application*.log
 *.iws
 *.iml
 *.ipr
-out/
+/out/
+**/out/classes/
 
 # Eclipse
 .apt_generated
