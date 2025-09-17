@@ -64,4 +64,5 @@ public interface ProductVariantJpaRepository extends JpaRepository<ProductVarian
         AND pv.id <> :excludeId
         """)
     boolean existsByVariantSkuAndIdNot(@Param("variantSku") String variantSku, @Param("excludeId") Long excludeId);
+
 }

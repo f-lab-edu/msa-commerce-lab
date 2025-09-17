@@ -16,7 +16,6 @@ import com.msa.commerce.monolith.product.domain.ProductType;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPQLQuery;
@@ -32,14 +31,17 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
     private final JPAQueryFactory queryFactory;
 
     private final QProductJpaEntity product = QProductJpaEntity.productJpaEntity;
+
     private final QProductCategoryJpaEntity category = QProductCategoryJpaEntity.productCategoryJpaEntity;
+
     private final QInventorySnapshotJpaEntity inventory = QInventorySnapshotJpaEntity.inventorySnapshotJpaEntity;
+
     private final QProductVariantJpaEntity variant = QProductVariantJpaEntity.productVariantJpaEntity;
 
     @Override
     public Page<ProductJpaEntity> searchProductsWithInventory(String keyword, Long categoryId,
-            ProductStatus status, ProductType productType, BigDecimal minPrice, BigDecimal maxPrice,
-            String brand, Boolean isFeatured, Pageable pageable) {
+        ProductStatus status, ProductType productType, BigDecimal minPrice, BigDecimal maxPrice,
+        String brand, Boolean isFeatured, Pageable pageable) {
 
         BooleanBuilder whereClause = new BooleanBuilder();
 
@@ -48,9 +50,9 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             String likeKeyword = "%" + keyword.trim() + "%";
             whereClause.and(
                 product.name.containsIgnoreCase(keyword)
-                .or(product.description.containsIgnoreCase(keyword))
-                .or(product.searchTags.containsIgnoreCase(keyword))
-                .or(product.brand.containsIgnoreCase(keyword))
+                    .or(product.description.containsIgnoreCase(keyword))
+                    .or(product.searchTags.containsIgnoreCase(keyword))
+                    .or(product.brand.containsIgnoreCase(keyword))
             );
         }
 
@@ -151,8 +153,8 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .leftJoin(product.inventorySnapshots, inventory).fetchJoin()
             .where(
                 product.status.eq(ProductStatus.ACTIVE)
-                .and(inventory.availableQuantity.loe(threshold))
-                .and(inventory.availableQuantity.gt(0))
+                    .and(inventory.availableQuantity.loe(threshold))
+                    .and(inventory.availableQuantity.gt(0))
             )
             .orderBy(inventory.availableQuantity.asc())
             .fetch();
@@ -167,7 +169,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .leftJoin(product.category, category).fetchJoin()
             .where(
                 product.status.eq(ProductStatus.ACTIVE)
-                .and(product.isFeatured.eq(true))
+                    .and(product.isFeatured.eq(true))
             )
             .orderBy(product.createdAt.desc())
             .limit(limit)
@@ -185,8 +187,8 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .from(product)
             .where(
                 product.status.eq(ProductStatus.ACTIVE)
-                .and(product.brand.isNotNull())
-                .and(product.brand.ne(""))
+                    .and(product.brand.isNotNull())
+                    .and(product.brand.ne(""))
             )
             .groupBy(product.brand)
             .orderBy(product.count().desc())
@@ -239,9 +241,9 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             String likeKeyword = "%" + keyword + "%";
             whereClause.and(
                 product.name.containsIgnoreCase(keyword)
-                .or(product.description.containsIgnoreCase(keyword))
-                .or(product.searchTags.containsIgnoreCase(keyword))
-                .or(product.brand.containsIgnoreCase(keyword))
+                    .or(product.description.containsIgnoreCase(keyword))
+                    .or(product.searchTags.containsIgnoreCase(keyword))
+                    .or(product.brand.containsIgnoreCase(keyword))
             );
         }
 
@@ -284,12 +286,12 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             .leftJoin(product.category, category).fetchJoin()
             .where(
                 product.id.ne(productId)
-                .and(product.status.eq(ProductStatus.ACTIVE))
-                .and(product.categoryId.eq(targetProduct.getCategoryId()))
-                .and(product.basePrice.between(
-                    targetProduct.getBasePrice().multiply(BigDecimal.valueOf(0.5)),
-                    targetProduct.getBasePrice().multiply(BigDecimal.valueOf(1.5))
-                ))
+                    .and(product.status.eq(ProductStatus.ACTIVE))
+                    .and(product.categoryId.eq(targetProduct.getCategoryId()))
+                    .and(product.basePrice.between(
+                        targetProduct.getBasePrice().multiply(BigDecimal.valueOf(0.5)),
+                        targetProduct.getBasePrice().multiply(BigDecimal.valueOf(1.5))
+                    ))
             )
             .orderBy(product.isFeatured.desc(), product.createdAt.desc())
             .limit(limit)
@@ -343,67 +345,137 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
 
     // 통계 구현 클래스들
     public static class ProductCategoryStatsImpl implements ProductCategoryStats {
+
         private Long categoryId;
+
         private String categoryName;
+
         private Long productCount;
+
         private Long activeProductCount;
 
         // getters and setters
         @Override
-        public Long getCategoryId() { return categoryId; }
-        public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+        public Long getCategoryId() {
+            return categoryId;
+        }
+
+        public void setCategoryId(Long categoryId) {
+            this.categoryId = categoryId;
+        }
 
         @Override
-        public String getCategoryName() { return categoryName; }
-        public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+        public String getCategoryName() {
+            return categoryName;
+        }
+
+        public void setCategoryName(String categoryName) {
+            this.categoryName = categoryName;
+        }
 
         @Override
-        public Long getProductCount() { return productCount; }
-        public void setProductCount(Long productCount) { this.productCount = productCount; }
+        public Long getProductCount() {
+            return productCount;
+        }
+
+        public void setProductCount(Long productCount) {
+            this.productCount = productCount;
+        }
 
         @Override
-        public Long getActiveProductCount() { return activeProductCount; }
-        public void setActiveProductCount(Long activeProductCount) { this.activeProductCount = activeProductCount; }
+        public Long getActiveProductCount() {
+            return activeProductCount;
+        }
+
+        public void setActiveProductCount(Long activeProductCount) {
+            this.activeProductCount = activeProductCount;
+        }
+
     }
 
     public static class BrandStatsImpl implements BrandStats {
+
         private String brand;
+
         private Long productCount;
+
         private BigDecimal averagePrice;
 
         @Override
-        public String getBrand() { return brand; }
-        public void setBrand(String brand) { this.brand = brand; }
+        public String getBrand() {
+            return brand;
+        }
+
+        public void setBrand(String brand) {
+            this.brand = brand;
+        }
 
         @Override
-        public Long getProductCount() { return productCount; }
-        public void setProductCount(Long productCount) { this.productCount = productCount; }
+        public Long getProductCount() {
+            return productCount;
+        }
+
+        public void setProductCount(Long productCount) {
+            this.productCount = productCount;
+        }
 
         @Override
-        public BigDecimal getAveragePrice() { return averagePrice; }
-        public void setAveragePrice(BigDecimal averagePrice) { this.averagePrice = averagePrice; }
+        public BigDecimal getAveragePrice() {
+            return averagePrice;
+        }
+
+        public void setAveragePrice(BigDecimal averagePrice) {
+            this.averagePrice = averagePrice;
+        }
+
     }
 
     public static class PriceRangeStatsImpl implements PriceRangeStats {
+
         private String priceRange;
+
         private Long productCount;
+
         private BigDecimal minPrice;
+
         private BigDecimal maxPrice;
 
         @Override
-        public String getPriceRange() { return priceRange; }
-        public void setPriceRange(String priceRange) { this.priceRange = priceRange; }
+        public String getPriceRange() {
+            return priceRange;
+        }
+
+        public void setPriceRange(String priceRange) {
+            this.priceRange = priceRange;
+        }
 
         @Override
-        public Long getProductCount() { return productCount; }
-        public void setProductCount(Long productCount) { this.productCount = productCount; }
+        public Long getProductCount() {
+            return productCount;
+        }
+
+        public void setProductCount(Long productCount) {
+            this.productCount = productCount;
+        }
 
         @Override
-        public BigDecimal getMinPrice() { return minPrice; }
-        public void setMinPrice(BigDecimal minPrice) { this.minPrice = minPrice; }
+        public BigDecimal getMinPrice() {
+            return minPrice;
+        }
+
+        public void setMinPrice(BigDecimal minPrice) {
+            this.minPrice = minPrice;
+        }
 
         @Override
-        public BigDecimal getMaxPrice() { return maxPrice; }
-        public void setMaxPrice(BigDecimal maxPrice) { this.maxPrice = maxPrice; }
+        public BigDecimal getMaxPrice() {
+            return maxPrice;
+        }
+
+        public void setMaxPrice(BigDecimal maxPrice) {
+            this.maxPrice = maxPrice;
+        }
+
     }
+
 }

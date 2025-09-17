@@ -87,8 +87,8 @@ public class InventoryEventJpaEntity {
     @Column(name = "reference_id", length = 100)
     private String referenceId;
 
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "event_data", columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "event_data", columnDefinition = "TEXT")
     private String eventData;
 
     @Column(name = "correlation_id", length = 36)
@@ -100,10 +100,10 @@ public class InventoryEventJpaEntity {
 
     @Builder
     public InventoryEventJpaEntity(InventoryEventType eventType, String aggregateId,
-            Long aggregateVersion, ProductJpaEntity product, ProductVariantJpaEntity variant,
-            String locationCode, Integer quantityChange, Integer quantityBefore,
-            Integer quantityAfter, String changeReason, String referenceType,
-            String referenceId, String eventData, String correlationId) {
+        Long aggregateVersion, ProductJpaEntity product, ProductVariantJpaEntity variant,
+        String locationCode, Integer quantityChange, Integer quantityBefore,
+        Integer quantityAfter, String changeReason, String referenceType,
+        String referenceId, String eventData, String correlationId) {
         this.eventType = eventType;
         this.aggregateId = aggregateId;
         this.aggregateVersion = aggregateVersion;
@@ -146,4 +146,5 @@ public class InventoryEventJpaEntity {
     public boolean hasReference() {
         return referenceType != null && referenceId != null;
     }
+
 }

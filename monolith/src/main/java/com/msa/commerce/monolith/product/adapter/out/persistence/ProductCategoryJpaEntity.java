@@ -84,7 +84,7 @@ public class ProductCategoryJpaEntity {
 
     @Builder
     public ProductCategoryJpaEntity(ProductCategoryJpaEntity parent, String name, String description,
-            String slug, Integer displayOrder, Boolean isActive, Boolean isFeatured, String imageUrl) {
+        String slug, Integer displayOrder, Boolean isActive, Boolean isFeatured, String imageUrl) {
         this.parent = parent;
         this.name = name;
         this.description = description;
@@ -107,7 +107,7 @@ public class ProductCategoryJpaEntity {
     }
 
     public void updateCategoryInfo(String name, String description, String slug,
-            Integer displayOrder, String imageUrl) {
+        Integer displayOrder, String imageUrl) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name;
         }
@@ -202,4 +202,5 @@ public class ProductCategoryJpaEntity {
         pathBuilder.append(this.name);
         return pathBuilder.toString();
     }
+
 }

@@ -1,7 +1,6 @@
 package com.msa.commerce.monolith.product.adapter.out.persistence;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Component;
 
@@ -9,7 +8,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msa.commerce.monolith.product.domain.ProductVariant;
-import com.msa.commerce.monolith.product.domain.ProductVariantStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +94,8 @@ public class ProductVariantMapper {
         }
 
         try {
-            return objectMapper.readValue(optionsJson, new TypeReference<java.util.Map<String, Object>>() {});
+            return objectMapper.readValue(optionsJson, new TypeReference<java.util.Map<String, Object>>() {
+            });
         } catch (JsonProcessingException e) {
             log.warn("옵션 JSON 파싱 실패: {}", optionsJson, e);
             return new java.util.HashMap<>();
@@ -187,4 +186,5 @@ public class ProductVariantMapper {
             throw new IllegalArgumentException("가격 조정은 음수일 수 없습니다.");
         }
     }
+
 }

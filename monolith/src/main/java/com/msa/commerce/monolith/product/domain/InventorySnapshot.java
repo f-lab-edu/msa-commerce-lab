@@ -8,15 +8,25 @@ import lombok.Getter;
 @Getter
 @Builder
 public class InventorySnapshot {
+
     private final Long id;
+
     private final Long productId;
+
     private final Long variantId;
+
     private final String locationCode;
+
     private final int availableQuantity;
+
     private final int reservedQuantity;
+
     private final int lowStockThreshold;
+
     private final StockStatus stockStatus;
+
     private final LocalDateTime lastUpdatedAt;
+
     private final Long version;
 
     public int getTotalQuantity() {
@@ -147,4 +157,5 @@ public class InventorySnapshot {
 
         return StockStatus.IN_STOCK;
     }
+
 }

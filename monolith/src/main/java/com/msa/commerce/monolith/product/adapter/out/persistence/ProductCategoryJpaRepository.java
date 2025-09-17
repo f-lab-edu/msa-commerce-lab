@@ -81,4 +81,5 @@ public interface ProductCategoryJpaRepository extends JpaRepository<ProductCateg
         WHERE pc.parent IS NULL
         """)
     Integer findMaxDisplayOrderForRootCategories();
+
 }
