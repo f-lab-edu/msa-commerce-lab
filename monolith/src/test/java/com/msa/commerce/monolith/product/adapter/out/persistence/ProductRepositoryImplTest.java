@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -20,13 +21,16 @@ import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
 @DataJpaTest
-@Import({ProductRepositoryImpl.class, TestBeansConfiguration.class})
+@Import({ProductRepositoryImpl.class, TestBeansConfiguration.class, com.msa.commerce.monolith.config.QuerydslConfig.class})
 @ActiveProfiles("test")
 @DisplayName("ProductRepositoryImpl 통합 테스트")
 class ProductRepositoryImplTest {
 
     @Autowired
     private ProductRepositoryImpl productRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Test
     @DisplayName("카테고리별 상품 검색이 정상적으로 동작한다")
@@ -198,52 +202,73 @@ class ProductRepositoryImplTest {
     }
 
     private void createTestProducts() {
-        Product product1 = Product.builder()
+        // 임시 카테고리 생성
+        ProductCategoryJpaEntity category1 = ProductCategoryJpaEntity.builder()
+            .name("Test Category 1")
+            .slug("test-category-1")
+            .description("Test Category 1 Description")
+            .isActive(true)
+            .displayOrder(1)
+            .build();
+        entityManager.persistAndFlush(category1);
+
+        ProductCategoryJpaEntity category2 = ProductCategoryJpaEntity.builder()
+            .name("Test Category 2")
+            .slug("test-category-2")
+            .description("Test Category 2 Description")
+            .isActive(true)
+            .displayOrder(2)
+            .build();
+        entityManager.persistAndFlush(category2);
+
+        // 상품을 JPA 엔티티로 직접 생성 (상태는 이후 변경)
+        Product domainProduct1 = Product.builder()
             .sku("TEST-001")
             .name("Test Product 1")
             .description("Test Description 1")
-            .categoryId(1L)
+            .categoryId(category1.getId())
             .productType(ProductType.PHYSICAL)
             .basePrice(new BigDecimal("100.00"))
             .slug("test-product-1")
             .isFeatured(false)
             .build();
+        domainProduct1.activate(); // ACTIVE 상태로 변경
 
-        Product product2 = Product.builder()
+        ProductJpaEntity product1 = ProductJpaEntity.fromDomainEntityForCreation(domainProduct1);
+        product1.setCategory(category1);
+        entityManager.persistAndFlush(product1);
+
+        Product domainProduct2 = Product.builder()
             .sku("TEST-002")
             .name("Test Product 2")
             .description("Test Description 2")
-            .categoryId(1L)
+            .categoryId(category1.getId())
             .productType(ProductType.PHYSICAL)
             .basePrice(new BigDecimal("200.00"))
             .slug("test-product-2")
             .isFeatured(true)
             .build();
+        domainProduct2.activate(); // ACTIVE 상태로 변경
 
-        Product product3 = Product.builder()
+        ProductJpaEntity product2 = ProductJpaEntity.fromDomainEntityForCreation(domainProduct2);
+        product2.setCategory(category1);
+        entityManager.persistAndFlush(product2);
+
+        Product domainProduct3 = Product.builder()
             .sku("TEST-003")
             .name("Test Product 3")
             .description("Test Description 3")
-            .categoryId(2L)
+            .categoryId(category2.getId())
             .productType(ProductType.PHYSICAL)
             .basePrice(new BigDecimal("300.00"))
             .slug("test-product-3")
             .isFeatured(false)
             .build();
+        domainProduct3.deactivate(); // INACTIVE 상태로 변경
 
-        Product savedProduct1 = productRepository.save(product1);
-        Product savedProduct2 = productRepository.save(product2);
-        Product savedProduct3 = productRepository.save(product3);
-
-        // Set product1 and product2 to active for status filtering tests
-        savedProduct1.activate();
-        savedProduct2.activate();
-        productRepository.save(savedProduct1);
-        productRepository.save(savedProduct2);
-
-        // Set product3 to inactive after saving to test status filtering
-        savedProduct3.deactivate();
-        productRepository.save(savedProduct3);
+        ProductJpaEntity product3 = ProductJpaEntity.fromDomainEntityForCreation(domainProduct3);
+        product3.setCategory(category2);
+        entityManager.persistAndFlush(product3);
     }
 
 }

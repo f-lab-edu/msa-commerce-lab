@@ -37,7 +37,7 @@ public class DataSourceConfiguration {
             .build();
     }
 
-    @Bean
+    @Bean("readerDataSource")
     @Profile("test") // 테스트 환경에서는 Writer 데이터소스를 Reader로도 사용
     public DataSource testReaderDataSource(@Qualifier("writerDataSource") DataSource writerDataSource) {
         log.info("테스트 환경: Writer 데이터소스를 Reader로 공유");

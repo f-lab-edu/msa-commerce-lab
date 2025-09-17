@@ -1,61 +1,37 @@
 -- ============================================================================
 -- MSA Commerce Lab - Product Domain Extension
--- Version: V1 (Product Variants and Inventory)
+-- Version: V1 (Additional Constraints and Optimizations)
 -- Date: 2025-01-21
--- Description: 상품 변형, 재고 관리 테이블 추가
+-- Description: V0에서 누락된 제약조건 및 최적화 추가 (DDL은 V0에 존재)
 -- ============================================================================
 
 USE db_platform;
 
--- 상품 주문 수량 제한 컬럼 추가
-ALTER TABLE products
-ADD COLUMN min_order_quantity INT NULL,
-ADD COLUMN max_order_quantity INT NULL;
+-- 상품 주문 수량 제약 조건 추가 (V0에서 누락된 제약조건)
+-- V0에는 chk_products_order_quantity가 있으므로 min/max 개별 제약조건은 필요시에만 추가
 
--- 상품 주문 수량 제한 인덱스 추가 (이미 V0에 정의되어 있으므로 주석 처리)
--- CREATE INDEX idx_products_min_order_qty ON products(min_order_quantity);
--- CREATE INDEX idx_products_max_order_qty ON products(max_order_quantity);
+-- 제약조건이 존재하지 않는 경우에만 추가
+SET @sql = IF((SELECT COUNT(*)
+               FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+               WHERE TABLE_SCHEMA = 'db_platform'
+                 AND TABLE_NAME = 'products'
+                 AND CONSTRAINT_NAME = 'chk_products_min_order_qty') = 0,
+              'ALTER TABLE products ADD CONSTRAINT chk_products_min_order_qty CHECK (min_order_quantity IS NULL OR min_order_quantity > 0)',
+              'SELECT "chk_products_min_order_qty constraint already exists" as info');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
--- 상품 주문 수량 제약 조건 추가
-ALTER TABLE products
-ADD CONSTRAINT chk_products_min_order_qty CHECK (min_order_quantity > 0),
-ADD CONSTRAINT chk_products_max_order_qty CHECK (max_order_quantity > 0),
-ADD CONSTRAINT chk_products_order_qty_range CHECK (max_order_quantity >= min_order_quantity);
-
--- 새로운 테이블들은 이미 V0에서 생성되어 있으므로 없는 경우에만 생성
-
--- 상품 변형 테이블 (V0에서 누락되었을 경우를 위해)
-CREATE TABLE IF NOT EXISTS product_variants
-(
-    id               BIGINT AUTO_INCREMENT PRIMARY KEY,
-    product_id       BIGINT                                      NOT NULL,
-    variant_sku      VARCHAR(100) UNIQUE                         NOT NULL,
-    name             VARCHAR(255)                                NOT NULL,
-    price_adjustment DECIMAL(10, 4)                                       DEFAULT 0.00,
-    status           ENUM ('ACTIVE', 'INACTIVE', 'OUT_OF_STOCK') NOT NULL DEFAULT 'ACTIVE',
-    is_default       BOOLEAN                                     NOT NULL DEFAULT FALSE,
-
-    -- 옵션 정보 (JSON)
-    options          JSON, -- {"color": "red", "size": "XL"}
-    color            VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options -> '$.color')) STORED,
-    size             VARCHAR(50) GENERATED ALWAYS AS (JSON_UNQUOTE(options -> '$.size')) STORED,
-    created_at       DATETIME                                    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       DATETIME                                    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    INDEX idx_variants_product (product_id, status),
-    INDEX idx_variants_sku (variant_sku),
-    INDEX idx_variants_color (color),
-    INDEX idx_variants_size (size),
-    FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
--- 재고 스냅샷 테이블 (V0에서 이미 생성됨)
--- CREATE TABLE IF NOT EXISTS inventory_snapshots ...
-
--- 재고 이벤트 테이블 (V0에서 이미 생성됨)
--- CREATE TABLE IF NOT EXISTS inventory_events ...
+SET @sql = IF((SELECT COUNT(*)
+               FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+               WHERE TABLE_SCHEMA = 'db_platform'
+                 AND TABLE_NAME = 'products'
+                 AND CONSTRAINT_NAME = 'chk_products_max_order_qty') = 0,
+              'ALTER TABLE products ADD CONSTRAINT chk_products_max_order_qty CHECK (max_order_quantity IS NULL OR max_order_quantity > 0)',
+              'SELECT "chk_products_max_order_qty constraint already exists" as info');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- 기본 재고 데이터 설정 (기존 상품들에 대해)
 INSERT IGNORE INTO inventory_snapshots (product_id, variant_id, location_code, available_quantity, reserved_quantity, low_stock_threshold)
@@ -99,9 +75,29 @@ LEFT JOIN inventory_events ie ON (ie.aggregate_id = CONCAT('PRODUCT_', p.id, '_M
 WHERE ie.id IS NULL
 AND p.status IN ('ACTIVE', 'INACTIVE');
 
--- 인덱스 최적화 (누락된 경우만 추가)
-CREATE INDEX IF NOT EXISTS idx_products_category_status ON products(category_id, status);
-CREATE INDEX IF NOT EXISTS idx_products_brand_status ON products(brand, status);
+-- 인덱스 최적화 (V0에서 누락된 인덱스)
+-- 이미 존재하지 않는 경우에만 생성
+SET @sql = IF((SELECT COUNT(*)
+               FROM INFORMATION_SCHEMA.STATISTICS
+               WHERE TABLE_SCHEMA = 'db_platform'
+                 AND TABLE_NAME = 'products'
+                 AND INDEX_NAME = 'idx_products_category_status') = 0,
+              'CREATE INDEX idx_products_category_status ON products(category_id, status)',
+              'SELECT "idx_products_category_status already exists" as info');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql = IF((SELECT COUNT(*)
+               FROM INFORMATION_SCHEMA.STATISTICS
+               WHERE TABLE_SCHEMA = 'db_platform'
+                 AND TABLE_NAME = 'products'
+                 AND INDEX_NAME = 'idx_products_brand_status') = 0,
+              'CREATE INDEX idx_products_brand_status ON products(brand, status)',
+              'SELECT "idx_products_brand_status already exists" as info');
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- 통계 및 성능을 위한 뷰 생성
 CREATE OR REPLACE VIEW v_product_inventory_summary AS
@@ -242,10 +238,12 @@ INSERT INTO cross_domain_events (
     'MIGRATION', 1, UUID(),
     JSON_OBJECT(
         'migration_version', 'V1',
-        'description', 'Product variants and inventory tables added',
-        'tables_added', JSON_ARRAY('product_variants', 'inventory_snapshots', 'inventory_events'),
+        'description', 'Product constraints, indexes, views and procedures added',
+        'constraints_added', JSON_ARRAY('chk_products_min_order_qty', 'chk_products_max_order_qty'),
+        'indexes_added', JSON_ARRAY('idx_products_category_status', 'idx_products_brand_status'),
         'views_created', JSON_ARRAY('v_product_inventory_summary', 'v_inventory_event_summary'),
         'procedures_created', JSON_ARRAY('sp_adjust_inventory')
     ),
     'product.migration.completed', 'PUBLISHED', NOW(), NOW()
 );
+
