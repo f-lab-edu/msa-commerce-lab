@@ -32,8 +32,8 @@ public class InventorySnapshotMapper {
     }
 
     public InventorySnapshotJpaEntity toEntity(InventorySnapshot domain,
-                                             ProductJpaEntity productEntity,
-                                             ProductVariantJpaEntity variantEntity) {
+        ProductJpaEntity productEntity,
+        ProductVariantJpaEntity variantEntity) {
         if (domain == null) {
             return null;
         }
@@ -105,4 +105,5 @@ public class InventorySnapshotMapper {
             throw new IllegalArgumentException("위치 코드는 필수입니다.");
         }
     }
+
 }

@@ -74,22 +74,37 @@ public interface ProductCustomRepository {
 
     // 통계 클래스들
     interface ProductCategoryStats {
+
         Long getCategoryId();
+
         String getCategoryName();
+
         Long getProductCount();
+
         Long getActiveProductCount();
+
     }
 
     interface BrandStats {
+
         String getBrand();
+
         Long getProductCount();
+
         BigDecimal getAveragePrice();
+
     }
 
     interface PriceRangeStats {
+
         String getPriceRange();
+
         Long getProductCount();
+
         BigDecimal getMinPrice();
+
         BigDecimal getMaxPrice();
+
     }
+
 }

@@ -132,4 +132,5 @@ public interface InventoryEventJpaRepository extends JpaRepository<InventoryEven
         WHERE ie.aggregateId = :aggregateId
         """)
     Long getNextVersionForAggregate(@Param("aggregateId") String aggregateId);
+
 }

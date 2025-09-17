@@ -227,4 +227,18 @@ public class ProductJpaEntity {
         );
     }
 
+    // Test용 setter 메서드들
+    public void setCategory(ProductCategoryJpaEntity category) {
+        this.category = category;
+        this.categoryId = category != null ? category.getId() : null;
+    }
+
+    public void setCategoryId(Long categoryId) {
+        this.categoryId = categoryId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
 }

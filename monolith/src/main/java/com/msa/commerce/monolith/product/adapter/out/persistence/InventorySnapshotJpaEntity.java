@@ -87,8 +87,8 @@ public class InventorySnapshotJpaEntity {
 
     @Builder
     public InventorySnapshotJpaEntity(ProductJpaEntity product, ProductVariantJpaEntity variant,
-            String locationCode, Integer availableQuantity, Integer reservedQuantity,
-            Integer lowStockThreshold) {
+        String locationCode, Integer availableQuantity, Integer reservedQuantity,
+        Integer lowStockThreshold) {
         this.product = product;
         this.variant = variant;
         this.locationCode = locationCode != null ? locationCode : "MAIN";
@@ -171,4 +171,5 @@ public class InventorySnapshotJpaEntity {
             return StockStatus.IN_STOCK;
         }
     }
+
 }
