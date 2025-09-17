@@ -7,8 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.msa.commerce.monolith.product.domain.StockStatus;
-
 public interface InventorySnapshotJpaRepository extends JpaRepository<InventorySnapshotJpaEntity, Long> {
 
     Optional<InventorySnapshotJpaEntity> findByProductIdAndLocationCode(Long productId, String locationCode);
@@ -99,4 +97,5 @@ public interface InventorySnapshotJpaRepository extends JpaRepository<InventoryS
         @Param("variantId") Long variantId,
         @Param("locationCode") String locationCode,
         @Param("requiredQuantity") int requiredQuantity);
+
 }

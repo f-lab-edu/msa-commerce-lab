@@ -85,8 +85,8 @@ public class ProductVariantJpaEntity {
 
     @Builder
     public ProductVariantJpaEntity(ProductJpaEntity product, String variantSku, String name,
-            BigDecimal priceAdjustment, ProductVariantStatus status, Boolean isDefault,
-            String options, String color, String size) {
+        BigDecimal priceAdjustment, ProductVariantStatus status, Boolean isDefault,
+        String options, String color, String size) {
         this.product = product;
         this.variantSku = variantSku;
         this.name = name;
@@ -99,7 +99,7 @@ public class ProductVariantJpaEntity {
     }
 
     public void updateVariantInfo(String name, BigDecimal priceAdjustment, String options,
-            String color, String size) {
+        String color, String size) {
         if (name != null && !name.trim().isEmpty()) {
             this.name = name;
         }
@@ -147,4 +147,5 @@ public class ProductVariantJpaEntity {
         }
         return priceAdjustment != null ? priceAdjustment : BigDecimal.ZERO;
     }
+
 }

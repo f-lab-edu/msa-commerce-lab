@@ -12,6 +12,7 @@ import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCas
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
 import com.msa.commerce.monolith.product.domain.Product;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,9 +33,9 @@ public class ProductSearchService implements ProductSearchUseCase {
     public ProductPageResponse searchProducts(ProductSearchCommand command) {
         // Manual validation until AOP is properly configured
         validateCommand(command);
-        
+
         Page<Product> productPage = productRepository.searchProducts(command);
-        
+
         if (productPage == null) {
             throw new IllegalStateException("Repository returned null result for search command");
         }
@@ -84,15 +85,15 @@ public class ProductSearchService implements ProductSearchUseCase {
         if (command.getPage() != null && command.getPage() < 0) {
             throw new IllegalArgumentException("Page must be greater than or equal to 0");
         }
-        
+
         if (command.getSize() != null && (command.getSize() < 1 || command.getSize() > 100)) {
             throw new IllegalArgumentException("Size must be between 1 and 100");
         }
-        
+
         if (command.getMinPrice() != null && command.getMinPrice().signum() < 0) {
             throw new IllegalArgumentException("Minimum price cannot be negative");
         }
-        
+
         if (command.getMaxPrice() != null && command.getMaxPrice().signum() < 0) {
             throw new IllegalArgumentException("Maximum price cannot be negative");
         }

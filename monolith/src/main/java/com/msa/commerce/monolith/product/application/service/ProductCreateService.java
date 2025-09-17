@@ -70,23 +70,23 @@ public class ProductCreateService implements ProductCreateUseCase {
         if (command.getSku() == null || command.getSku().trim().isEmpty()) {
             throw new IllegalArgumentException("SKU is required");
         }
-        
+
         if (command.getName() == null || command.getName().trim().isEmpty()) {
             throw new IllegalArgumentException("Product name is required.");
         }
-        
+
         if (command.getBasePrice() == null) {
             throw new IllegalArgumentException("Base price must be greater than 0.");
         }
-        
+
         if (command.getBasePrice().signum() <= 0) {
             throw new IllegalArgumentException("Base price must be greater than 0.");
         }
-        
+
         if (command.getSlug() == null || command.getSlug().trim().isEmpty()) {
             throw new IllegalArgumentException("Slug is required");
         }
-        
+
         // Optional validation for categoryId - based on business logic, it might be required
         // The test expects exception when categoryId is null, but the annotation doesn't mark it as @NotNull
         // Let's check if this validation is needed based on the failing test

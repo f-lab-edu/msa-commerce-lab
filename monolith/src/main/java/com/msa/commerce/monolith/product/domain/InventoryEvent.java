@@ -9,21 +9,37 @@ import lombok.Getter;
 @Getter
 @Builder
 public class InventoryEvent {
+
     private final Long id;
+
     private final InventoryEventType eventType;
+
     private final String aggregateId;
+
     private final Long aggregateVersion;
+
     private final Long productId;
+
     private final Long variantId;
+
     private final String locationCode;
+
     private final int quantityChange;
+
     private final int quantityBefore;
+
     private final int quantityAfter;
+
     private final String changeReason;
+
     private final String referenceType;
+
     private final String referenceId;
+
     private final String eventData;
+
     private final String correlationId;
+
     private final LocalDateTime occurredAt;
 
     public boolean isStockIncrease() {
@@ -36,13 +52,13 @@ public class InventoryEvent {
 
     public boolean isReservationEvent() {
         return eventType == InventoryEventType.STOCK_RESERVATION ||
-               eventType == InventoryEventType.STOCK_RESERVATION_RELEASE ||
-               eventType == InventoryEventType.STOCK_RESERVATION_CONFIRM;
+            eventType == InventoryEventType.STOCK_RESERVATION_RELEASE ||
+            eventType == InventoryEventType.STOCK_RESERVATION_CONFIRM;
     }
 
     public boolean isStockMovementEvent() {
         return eventType == InventoryEventType.STOCK_IN ||
-               eventType == InventoryEventType.STOCK_OUT;
+            eventType == InventoryEventType.STOCK_OUT;
     }
 
     public boolean isAdjustmentEvent() {
@@ -108,6 +124,7 @@ public class InventoryEvent {
     }
 
     public static class InventoryEventBuilder {
+
         public InventoryEventBuilder validateQuantityChange() {
             if (this.quantityBefore + this.quantityChange != this.quantityAfter) {
                 throw new IllegalArgumentException(
@@ -121,5 +138,7 @@ public class InventoryEvent {
             this.occurredAt = LocalDateTime.now();
             return this;
         }
+
     }
+
 }

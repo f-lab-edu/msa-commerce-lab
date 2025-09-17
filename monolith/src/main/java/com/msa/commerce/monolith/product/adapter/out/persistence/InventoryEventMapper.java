@@ -38,8 +38,8 @@ public class InventoryEventMapper {
     }
 
     public InventoryEventJpaEntity toEntity(InventoryEvent domain,
-                                          ProductJpaEntity productEntity,
-                                          ProductVariantJpaEntity variantEntity) {
+        ProductJpaEntity productEntity,
+        ProductVariantJpaEntity variantEntity) {
         if (domain == null) {
             return null;
         }
@@ -108,4 +108,5 @@ public class InventoryEventMapper {
             throw new IllegalArgumentException("상관관계 ID는 필수입니다.");
         }
     }
+
 }

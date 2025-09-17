@@ -10,17 +10,29 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ProductVariant {
+
     private final Long id;
+
     private final Long productId;
+
     private final String variantSku;
+
     private final String name;
+
     private final BigDecimal priceAdjustment;
+
     private final ProductVariantStatus status;
+
     private final Boolean isDefault;
+
     private final Map<String, Object> options;
+
     private final String color;
+
     private final String size;
+
     private final LocalDateTime createdAt;
+
     private final LocalDateTime updatedAt;
 
     public BigDecimal calculateEffectivePrice(BigDecimal basePrice) {
@@ -89,4 +101,5 @@ public class ProductVariant {
             .updatedAt(this.updatedAt)
             .build();
     }
+
 }
