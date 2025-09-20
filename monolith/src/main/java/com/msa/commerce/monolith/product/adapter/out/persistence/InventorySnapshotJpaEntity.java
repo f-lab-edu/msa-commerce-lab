@@ -2,15 +2,12 @@ package com.msa.commerce.monolith.product.adapter.out.persistence;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.msa.commerce.monolith.product.domain.StockStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -31,7 +28,8 @@ import lombok.NoArgsConstructor;
     name = "inventory_snapshots",
     indexes = {
         @Index(name = "idx_inventory_product", columnList = "product_id"),
-        @Index(name = "idx_inventory_stock_status", columnList = "stock_status")
+        @Index(name = "idx_inventory_available_qty", columnList = "available_quantity"),
+        @Index(name = "idx_inventory_location", columnList = "location_code")
     },
     uniqueConstraints = {
         @UniqueConstraint(name = "uk_inventory_location", columnNames = {"product_id", "variant_id", "location_code"})
@@ -62,21 +60,8 @@ public class InventorySnapshotJpaEntity {
     @Column(name = "reserved_quantity", nullable = false)
     private Integer reservedQuantity = 0;
 
-    @Formula("available_quantity + reserved_quantity")
-    private Integer totalQuantity;
-
     @Column(name = "low_stock_threshold", nullable = false)
     private Integer lowStockThreshold = 10;
-
-    @Enumerated(EnumType.STRING)
-    @Formula("""
-        CASE
-            WHEN available_quantity = 0 THEN 'OUT_OF_STOCK'
-            WHEN available_quantity <= low_stock_threshold THEN 'LOW_STOCK'
-            ELSE 'IN_STOCK'
-        END
-        """)
-    private StockStatus stockStatus;
 
     @UpdateTimestamp
     @Column(name = "last_updated_at", nullable = false)
@@ -160,6 +145,10 @@ public class InventorySnapshotJpaEntity {
 
     public boolean canReserve(int quantity) {
         return availableQuantity >= quantity;
+    }
+
+    public int getTotalQuantity() {
+        return availableQuantity + reservedQuantity;
     }
 
     public StockStatus calculateStockStatus() {
