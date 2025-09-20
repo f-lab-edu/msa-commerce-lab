@@ -35,7 +35,9 @@ class ProductCustomRepositoryTest {
     private ProductJpaRepository productRepository;
 
     private ProductCategoryJpaEntity testCategory;
+
     private ProductJpaEntity testProduct1;
+
     private ProductJpaEntity testProduct2;
 
     @BeforeEach
@@ -309,4 +311,5 @@ class ProductCustomRepositoryTest {
         assertThat(firstResult.getContent().get(0).getId())
             .isNotEqualTo(secondResult.getContent().get(0).getId());
     }
+
 }
