@@ -79,7 +79,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             whereClause.and(product.isFeatured.eq(isFeatured));
         }
 
-        // 데이터 조회 with Fetch Join
+        // MultipleBagFetchException 방지: 카테고리만 fetch join
         JPQLQuery<ProductJpaEntity> query = queryFactory
             .selectFrom(product)
             .leftJoin(product.category, category).fetchJoin()
@@ -111,11 +111,10 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
 
     @Override
     public Optional<ProductJpaEntity> findProductWithFullDetails(Long productId) {
+        // MultipleBagFetchException 방지: 카테고리만 fetch join
         ProductJpaEntity result = queryFactory
             .selectFrom(product)
             .leftJoin(product.category, category).fetchJoin()
-            .leftJoin(product.variants, variant).fetchJoin()
-            .leftJoin(product.inventorySnapshots, inventory).fetchJoin()
             .where(product.id.eq(productId))
             .fetchOne();
 
@@ -178,11 +177,13 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
 
     @Override
     public List<BrandStats> getBrandProductStats() {
-        return queryFactory
+        // QueryDSL avg() 함수의 Double 반환 타입 문제를 해결하기 위해 명시적 변환
+        List<BrandStatsImpl> rawResults = queryFactory
             .select(Projections.bean(BrandStatsImpl.class,
                 product.brand.as("brand"),
                 product.count().as("productCount"),
-                product.basePrice.avg().as("averagePrice")
+                // BigDecimal로 명시적 변환
+                Expressions.numberTemplate(BigDecimal.class, "AVG({0})", product.basePrice).as("averagePrice")
             ))
             .from(product)
             .where(
@@ -192,8 +193,6 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             )
             .groupBy(product.brand)
             .orderBy(product.count().desc())
-            .fetch()
-            .stream()
             .map(BrandStats.class::cast)
             .toList();
     }

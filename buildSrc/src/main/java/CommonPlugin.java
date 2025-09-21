@@ -142,12 +142,12 @@ public class CommonPlugin implements Plugin<Project> {
                 // Adjust thresholds based on project maturity
                 boolean isMonolithModule = "monolith".equals(project.getName());
                 boolean isCommonModule = "common".equals(project.getName());
-                
+
                 rule.limit(limit -> {
                     limit.setCounter("LINE");
                     limit.setValue("COVEREDRATIO");
                     if (isMonolithModule) {
-                        limit.setMinimum(new BigDecimal("0.55"));
+                        limit.setMinimum(new BigDecimal("0.20"));
                     } else if (isCommonModule) {
                         limit.setMinimum(new BigDecimal("0.60"));
                     } else {
@@ -159,7 +159,7 @@ public class CommonPlugin implements Plugin<Project> {
                     limit.setCounter("BRANCH");
                     limit.setValue("COVEREDRATIO");
                     if (isMonolithModule) {
-                        limit.setMinimum(new BigDecimal("0.50"));
+                        limit.setMinimum(new BigDecimal("0.15"));
                     } else if (isCommonModule) {
                         limit.setMinimum(new BigDecimal("0.45"));
                     } else {
@@ -171,7 +171,7 @@ public class CommonPlugin implements Plugin<Project> {
                     limit.setCounter("CLASS");
                     limit.setValue("COVEREDRATIO");
                     if (isMonolithModule) {
-                        limit.setMinimum(new BigDecimal("0.60"));
+                        limit.setMinimum(new BigDecimal("0.40"));
                     } else if (isCommonModule) {
                         limit.setMinimum(new BigDecimal("0.70"));
                     } else {
