@@ -58,6 +58,8 @@ public class Product {
 
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+
     private Long version;
 
     @Builder
@@ -98,7 +100,7 @@ public class Product {
         ProductStatus status, BigDecimal basePrice, BigDecimal salePrice, String currency,
         Integer weightGrams, Boolean requiresShipping, Boolean isTaxable, Boolean isFeatured,
         String slug, String searchTags, String primaryImageUrl, Integer minOrderQuantity,
-        Integer maxOrderQuantity, LocalDateTime createdAt, LocalDateTime updatedAt, Long version) {
+        Integer maxOrderQuantity, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt, Long version) {
         Product product = new Product();
         product.id = id;
         product.sku = sku;
@@ -123,6 +125,7 @@ public class Product {
         product.maxOrderQuantity = maxOrderQuantity;
         product.createdAt = createdAt;
         product.updatedAt = updatedAt;
+        product.deletedAt = deletedAt;
         product.version = version;
         return product;
     }
@@ -220,12 +223,19 @@ public class Product {
 
     public void deactivate() {
         this.status = ProductStatus.INACTIVE;
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void activate() {
         this.status = ProductStatus.ACTIVE;
-        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void softDelete() {
+        this.status = ProductStatus.ARCHIVED;
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
     }
 
     public boolean isValidateOrderQuantity(Integer requestedQuantity) {
