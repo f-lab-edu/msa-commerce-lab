@@ -66,6 +66,8 @@ class ProductDeleteServiceTest {
             "test-product",
             "test,product",
             "http://example.com/image.jpg",
+            1,
+            100,
             LocalDateTime.now().minusDays(10),
             LocalDateTime.now().minusDays(1),
             null,
@@ -130,6 +132,8 @@ class ProductDeleteServiceTest {
             "test-product",
             "test,product",
             "http://example.com/image.jpg",
+            1,
+            100,
             LocalDateTime.now().minusDays(10),
             LocalDateTime.now().minusDays(1),
             LocalDateTime.now().minusHours(1), // 이미 삭제됨

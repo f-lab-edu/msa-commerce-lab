@@ -159,7 +159,6 @@ class ProductUpdateServiceTest {
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
             1, 100,
-            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), 1L
             LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), null, 1L
         );
 
