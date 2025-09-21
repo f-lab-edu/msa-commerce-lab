@@ -4,7 +4,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.msa.commerce.common.config.RedisConfig;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
@@ -36,7 +35,7 @@ public class ProductGetService implements ProductGetUseCase {
     }
 
     @Override
-    @Cacheable(value = RedisConfig.PRODUCT_CACHE, key = "#productId", condition = "#increaseViewCount == false")
+    @Cacheable(value = "product", key = "#productId", condition = "#increaseViewCount == false")
     public ProductResponse getProduct(Long productId, boolean increaseViewCount) {
         Product product = productRepository.findById(productId)
             .orElseThrow(

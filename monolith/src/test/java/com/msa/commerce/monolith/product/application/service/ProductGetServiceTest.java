@@ -3,7 +3,6 @@ package com.msa.commerce.monolith.product.application.service;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
-import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -75,6 +74,7 @@ class ProductGetServiceTest {
             100,                         // maxOrderQuantity
             now,                         // createdAt
             now,                         // updatedAt
+            null,                         // deletedAt
             1L                           // version
         );
 
@@ -102,6 +102,7 @@ class ProductGetServiceTest {
             100,                         // maxOrderQuantity
             now,                         // createdAt
             now,                         // updatedAt
+            null,                         // deletedAt
             1L                           // version
         );
 
