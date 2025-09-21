@@ -1,12 +1,13 @@
-package com.msa.commerce.orchestrator;
+package com.msa.commerce.materializedview;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class OrderOrchestratorApplication {
+public class MaterializedViewApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(OrderOrchestratorApplication.class, args);
+        SpringApplication.run(MaterializedViewApplication.class, args);
     }
+
 }
