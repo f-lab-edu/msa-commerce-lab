@@ -70,6 +70,8 @@ class ProductGetServiceTest {
             "test-product",             // slug
             "test,product",             // searchTags
             null,                        // primaryImageUrl
+            1,                           // minOrderQuantity
+            100,                         // maxOrderQuantity
             now,                         // createdAt
             now,                         // updatedAt
             null,                         // deletedAt
@@ -96,6 +98,8 @@ class ProductGetServiceTest {
             "archived-product",         // slug
             "test,archived",            // searchTags
             null,                        // primaryImageUrl
+            1,                           // minOrderQuantity
+            100,                         // maxOrderQuantity
             now,                         // createdAt
             now,                         // updatedAt
             null,                         // deletedAt

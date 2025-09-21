@@ -660,6 +660,213 @@ paths:
                     path: "/api/v1/products/1"
                     status: 500
 
+
+  /api/v1/products/verify:
+    post:
+      tags: [ Product ]
+      summary: Verify Products
+      description: |
+        Validates product availability and provides detailed information for order processing.
+        
+        ### Business Rules
+        - Validates product existence and active status
+        - Checks inventory availability (placeholder implementation)
+        - Returns order quantity constraints (min/max)
+        - Provides pricing information (current vs original)
+        - Supports batch verification for multiple products
+        
+        ### Implementation Notes
+        - Currently returns "Insufficient stock" for all products (TODO: integrate with inventory_snapshots)
+        - Order quantity limits are hardcoded (min: 1, max: 100) - TODO: make product-specific
+        - Follows hexagonal architecture patterns with proper separation of concerns
+        
+        ### Use Cases
+        - Order validation before checkout
+        - Shopping cart verification
+        - Inventory availability checks
+        - Bulk product verification
+      operationId: verifyProducts
+      requestBody:
+        description: List of products to verify with requested quantities
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductVerifyRequest'
+            examples:
+              single_product:
+                summary: Single Product Verification
+                description: Verify availability of one product
+                value:
+                  items:
+                    - productId: 1
+                      quantity: 5
+              multiple_products:
+                summary: Multiple Products Verification
+                description: Batch verification of multiple products
+                value:
+                  items:
+                    - productId: 1
+                      quantity: 5
+                    - productId: 2
+                      quantity: 10
+                    - productId: 3
+                      quantity: 3
+              large_quantities:
+                summary: Large Quantity Verification
+                description: Verify products with larger quantities
+                value:
+                  items:
+                    - productId: 1
+                      quantity: 50
+                    - productId: 2
+                      quantity: 100
+      responses:
+        '200':
+          description: Product verification results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductVerifyResponse'
+              examples:
+                all_available:
+                  summary: All products available
+                  description: All requested products are available for purchase
+                  value:
+                    allAvailable: true
+                    results:
+                      - productId: 1
+                        sku: "LAPTOP-001"
+                        name: "Gaming Laptop"
+                        available: true
+                        status: "ACTIVE"
+                        requestedQuantity: 5
+                        availableStock: 50
+                        currentPrice: 1500000.00
+                        originalPrice: 1500000.00
+                        minOrderQuantity: 1
+                        maxOrderQuantity: 100
+                      - productId: 2
+                        sku: "MOUSE-001"
+                        name: "Gaming Mouse"
+                        available: true
+                        status: "ACTIVE"
+                        requestedQuantity: 10
+                        availableStock: 100
+                        currentPrice: 50000.00
+                        originalPrice: 50000.00
+                        minOrderQuantity: 1
+                        maxOrderQuantity: 100
+                some_unavailable:
+                  summary: Some products unavailable
+                  description: Mixed results with both available and unavailable products
+                  value:
+                    allAvailable: false
+                    results:
+                      - productId: 1
+                        sku: "LAPTOP-001"
+                        name: "Gaming Laptop"
+                        available: true
+                        status: "ACTIVE"
+                        requestedQuantity: 5
+                        availableStock: 50
+                        currentPrice: 1500000.00
+                        originalPrice: 1500000.00
+                        minOrderQuantity: 1
+                        maxOrderQuantity: 100
+                      - productId: 2
+                        sku: "MOUSE-002"
+                        name: "Wireless Mouse"
+                        available: false
+                        status: "ACTIVE"
+                        requestedQuantity: 200
+                        availableStock: 50
+                        currentPrice: 75000.00
+                        originalPrice: 75000.00
+                        unavailableReason: "Insufficient stock"
+                        minOrderQuantity: 1
+                        maxOrderQuantity: 100
+                product_not_found:
+                  summary: Product not found
+                  description: Some products do not exist
+                  value:
+                    allAvailable: false
+                    results:
+                      - productId: 1
+                        sku: "LAPTOP-001"
+                        name: "Gaming Laptop"
+                        available: true
+                        status: "ACTIVE"
+                        requestedQuantity: 5
+                        availableStock: 50
+                        currentPrice: 1500000.00
+                        originalPrice: 1500000.00
+                        minOrderQuantity: 1
+                        maxOrderQuantity: 100
+                      - productId: 999
+                        available: false
+                        requestedQuantity: 1
+                        unavailableReason: "Product not found"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty_items:
+                  summary: Empty items list
+                  description: Items list cannot be empty
+                  value:
+                    message: "Validation failed"
+                    code: "VALIDATION_ERROR"
+                    timestamp: "2024-01-15T16:45:00"
+                    path: "/api/v1/products/verify"
+                    status: 400
+                    validationErrors:
+                      - field: "items"
+                        message: "Product verification items cannot be empty."
+                invalid_product_id:
+                  summary: Invalid product ID
+                  description: Product ID must be positive
+                  value:
+                    message: "Validation failed"
+                    code: "VALIDATION_ERROR"
+                    timestamp: "2024-01-15T16:45:00"
+                    path: "/api/v1/products/verify"
+                    status: 400
+                    validationErrors:
+                      - field: "items[0].productId"
+                        message: "Product ID must be positive."
+                invalid_quantity:
+                  summary: Invalid quantity
+                  description: Quantity must be positive
+                  value:
+                    message: "Validation failed"
+                    code: "VALIDATION_ERROR"
+                    timestamp: "2024-01-15T16:45:00"
+                    path: "/api/v1/products/verify"
+                    status: 400
+                    validationErrors:
+                      - field: "items[0].quantity"
+                        message: "Quantity must be positive."
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                server_error:
+                  summary: Product verification failed
+                  description: Unexpected server error during verification
+                  value:
+                    message: "Product verification failed"
+                    code: "INTERNAL_SERVER_ERROR"
+                    timestamp: "2024-01-15T16:45:00"
+                    path: "/api/v1/products/verify"
+                    status: 500
+
 components:
   schemas:
     ProductCreateRequest:
@@ -1129,6 +1336,142 @@ components:
       required:
         - field
         - message
+
+    ProductVerifyRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          description: List of products to verify
+          items:
+            $ref: '#/components/schemas/ProductVerifyItem'
+      example:
+        items:
+          - productId: 1
+            quantity: 5
+          - productId: 2
+            quantity: 10
+
+    ProductVerifyItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Product ID to verify
+          example: 1
+        quantity:
+          type: integer
+          minimum: 1
+          description: Requested quantity
+          example: 5
+
+    ProductVerifyResponse:
+      type: object
+      required:
+        - allAvailable
+        - results
+      properties:
+        allAvailable:
+          type: boolean
+          description: True if all requested products are available
+          example: true
+        results:
+          type: array
+          description: Verification results for each requested product
+          items:
+            $ref: '#/components/schemas/ProductVerifyResult'
+      example:
+        allAvailable: true
+        results:
+          - productId: 1
+            sku: "LAPTOP-001"
+            name: "Gaming Laptop"
+            available: true
+            status: "ACTIVE"
+            requestedQuantity: 5
+            availableStock: 50
+            currentPrice: 1500000.00
+            originalPrice: 1500000.00
+            minOrderQuantity: 1
+            maxOrderQuantity: 100
+
+    ProductVerifyResult:
+      type: object
+      required:
+        - productId
+        - available
+        - requestedQuantity
+      properties:
+        productId:
+          type: integer
+          format: int64
+          description: Product ID from request
+          example: 1
+        sku:
+          type: string
+          description: Product SKU (only if product exists)
+          example: "LAPTOP-001"
+        name:
+          type: string
+          description: Product name (only if product exists)
+          example: "Gaming Laptop"
+        available:
+          type: boolean
+          description: Whether the product is available for purchase
+          example: true
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+        requestedQuantity:
+          type: integer
+          description: Requested quantity from request
+          example: 5
+        availableStock:
+          type: integer
+          description: Available stock quantity (only if product exists)
+          example: 50
+        currentPrice:
+          type: number
+          format: decimal
+          description: Current selling price (only if product exists)
+          example: 1500000.00
+        originalPrice:
+          type: number
+          format: decimal
+          description: Original/base price (only if product exists)
+          example: 1500000.00
+        unavailableReason:
+          type: string
+          description: Reason why product is unavailable (only if not available)
+          example: "Insufficient stock"
+        minOrderQuantity:
+          type: integer
+          description: Minimum order quantity allowed (only if product exists)
+          example: 1
+        maxOrderQuantity:
+          type: integer
+          description: Maximum order quantity allowed (only if product exists)
+          example: 100
+      example:
+        productId: 1
+        sku: "LAPTOP-001"
+        name: "Gaming Laptop"
+        available: true
+        status: "ACTIVE"
+        requestedQuantity: 5
+        availableStock: 50
+        currentPrice: 1500000.00
+        originalPrice: 1500000.00
+        minOrderQuantity: 1
+        maxOrderQuantity: 100
+
   securitySchemes:
     bearerAuth:
       type: http

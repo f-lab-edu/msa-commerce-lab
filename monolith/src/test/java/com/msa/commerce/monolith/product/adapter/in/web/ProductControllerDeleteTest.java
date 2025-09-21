@@ -18,10 +18,12 @@ import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.common.exception.ValidationException;
 import com.msa.commerce.common.monitoring.MetricsCollector;
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 
 @WebMvcTest(ProductController.class)
 @DisplayName("ProductController 삭제 API 단위 테스트")
@@ -41,6 +43,9 @@ class ProductControllerDeleteTest {
 
     @MockitoBean
     private ProductDeleteUseCase productDeleteUseCase;
+
+    @MockitoBean
+    private ProductVerifyUseCase productVerifyUseCase;
 
     @MockitoBean
     private ProductMapper productMapper;

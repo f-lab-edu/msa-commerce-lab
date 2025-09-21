@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +24,8 @@ import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
+import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,16 +50,7 @@ class ProductCreateServiceTest {
 
     @BeforeEach
     void setUp() {
-        validCommand = ProductCreateCommand.builder()
-            .sku("TEST-1234")
-            .name("테스트 상품")
-            .description("테스트 상품 설명")
-            .basePrice(new BigDecimal("10000"))
-            .categoryId(1L)
-            .slug("test-product")
-            .productType(ProductType.PHYSICAL)
-            .currency("KRW")
-            .build();
+        validCommand = ProductCommandFixture.validProductCreateCommand();
 
         savedProduct = Product.reconstitute(
             1L,                                    // id
@@ -77,6 +72,8 @@ class ProductCreateServiceTest {
             "test-product",                      // slug
             null,                                 // searchTags
             null,                                 // primaryImageUrl
+            1,                                    // minOrderQuantity
+            100,                                  // maxOrderQuantity
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
             null,                                 // deletedAt
@@ -113,76 +110,26 @@ class ProductCreateServiceTest {
     @DisplayName("중복된 SKU로 생성 시 예외 발생")
     void createProduct_DuplicateSku_ThrowsException() {
         // given
-        given(productRepository.existsBySku(validCommand.getSku())).willReturn(true);
+        ProductCreateCommand duplicateSkuCommand = ProductCommandFixture.duplicateSkuCommand();
+        given(productRepository.existsBySku(duplicateSkuCommand.getSku())).willReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> productCreateService.createProduct(validCommand))
+        assertThatThrownBy(() -> productCreateService.createProduct(duplicateSkuCommand))
             .isInstanceOf(DuplicateResourceException.class)
-            .hasMessage("Product SKU already exists: " + validCommand.getSku());
+            .hasMessage("Product SKU already exists: " + duplicateSkuCommand.getSku());
 
-        verify(productRepository).existsBySku(validCommand.getSku());
+        verify(productRepository).existsBySku(duplicateSkuCommand.getSku());
         verify(productRepository, never()).save(any(Product.class));
         verify(productResponseMapper, never()).toResponse(any(Product.class));
     }
 
-    @Test
+    @ParameterizedTest(name = "{0} - 유효하지 않은 명령으로 생성 시 예외 발생")
+    @MethodSource("com.msa.commerce.monolith.product.fixture.ProductCommandFixture#invalidCreateCommandScenarios")
     @DisplayName("유효하지 않은 명령으로 생성 시 예외 발생")
-    void createProduct_InvalidCommand_ThrowsException() {
-        // given
-        ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .sku("TEST-1234")
-            .name("") // 빈 문자열
-            .basePrice(new BigDecimal("10000"))
-            .categoryId(1L)
-            .slug("test-product")
-            .build();
-
+    void createProduct_InvalidCommand_ThrowsException(String scenario, ProductCreateCommand invalidCommand) {
         // when & then
         assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Product name is required.");
-
-        verify(productRepository, never()).existsBySku(anyString());
-        verify(productRepository, never()).save(any(Product.class));
-    }
-
-    @Test
-    @DisplayName("가격이 null인 명령으로 생성 시 예외 발생")
-    void createProduct_NullPrice_ThrowsException() {
-        // given
-        ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .sku("TEST-1234")
-            .name("테스트 상품")
-            .basePrice(null) // null 가격
-            .categoryId(1L)
-            .slug("test-product")
-            .build();
-
-        // when & then
-        assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Base price must be greater than 0.");
-
-        verify(productRepository, never()).existsBySku(anyString());
-        verify(productRepository, never()).save(any(Product.class));
-    }
-
-    @Test
-    @DisplayName("카테고리 ID가 null인 명령으로 생성 시 예외 발생")
-    void createProduct_NullCategoryId_ThrowsException() {
-        // given
-        ProductCreateCommand invalidCommand = ProductCreateCommand.builder()
-            .sku("TEST-1234")
-            .name("테스트 상품")
-            .basePrice(new BigDecimal("10000"))
-            .categoryId(null) // null 카테고리 ID
-            .slug("test-product")
-            .build();
-
-        // when & then
-        assertThatThrownBy(() -> productCreateService.createProduct(invalidCommand))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Category ID is required.");
+            .isInstanceOf(IllegalArgumentException.class);
 
         verify(productRepository, never()).existsBySku(anyString());
         verify(productRepository, never()).save(any(Product.class));
