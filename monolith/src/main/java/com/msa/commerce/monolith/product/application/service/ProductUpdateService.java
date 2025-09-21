@@ -101,10 +101,71 @@ public class ProductUpdateService implements ProductUpdateUseCase {
             command.getProductType(), command.getBasePrice(), command.getSalePrice(),
             command.getCurrency(), command.getWeightGrams(), command.getRequiresShipping(),
             command.getIsTaxable(), command.getIsFeatured(), command.getSlug(),
-            command.getSearchTags(), command.getPrimaryImageUrl()
+            command.getSearchTags(), command.getPrimaryImageUrl(),
+            command.getMinOrderQuantity(), command.getMaxOrderQuantity()
         );
     }
 
+    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command,
+        Product originalProduct) {
+        invalidateProductCache(updatedProduct.getId());
+        logProductChanges(originalProduct, updatedProduct, command);
+    }
+
+    private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
+        log.info("Product changes for ID: {} - Updated fields: {}",
+            after.getId(), getUpdatedFieldsDescription(command));
+    }
+
+    private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
+        StringBuilder description = new StringBuilder();
+
+        appendBasicFieldUpdates(description, command);
+        appendPriceFieldUpdates(description, command);
+        appendMetadataFieldUpdates(description, command);
+
+        return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
+    }
+
+    private void appendBasicFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getSku(), "sku");
+        appendFieldIfNotNull(description, command.getName(), "name");
+        appendFieldIfNotNull(description, command.getShortDescription(), "shortDescription");
+        appendFieldIfNotNull(description, command.getDescription(), "description");
+        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
+        appendFieldIfNotNull(description, command.getBrand(), "brand");
+        appendFieldIfNotNull(description, command.getProductType(), "productType");
+    }
+
+    private void appendPriceFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getBasePrice(), "basePrice");
+        appendFieldIfNotNull(description, command.getSalePrice(), "salePrice");
+        appendFieldIfNotNull(description, command.getCurrency(), "currency");
+        appendFieldIfNotNull(description, command.getWeightGrams(), "weightGrams");
+    }
+
+    private void appendMetadataFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
+        appendFieldIfNotNull(description, command.getRequiresShipping(), "requiresShipping");
+        appendFieldIfNotNull(description, command.getIsTaxable(), "isTaxable");
+        appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
+        appendFieldIfNotNull(description, command.getSlug(), "slug");
+        appendFieldIfNotNull(description, command.getSearchTags(), "searchTags");
+        appendFieldIfNotNull(description, command.getPrimaryImageUrl(), "primaryImageUrl");
+        appendFieldIfNotNull(description, command.getMinOrderQuantity(), "minOrderQuantity");
+        appendFieldIfNotNull(description, command.getMaxOrderQuantity(), "maxOrderQuantity");
+    }
+
+    private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
+        if (field != null) {
+            description.append(fieldName).append(",");
+        }
+    }
+
+    private void invalidateProductCache(Long productId) {
+        log.debug("Invalidating cache for product ID: {}", productId);
+        log.info("Cache invalidation completed for product ID: {}", productId);
+    }
+    
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
         if (!violations.isEmpty()) {

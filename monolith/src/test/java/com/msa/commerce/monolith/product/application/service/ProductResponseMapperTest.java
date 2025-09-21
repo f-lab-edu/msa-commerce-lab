@@ -45,6 +45,8 @@ class ProductResponseMapperTest {
             "test-product",                      // slug
             "test, product, electronics",       // searchTags
             null,                                 // primaryImageUrl
+            5,                                    // minOrderQuantity
+            50,                                   // maxOrderQuantity
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
             null,                         // deletedAt
@@ -107,6 +109,8 @@ class ProductResponseMapperTest {
             "test-book",                       // slug
             null,                               // searchTags null
             null,                               // primaryImageUrl null
+            1,                                  // minOrderQuantity
+            100,                                // maxOrderQuantity
             LocalDateTime.now(),                // createdAt
             LocalDateTime.now(),                // updatedAt
             null,                         // deletedAt
