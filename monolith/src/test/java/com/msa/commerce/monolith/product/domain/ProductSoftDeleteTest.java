@@ -103,6 +103,8 @@ class ProductSoftDeleteTest {
             "test-product",
             "test,product",
             "http://example.com/image.jpg",
+            1,
+            100,
             LocalDateTime.now().minusDays(10),
             LocalDateTime.now().minusDays(1),
             deletedAt,
@@ -139,6 +141,8 @@ class ProductSoftDeleteTest {
             "test-product",
             "test,product",
             "http://example.com/image.jpg",
+            1,
+            100,
             LocalDateTime.now().minusDays(10),
             LocalDateTime.now().minusDays(1),
             null, // deletedAt이 null

@@ -663,7 +663,7 @@ paths:
 
   /api/v1/products/verify:
     post:
-      tags: [Product]
+      tags: [ Product ]
       summary: Verify Products
       description: |
         Validates product availability and provides detailed information for order processing.

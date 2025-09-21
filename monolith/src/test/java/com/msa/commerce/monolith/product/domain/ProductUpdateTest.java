@@ -169,7 +169,6 @@ class ProductUpdateTest {
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "active-product", null, null,
             1, 100,
-            LocalDateTime.now(), LocalDateTime.now(), 1L
             LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
@@ -187,7 +186,6 @@ class ProductUpdateTest {
             new BigDecimal("10000"), null, "KRW", null, true,
             true, false, "archived-product", null, null,
             1, 100,
-            LocalDateTime.now(), LocalDateTime.now(), 1L
             LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
