@@ -21,11 +21,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +47,13 @@ class ProductControllerTest {
     private ProductUpdateUseCase productUpdateUseCase;
 
     @Mock
+    private ProductSearchUseCase productSearchUseCase;
+
+    @Mock
     private ProductDeleteUseCase productDeleteUseCase;
+
+    @Mock
+    private ProductVerifyUseCase productVerifyUseCase;
 
     @Mock
     private ProductMapper productMapper;
@@ -53,7 +62,7 @@ class ProductControllerTest {
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(
                 new ProductController(productCreateUseCase, productGetUseCase, productUpdateUseCase,
-                    productDeleteUseCase, productMapper))
+                    productDeleteUseCase, productVerifyUseCase, productMapper))
             .setControllerAdvice(new com.msa.commerce.common.exception.GlobalExceptionHandler())
             .build();
     }

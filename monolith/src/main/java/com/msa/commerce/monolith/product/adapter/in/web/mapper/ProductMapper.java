@@ -1,4 +1,4 @@
-package com.msa.commerce.monolith.product.adapter.in.web;
+package com.msa.commerce.monolith.product.adapter.in.web.mapper;
 
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
@@ -9,9 +9,14 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
 import com.msa.commerce.common.aop.ValidateResult;
+import com.msa.commerce.monolith.product.adapter.in.web.ProductCreateRequest;
+import com.msa.commerce.monolith.product.adapter.in.web.ProductSearchRequest;
+import com.msa.commerce.monolith.product.adapter.in.web.ProductUpdateRequest;
+import com.msa.commerce.monolith.product.adapter.in.web.ProductVerifyRequest;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
@@ -53,6 +58,9 @@ public interface ProductMapper {
     @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
+    
+    @ValidateResult
+    ProductVerifyCommand toVerifyCommand(ProductVerifyRequest request);
 
     @AfterMapping
     default void applyCreateDefaults(@MappingTarget ProductCreateCommand.ProductCreateCommandBuilder target,
@@ -63,7 +71,6 @@ public interface ProductMapper {
             target.sku(request.getSku());
         }
 
-        // Generate slug from name since ProductCreateRequest doesn't have slug field yet
         target.slug(generateSlugFromName(request.getName()));
 
         if (request.getIsFeatured() == null) {
@@ -78,14 +85,12 @@ public interface ProductMapper {
             return "PROD-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         }
 
-        // Take first word or first few characters
         String[] words = name.trim().split("\\s+");
-        String firstPart = words[0]; // First word
+        String firstPart = words[0];
 
         String cleanName = firstPart.toUpperCase()
             .replaceAll("[^A-Z0-9가-힣]", "");
 
-        // Take first 4 characters or less
         if (cleanName.length() > 4) {
             cleanName = cleanName.substring(0, 4);
         }
@@ -107,5 +112,5 @@ public interface ProductMapper {
             .trim()
             .replaceAll("\\s+", "-");
     }
-
 }
+

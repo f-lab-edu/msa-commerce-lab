@@ -51,6 +51,10 @@ public class ProductSearchResponse {
 
     private final String primaryImageUrl;
 
+    private final Integer minOrderQuantity;
+
+    private final Integer maxOrderQuantity;
+
     private final LocalDateTime createdAt;
 
     private final LocalDateTime updatedAt;

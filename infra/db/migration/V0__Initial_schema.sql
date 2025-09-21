@@ -110,37 +110,41 @@ CREATE TABLE IF NOT EXISTS product_categories
 -- 상품
 CREATE TABLE IF NOT EXISTS products
 (
-    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sku               VARCHAR(100) UNIQUE                                                  NOT NULL,
-    name              VARCHAR(255)                                                         NOT NULL,
-    short_description VARCHAR(500),
-    description       TEXT,
-    category_id       BIGINT                                                               NULL,
-    brand             VARCHAR(100),
-    product_type      ENUM ('PHYSICAL', 'DIGITAL', 'SERVICE', 'BUNDLE')                    NOT NULL DEFAULT 'PHYSICAL',
-    status            ENUM ('DRAFT', 'ACTIVE', 'INACTIVE', 'DISCONTINUED', 'OUT_OF_STOCK') NOT NULL DEFAULT 'DRAFT',
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sku                VARCHAR(100) UNIQUE                                                  NOT NULL,
+    name               VARCHAR(255)                                                         NOT NULL,
+    short_description  VARCHAR(500),
+    description        TEXT,
+    category_id        BIGINT                                                               NULL,
+    brand              VARCHAR(100),
+    product_type       ENUM ('PHYSICAL', 'DIGITAL', 'SERVICE', 'BUNDLE')                    NOT NULL DEFAULT 'PHYSICAL',
+    status             ENUM ('DRAFT', 'ACTIVE', 'INACTIVE', 'DISCONTINUED', 'OUT_OF_STOCK') NOT NULL DEFAULT 'DRAFT',
 
     -- 기본 가격 정보
-    base_price        DECIMAL(12, 4)                                                       NOT NULL DEFAULT 0 CHECK (base_price >= 0),
-    sale_price        DECIMAL(12, 4) CHECK (sale_price >= 0),
-    currency          CHAR(3)                                                              NOT NULL DEFAULT 'KRW',
+    base_price         DECIMAL(12, 4)                                                       NOT NULL DEFAULT 0 CHECK (base_price >= 0),
+    sale_price         DECIMAL(12, 4) CHECK (sale_price >= 0),
+    currency           CHAR(3)                                                              NOT NULL DEFAULT 'KRW',
 
     -- 물리적 속성
-    weight_grams      INT CHECK (weight_grams > 0),
-    requires_shipping BOOLEAN                                                              NOT NULL DEFAULT TRUE,
-    is_taxable        BOOLEAN                                                              NOT NULL DEFAULT TRUE,
-    is_featured       BOOLEAN                                                              NOT NULL DEFAULT FALSE,
+    weight_grams       INT CHECK (weight_grams > 0),
+    requires_shipping  BOOLEAN                                                              NOT NULL DEFAULT TRUE,
+    is_taxable         BOOLEAN                                                              NOT NULL DEFAULT TRUE,
+    is_featured        BOOLEAN                                                              NOT NULL DEFAULT FALSE,
 
     -- SEO 및 검색
-    slug              VARCHAR(300) UNIQUE                                                  NOT NULL,
-    search_tags       TEXT,
+    slug               VARCHAR(300) UNIQUE                                                  NOT NULL,
+    search_tags        TEXT,
 
     -- 미디어
-    primary_image_url VARCHAR(500),
+    primary_image_url  VARCHAR(500),
 
-    created_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    version           BIGINT                                                               NOT NULL DEFAULT 1,
+    -- 주문 수량 제한
+    min_order_quantity INT                                                                  NULL,
+    max_order_quantity INT                                                                  NULL,
+
+    created_at         TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP                                                            NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    version            BIGINT                                                               NOT NULL DEFAULT 1,
 
     INDEX idx_products_sku (sku),
     INDEX idx_products_status (status),
@@ -149,9 +153,12 @@ CREATE TABLE IF NOT EXISTS products
     INDEX idx_products_featured (is_featured, status),
     INDEX idx_products_status_created (status, created_at DESC),
     INDEX idx_products_featured_created (is_featured, status, created_at DESC),
+    INDEX idx_products_min_order_qty (min_order_quantity),
+    INDEX idx_products_max_order_qty (max_order_quantity),
     FULLTEXT (name, short_description, description, search_tags),
     CONSTRAINT chk_products_sale_price CHECK (sale_price IS NULL OR sale_price <= base_price),
     CONSTRAINT chk_products_slug_format CHECK (slug REGEXP '^[a-z0-9]+(-[a-z0-9]+)*$' AND CHAR_LENGTH(slug) > 0),
+    CONSTRAINT chk_products_order_quantity CHECK (max_order_quantity >= min_order_quantity),
     FOREIGN KEY (category_id) REFERENCES product_categories (id) ON DELETE SET NULL
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
@@ -563,29 +570,29 @@ USE db_materialized_view;
 CREATE TABLE IF NOT EXISTS product_sales_summary
 (
     id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
-    product_id            BIGINT                                 NOT NULL,
-    product_sku           VARCHAR(100)                           NOT NULL,
-    product_name          VARCHAR(255)                           NOT NULL,
-    
+    product_id            BIGINT                                                    NOT NULL,
+    product_sku           VARCHAR(100)                                              NOT NULL,
+    product_name          VARCHAR(255)                                              NOT NULL,
+
     -- Sales metrics
-    total_quantity_sold   INT                                    NOT NULL DEFAULT 0,
-    total_revenue         DECIMAL(15, 2)                         NOT NULL DEFAULT 0.00,
-    average_selling_price DECIMAL(10, 2)                         NOT NULL DEFAULT 0.00,
-    total_orders          INT                                    NOT NULL DEFAULT 0,
-    unique_customers      INT                                    NOT NULL DEFAULT 0,
-    
+    total_quantity_sold   INT                                                       NOT NULL DEFAULT 0,
+    total_revenue         DECIMAL(15, 2)                                            NOT NULL DEFAULT 0.00,
+    average_selling_price DECIMAL(10, 2)                                            NOT NULL DEFAULT 0.00,
+    total_orders          INT                                                       NOT NULL DEFAULT 0,
+    unique_customers      INT                                                       NOT NULL DEFAULT 0,
+
     -- Time-based metrics
-    last_sale_date        DATE                                            NULL,
-    first_sale_date       DATE                                            NULL,
-    
+    last_sale_date        DATE                                                      NULL,
+    first_sale_date       DATE                                                      NULL,
+
     -- Summary period
-    summary_period        ENUM('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'LIFETIME') NOT NULL,
-    period_start_date     DATE                                            NULL,
-    period_end_date       DATE                                            NULL,
-    
-    last_updated_at       TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at            TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+    summary_period        ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY', 'LIFETIME') NOT NULL,
+    period_start_date     DATE                                                      NULL,
+    period_end_date       DATE                                                      NULL,
+
+    last_updated_at       TIMESTAMP                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at            TIMESTAMP                                                 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     INDEX idx_product_sales_product_id (product_id),
     INDEX idx_product_sales_sku (product_sku),
     INDEX idx_product_sales_period (summary_period, period_start_date),
@@ -600,34 +607,34 @@ CREATE TABLE IF NOT EXISTS product_sales_summary
 -- User order summary (materialized view)
 CREATE TABLE IF NOT EXISTS user_order_summary
 (
-    id                    BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id               BIGINT                                 NOT NULL,
-    
+    id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id              BIGINT                                 NOT NULL,
+
     -- Order metrics
-    total_orders          INT                                    NOT NULL DEFAULT 0,
-    completed_orders      INT                                    NOT NULL DEFAULT 0,
-    cancelled_orders      INT                                    NOT NULL DEFAULT 0,
-    pending_orders        INT                                    NOT NULL DEFAULT 0,
-    
+    total_orders         INT                                    NOT NULL DEFAULT 0,
+    completed_orders     INT                                    NOT NULL DEFAULT 0,
+    cancelled_orders     INT                                    NOT NULL DEFAULT 0,
+    pending_orders       INT                                    NOT NULL DEFAULT 0,
+
     -- Financial metrics
-    total_spent           DECIMAL(15, 2)                         NOT NULL DEFAULT 0.00,
-    average_order_value   DECIMAL(10, 2)                         NOT NULL DEFAULT 0.00,
-    lifetime_value        DECIMAL(15, 2)                         NOT NULL DEFAULT 0.00,
-    
+    total_spent          DECIMAL(15, 2)                         NOT NULL DEFAULT 0.00,
+    average_order_value  DECIMAL(10, 2)                         NOT NULL DEFAULT 0.00,
+    lifetime_value       DECIMAL(15, 2)                         NOT NULL DEFAULT 0.00,
+
     -- Behavioral metrics
-    first_order_date      DATE                                            NULL,
-    last_order_date       DATE                                            NULL,
-    days_between_orders   INT                                             NULL,
-    favorite_category_id  BIGINT                                          NULL,
-    
+    first_order_date     DATE                                   NULL,
+    last_order_date      DATE                                   NULL,
+    days_between_orders  INT                                    NULL,
+    favorite_category_id BIGINT                                 NULL,
+
     -- Summary period
-    summary_period        ENUM('MONTHLY', 'YEARLY', 'LIFETIME')  NOT NULL,
-    period_start_date     DATE                                            NULL,
-    period_end_date       DATE                                            NULL,
-    
-    last_updated_at       TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at            TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+    summary_period       ENUM ('MONTHLY', 'YEARLY', 'LIFETIME') NOT NULL,
+    period_start_date    DATE                                   NULL,
+    period_end_date      DATE                                   NULL,
+
+    last_updated_at      TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at           TIMESTAMP                              NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     INDEX idx_user_order_user_id (user_id),
     INDEX idx_user_order_period (summary_period, period_start_date),
     INDEX idx_user_order_total_spent (total_spent),
@@ -642,36 +649,36 @@ CREATE TABLE IF NOT EXISTS user_order_summary
 CREATE TABLE IF NOT EXISTS daily_business_metrics
 (
     id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
-    business_date          DATE                   NOT NULL,
-    
+    business_date          DATE           NOT NULL,
+
     -- Order metrics
-    total_orders           INT                    NOT NULL DEFAULT 0,
-    completed_orders       INT                    NOT NULL DEFAULT 0,
-    cancelled_orders       INT                    NOT NULL DEFAULT 0,
-    average_order_value    DECIMAL(10, 2)         NOT NULL DEFAULT 0.00,
-    
+    total_orders           INT            NOT NULL DEFAULT 0,
+    completed_orders       INT            NOT NULL DEFAULT 0,
+    cancelled_orders       INT            NOT NULL DEFAULT 0,
+    average_order_value    DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+
     -- Revenue metrics
-    total_revenue          DECIMAL(15, 2)         NOT NULL DEFAULT 0.00,
-    gross_profit           DECIMAL(15, 2)         NOT NULL DEFAULT 0.00,
-    net_profit             DECIMAL(15, 2)         NOT NULL DEFAULT 0.00,
-    
+    total_revenue          DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    gross_profit           DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+    net_profit             DECIMAL(15, 2) NOT NULL DEFAULT 0.00,
+
     -- Customer metrics
-    new_customers          INT                    NOT NULL DEFAULT 0,
-    returning_customers    INT                    NOT NULL DEFAULT 0,
-    unique_customers       INT                    NOT NULL DEFAULT 0,
-    
+    new_customers          INT            NOT NULL DEFAULT 0,
+    returning_customers    INT            NOT NULL DEFAULT 0,
+    unique_customers       INT            NOT NULL DEFAULT 0,
+
     -- Product metrics
-    products_sold          INT                    NOT NULL DEFAULT 0,
-    unique_products_sold   INT                    NOT NULL DEFAULT 0,
-    top_selling_product_id BIGINT                          NULL,
-    
+    products_sold          INT            NOT NULL DEFAULT 0,
+    unique_products_sold   INT            NOT NULL DEFAULT 0,
+    top_selling_product_id BIGINT         NULL,
+
     -- Operational metrics
-    inventory_turnover     DECIMAL(8, 4)                   NULL,
-    conversion_rate        DECIMAL(5, 2)                   NULL,
-    
-    last_updated_at        TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_at             TIMESTAMP              NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    
+    inventory_turnover     DECIMAL(8, 4)  NULL,
+    conversion_rate        DECIMAL(5, 2)  NULL,
+
+    last_updated_at        TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_at             TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
     UNIQUE KEY uk_daily_business_date (business_date),
     INDEX idx_daily_business_total_revenue (total_revenue),
     INDEX idx_daily_business_total_orders (total_orders),

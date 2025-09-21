@@ -1,5 +1,6 @@
 package com.msa.commerce.monolith.product.application.port.out;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -19,9 +20,11 @@ public interface ProductRepository {
 
     Optional<Product> findBySku(String sku);
 
-    java.util.List<Product> findByCategoryId(Long categoryId);
+    List<Product> findByCategoryId(Long categoryId);
 
-    java.util.List<Product> findFeaturedProducts();
+    List<Product> findFeaturedProducts();
+
+    List<Product> findAllByIds(List<Long> ids);
 
     Page<Product> searchProducts(ProductSearchCommand command);
 

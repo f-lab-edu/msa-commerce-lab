@@ -50,6 +50,10 @@ public class Product {
 
     private String primaryImageUrl;
 
+    private Integer minOrderQuantity;
+
+    private Integer maxOrderQuantity;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -63,7 +67,7 @@ public class Product {
         Long categoryId, String brand, ProductType productType, BigDecimal basePrice,
         BigDecimal salePrice, String currency, Integer weightGrams, Boolean requiresShipping,
         Boolean isTaxable, Boolean isFeatured, String slug, String searchTags,
-        String primaryImageUrl) {
+        String primaryImageUrl, Integer minOrderQuantity, Integer maxOrderQuantity) {
         validateProduct(sku, name, basePrice);
 
         this.sku = sku;
@@ -84,6 +88,8 @@ public class Product {
         this.slug = slug;
         this.searchTags = searchTags;
         this.primaryImageUrl = primaryImageUrl;
+        this.minOrderQuantity = minOrderQuantity != null ? minOrderQuantity : 1;
+        this.maxOrderQuantity = maxOrderQuantity != null ? maxOrderQuantity : 100;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.version = 1L;
@@ -93,8 +99,8 @@ public class Product {
         String description, Long categoryId, String brand, ProductType productType,
         ProductStatus status, BigDecimal basePrice, BigDecimal salePrice, String currency,
         Integer weightGrams, Boolean requiresShipping, Boolean isTaxable, Boolean isFeatured,
-        String slug, String searchTags, String primaryImageUrl, LocalDateTime createdAt,
-        LocalDateTime updatedAt, LocalDateTime deletedAt, Long version) {
+        String slug, String searchTags, String primaryImageUrl, Integer minOrderQuantity,
+        Integer maxOrderQuantity, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime deletedAt, Long version) {
         Product product = new Product();
         product.id = id;
         product.sku = sku;
@@ -115,6 +121,8 @@ public class Product {
         product.slug = slug;
         product.searchTags = searchTags;
         product.primaryImageUrl = primaryImageUrl;
+        product.minOrderQuantity = minOrderQuantity;
+        product.maxOrderQuantity = maxOrderQuantity;
         product.createdAt = createdAt;
         product.updatedAt = updatedAt;
         product.deletedAt = deletedAt;
@@ -144,7 +152,7 @@ public class Product {
         Long categoryId, String brand, ProductType productType, BigDecimal basePrice,
         BigDecimal salePrice, String currency, Integer weightGrams, Boolean requiresShipping,
         Boolean isTaxable, Boolean isFeatured, String slug, String searchTags,
-        String primaryImageUrl) {
+        String primaryImageUrl, Integer minOrderQuantity, Integer maxOrderQuantity) {
 
         updateBasicFields(sku, name, shortDescription, description, categoryId);
         updateBrandAndTypeFields(brand, productType);
@@ -152,6 +160,7 @@ public class Product {
         updateShippingAndTaxFields(requiresShipping, isTaxable);
         updateContentFields(slug, searchTags, primaryImageUrl);
         updateFeatureFlag(isFeatured);
+        updateOrderQuantityFields(minOrderQuantity, maxOrderQuantity);
 
         this.updatedAt = LocalDateTime.now();
     }
@@ -193,6 +202,11 @@ public class Product {
         updateFieldIfNotNull(isFeatured, value -> this.isFeatured = value);
     }
 
+    private void updateOrderQuantityFields(Integer minOrderQuantity, Integer maxOrderQuantity) {
+        updateFieldIfNotNull(minOrderQuantity, value -> this.minOrderQuantity = value);
+        updateFieldIfNotNull(maxOrderQuantity, value -> this.maxOrderQuantity = value);
+    }
+
     private <T> void updateFieldIfNotNull(T value, java.util.function.Consumer<T> setter) {
         if (value != null) {
             setter.accept(value);
@@ -224,6 +238,37 @@ public class Product {
         return this.deletedAt != null;
     }
 
+    public boolean isValidateOrderQuantity(Integer requestedQuantity) {
+        if (requestedQuantity == null || requestedQuantity <= 0) {
+            return false;
+        }
+
+        if (minOrderQuantity != null && requestedQuantity < minOrderQuantity) {
+            return false;
+        }
+
+        if (maxOrderQuantity != null && requestedQuantity > maxOrderQuantity) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public Integer getMinOrderQuantity() {
+        return this.minOrderQuantity != null ? this.minOrderQuantity : 1;
+    }
+
+    public Integer getMaxOrderQuantity() {
+        return this.maxOrderQuantity != null ? this.maxOrderQuantity : 100;
+    }
+
+    public boolean isProductInactive() {
+        return switch (status) {
+            case ACTIVE -> false;
+            case INACTIVE, DRAFT, ARCHIVED -> true;
+        };
+    }
+
     private void validateProduct(String sku, String name, BigDecimal basePrice) {
         if (sku == null || sku.trim().isEmpty()) {
             throw new IllegalArgumentException("SKU is required.");
@@ -244,6 +289,14 @@ public class Product {
         if (basePrice.compareTo(new BigDecimal("999999999999.9999")) > 0) {
             throw new IllegalArgumentException("Base price cannot exceed 999,999,999,999.9999.");
         }
+    }
+
+    public BigDecimal getCurrnectPrice() {
+        return this.salePrice != null ? this.salePrice : this.basePrice;
+    }
+
+    public BigDecimal getOriginalPrice() {
+        return this.basePrice;
     }
 
 }
