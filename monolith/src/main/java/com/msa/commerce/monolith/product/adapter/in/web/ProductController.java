@@ -3,6 +3,7 @@ package com.msa.commerce.monolith.product.adapter.in.web;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
@@ -34,6 +36,8 @@ public class ProductController {
     private final ProductGetUseCase productGetUseCase;
 
     private final ProductUpdateUseCase productUpdateUseCase;
+
+    private final ProductDeleteUseCase productDeleteUseCase;
 
     private final ProductVerifyUseCase productVerifyUseCase;
 
@@ -64,6 +68,12 @@ public class ProductController {
     public ResponseEntity<ProductResponse> updateProduct(@PathVariable("id") Long productId,
         @Valid @RequestBody ProductUpdateRequest request) {
         return ResponseEntity.ok(productUpdateUseCase.updateProduct(productMapper.toUpdateCommand(productId, request)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long productId) {
+        productDeleteUseCase.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
     }
 
 }

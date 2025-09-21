@@ -49,6 +49,7 @@ class ProductResponseMapperTest {
             50,                                   // maxOrderQuantity
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
     }
@@ -112,6 +113,7 @@ class ProductResponseMapperTest {
             100,                                // maxOrderQuantity
             LocalDateTime.now(),                // createdAt
             LocalDateTime.now(),                // updatedAt
+            null,                         // deletedAt
             1L                                  // version
         );
 
