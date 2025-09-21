@@ -38,8 +38,14 @@ class ProductRepositoryImplTest {
         // Given
         createTestProducts();
 
+        // 슬러그로 카테고리 ID 조회 (하드코딩된 1L 대신 실제 ID 사용)
+        Long categoryId = entityManager.getEntityManager()
+            .createQuery("select c.id from ProductCategoryJpaEntity c where c.slug = :slug", Long.class)
+            .setParameter("slug", "test-category-1")
+            .getSingleResult();
+
         ProductSearchCommand command = ProductSearchCommand.builder()
-            .categoryId(1L)
+            .categoryId(categoryId)
             .page(0)
             .size(10)
             .sortProperty("createdAt")
@@ -55,7 +61,7 @@ class ProductRepositoryImplTest {
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent())
             .extracting(Product::getCategoryId)
-            .containsOnly(1L);
+            .containsOnly(categoryId);
     }
 
     @Test
