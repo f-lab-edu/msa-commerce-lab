@@ -14,14 +14,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductCreateService 테스트")
@@ -32,6 +33,9 @@ class ProductCreateServiceTest {
 
     @Mock
     private ProductResponseMapper productResponseMapper;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ProductCreateService productCreateService;
@@ -75,6 +79,7 @@ class ProductCreateServiceTest {
             null,                                 // primaryImageUrl
             LocalDateTime.now(),                  // createdAt
             LocalDateTime.now(),                  // updatedAt
+            null,                                 // deletedAt
             1L                                    // version
         );
     }
