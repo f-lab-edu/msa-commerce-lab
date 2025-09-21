@@ -77,6 +77,7 @@ class ProductSearchServiceTest {
             100,                              // maxOrderQuantity
             LocalDateTime.now().minusDays(1), // createdAt
             LocalDateTime.now(),              // updatedAt
+            null,                         // deletedAt
             1L                                // version
         );
 
@@ -104,6 +105,7 @@ class ProductSearchServiceTest {
             100,                              // maxOrderQuantity
             LocalDateTime.now().minusDays(2), // createdAt
             LocalDateTime.now(),              // updatedAt
+            null,                         // deletedAt
             1L                                // version
         );
 

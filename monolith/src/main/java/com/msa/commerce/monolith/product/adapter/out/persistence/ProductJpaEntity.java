@@ -106,6 +106,9 @@ public class ProductJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
     @Version
     @Column(nullable = false)
     private Long version = 1L;
@@ -135,6 +138,7 @@ public class ProductJpaEntity {
         jpaEntity.maxOrderQuantity = product.getMaxOrderQuantity();
         jpaEntity.createdAt = product.getCreatedAt();
         jpaEntity.updatedAt = product.getUpdatedAt();
+        jpaEntity.deletedAt = product.getDeletedAt();
         jpaEntity.version = product.getVersion();
         return jpaEntity;
     }
@@ -189,6 +193,7 @@ public class ProductJpaEntity {
             this.maxOrderQuantity,
             this.createdAt,
             this.updatedAt,
+            this.deletedAt,
             this.version
         );
     }

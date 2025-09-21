@@ -43,6 +43,7 @@ class ProductJpaEntityTest {
             100,                                 // maxOrderQuantity
             now,                                 // createdAt
             now,                                 // updatedAt
+            null,                                // deletedAt
             1L                                   // version
         );
 

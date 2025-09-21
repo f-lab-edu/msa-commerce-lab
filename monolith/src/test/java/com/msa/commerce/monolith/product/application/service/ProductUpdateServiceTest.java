@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
@@ -44,6 +45,9 @@ class ProductUpdateServiceTest {
 
     @Mock
     private Validator validator;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private ProductUpdateService productUpdateService;
@@ -80,6 +84,7 @@ class ProductUpdateServiceTest {
             100,                                  // maxOrderQuantity
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
 
@@ -155,6 +160,7 @@ class ProductUpdateServiceTest {
             true, false, "archived-product", null, null,
             1, 100,
             LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), 1L
+            LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), null, 1L
         );
 
         given(productRepository.findById(1L)).willReturn(Optional.of(archivedProduct));

@@ -44,6 +44,7 @@ class ProductUpdateTest {
             100,                                  // maxOrderQuantity
             LocalDateTime.now().minusDays(1),     // createdAt
             LocalDateTime.now().minusDays(1),     // updatedAt
+            null,                         // deletedAt
             1L                                    // version
         );
     }
@@ -169,6 +170,7 @@ class ProductUpdateTest {
             true, false, "active-product", null, null,
             1, 100,
             LocalDateTime.now(), LocalDateTime.now(), 1L
+            LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
         // when & then
@@ -186,6 +188,7 @@ class ProductUpdateTest {
             true, false, "archived-product", null, null,
             1, 100,
             LocalDateTime.now(), LocalDateTime.now(), 1L
+            LocalDateTime.now(), LocalDateTime.now(), null, 1L
         );
 
         // when & then
