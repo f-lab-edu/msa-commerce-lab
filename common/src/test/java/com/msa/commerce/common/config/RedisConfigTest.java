@@ -1,161 +1,78 @@
 package com.msa.commerce.common.config;
 
-import com.msa.commerce.common.config.cache.CacheDefinition;
-import com.msa.commerce.common.config.cache.CacheStrategy;
-import com.msa.commerce.common.config.cache.DomainCacheRegistry;
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.annotation.EnableCaching;
 
 @DisplayName("Redis Configuration Tests")
 class RedisConfigTest {
 
-    @BeforeEach
-    void setUp() {
-        // Clear registry before each test to ensure clean state
-        DomainCacheRegistry.clearAll();
-    }
-
     @Test
-    @DisplayName("Should define legacy cache names constants for backward compatibility")
-    void shouldDefineLegacyCacheNamesConstants() {
-        // Given & When & Then
-        assertEquals("default", RedisConfig.DEFAULT_CACHE);
-        assertEquals("product", RedisConfig.PRODUCT_CACHE);
-        assertEquals("product-view-count", RedisConfig.PRODUCT_VIEW_COUNT_CACHE);
-        assertEquals("user", RedisConfig.USER_CACHE);
-        assertEquals("order", RedisConfig.ORDER_CACHE);
-        assertEquals("payment", RedisConfig.PAYMENT_CACHE);
-    }
-
-    @Test
-    @DisplayName("Should define CacheNames utility class constants")
-    void shouldDefineCacheNamesUtilityClassConstants() {
-        // Given & When & Then
-        assertEquals("default", RedisConfig.CacheNames.DEFAULT);
-        assertEquals("product", RedisConfig.CacheNames.PRODUCT);
-        assertEquals("product-view-count", RedisConfig.CacheNames.PRODUCT_VIEW_COUNT);
-        assertEquals("user", RedisConfig.CacheNames.USER);
-        assertEquals("order", RedisConfig.CacheNames.ORDER);
-        assertEquals("payment", RedisConfig.CacheNames.PAYMENT);
-    }
-
-    @Test
-    @DisplayName("Should ensure cache name consistency")
-    void shouldEnsureCacheNameConsistency() {
-        // Given & When & Then
-        assertEquals(RedisConfig.DEFAULT_CACHE, RedisConfig.CacheNames.DEFAULT);
-        assertEquals(RedisConfig.PRODUCT_CACHE, RedisConfig.CacheNames.PRODUCT);
-        assertEquals(RedisConfig.PRODUCT_VIEW_COUNT_CACHE, RedisConfig.CacheNames.PRODUCT_VIEW_COUNT);
-        assertEquals(RedisConfig.USER_CACHE, RedisConfig.CacheNames.USER);
-        assertEquals(RedisConfig.ORDER_CACHE, RedisConfig.CacheNames.ORDER);
-        assertEquals(RedisConfig.PAYMENT_CACHE, RedisConfig.CacheNames.PAYMENT);
-    }
-
-    @Test
-    @DisplayName("Should validate conditional property annotation presence")
-    void shouldValidateConditionalPropertyAnnotationPresence() throws Exception {
+    @DisplayName("Should validate configuration annotations")
+    void shouldValidateConfigurationAnnotations() {
         // Given
-        RedisConfig config = new RedisConfig();
-        
-        // When - Check if the class has ConditionalOnProperty annotation
-        boolean hasConditionalAnnotation = config.getClass().isAnnotationPresent(
-            org.springframework.boot.autoconfigure.condition.ConditionalOnProperty.class);
-        
-        // Then
-        assertTrue(hasConditionalAnnotation, "RedisConfig should have ConditionalOnProperty annotation");
-        
-        // Verify the property name (annotation.name() returns an array)
-        org.springframework.boot.autoconfigure.condition.ConditionalOnProperty annotation = 
-            config.getClass().getAnnotation(
-                org.springframework.boot.autoconfigure.condition.ConditionalOnProperty.class);
-        assertEquals("spring.data.redis.host", annotation.name()[0]);
+        Class<RedisConfig> configClass = RedisConfig.class;
+
+        // Then - Verify @Configuration annotation is present
+        assertTrue(configClass.isAnnotationPresent(
+                org.springframework.context.annotation.Configuration.class),
+            "RedisConfig should have @Configuration annotation");
+
+        // Verify @EnableCaching annotation is present
+        assertTrue(configClass.isAnnotationPresent(EnableCaching.class),
+            "RedisConfig should have @EnableCaching annotation");
+
+        // Verify @ConditionalOnProperty annotation
+        assertTrue(configClass.isAnnotationPresent(ConditionalOnProperty.class),
+            "RedisConfig should have @ConditionalOnProperty annotation");
+
+        ConditionalOnProperty conditionalAnnotation =
+            configClass.getAnnotation(ConditionalOnProperty.class);
+        assertEquals("spring.data.redis.host", conditionalAnnotation.name()[0],
+            "Should be conditional on spring.data.redis.host property");
     }
 
     @Test
-    @DisplayName("Should register default caches during PostConstruct")
-    void shouldRegisterDefaultCachesDuringPostConstruct() {
+    @DisplayName("Should define RedisTemplate bean method")
+    void shouldDefineRedisTemplateBeanMethod() throws NoSuchMethodException {
         // Given
-        RedisConfig config = new RedisConfig();
-        assertEquals(0, DomainCacheRegistry.size());
+        Class<RedisConfig> configClass = RedisConfig.class;
 
-        // When
-        config.registerDefaultCaches();
+        // Then - Verify redisTemplate method exists
+        assertDoesNotThrow(() ->
+                configClass.getDeclaredMethod("redisTemplate",
+                    org.springframework.data.redis.connection.RedisConnectionFactory.class),
+            "RedisConfig should have redisTemplate method");
 
-        // Then
-        assertTrue(DomainCacheRegistry.size() > 0);
-        assertTrue(DomainCacheRegistry.isCacheRegistered("product"));
-        assertTrue(DomainCacheRegistry.isCacheRegistered("product-view-count"));
-        assertTrue(DomainCacheRegistry.isCacheRegistered("user"));
-        assertTrue(DomainCacheRegistry.isCacheRegistered("order"));
-        assertTrue(DomainCacheRegistry.isCacheRegistered("payment"));
-        assertTrue(DomainCacheRegistry.isCacheRegistered("default"));
+        // Verify it has @Bean annotation
+        var method = configClass.getDeclaredMethod("redisTemplate",
+            org.springframework.data.redis.connection.RedisConnectionFactory.class);
+        assertTrue(method.isAnnotationPresent(
+                org.springframework.context.annotation.Bean.class),
+            "redisTemplate method should have @Bean annotation");
     }
 
     @Test
-    @DisplayName("Should verify default cache strategies")
-    void shouldVerifyDefaultCacheStrategies() {
+    @DisplayName("Should define CacheManager bean method")
+    void shouldDefineCacheManagerBeanMethod() throws NoSuchMethodException {
         // Given
-        RedisConfig config = new RedisConfig();
-        config.registerDefaultCaches();
+        Class<RedisConfig> configClass = RedisConfig.class;
 
-        // When & Then
-        CacheDefinition productCache = DomainCacheRegistry.getCacheDefinition("product");
-        assertEquals(CacheStrategy.LONG_TERM, productCache.getStrategy());
+        // Then - Verify cacheManager method exists
+        assertDoesNotThrow(() ->
+                configClass.getDeclaredMethod("cacheManager",
+                    org.springframework.data.redis.connection.RedisConnectionFactory.class),
+            "RedisConfig should have cacheManager method");
 
-        CacheDefinition viewCountCache = DomainCacheRegistry.getCacheDefinition("product-view-count");
-        assertEquals(CacheStrategy.SHORT_TERM, viewCountCache.getStrategy());
-
-        CacheDefinition userCache = DomainCacheRegistry.getCacheDefinition("user");
-        assertEquals(CacheStrategy.MEDIUM_TERM, userCache.getStrategy());
-
-        CacheDefinition defaultCache = DomainCacheRegistry.getCacheDefinition("default");
-        assertEquals(CacheStrategy.DEFAULT, defaultCache.getStrategy());
+        // Verify it has @Bean annotation
+        var method = configClass.getDeclaredMethod("cacheManager",
+            org.springframework.data.redis.connection.RedisConnectionFactory.class);
+        assertTrue(method.isAnnotationPresent(
+                org.springframework.context.annotation.Bean.class),
+            "cacheManager method should have @Bean annotation");
     }
 
-    @Test
-    @DisplayName("Should test CacheUtils helper methods")
-    void shouldTestCacheUtilsHelperMethods() {
-        // Given
-        RedisConfig config = new RedisConfig();
-        config.registerDefaultCaches();
-
-        // When & Then - Test cache registration
-        RedisConfig.CacheUtils.registerCache("test-cache", CacheStrategy.LONG_TERM, "Test cache");
-        assertTrue(RedisConfig.CacheUtils.isCacheRegistered("test-cache"));
-        assertNotNull(RedisConfig.CacheUtils.getCacheInfo("test-cache"));
-
-        // Test cache name generation
-        assertEquals("user-profile", RedisConfig.CacheUtils.generateCacheName("User", "Profile"));
-        assertEquals("user:profile:basic", RedisConfig.CacheUtils.generateHierarchicalCacheName("User", "Profile", "Basic"));
-
-        // Test all cache names retrieval
-        assertTrue(RedisConfig.CacheUtils.getAllCacheNames().size() > 0);
-        assertTrue(RedisConfig.CacheUtils.getAllCacheNames().contains("product"));
-    }
-
-    @Test
-    @DisplayName("Should test cache name generation edge cases")
-    void shouldTestCacheNameGenerationEdgeCases() {
-        // Given & When & Then
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateCacheName(null, "type"));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateCacheName("", "type"));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateCacheName("domain", null));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateCacheName("domain", ""));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateHierarchicalCacheName());
-
-        assertThrows(IllegalArgumentException.class, () ->
-                RedisConfig.CacheUtils.generateHierarchicalCacheName(new String[]{}));
-    }
 }

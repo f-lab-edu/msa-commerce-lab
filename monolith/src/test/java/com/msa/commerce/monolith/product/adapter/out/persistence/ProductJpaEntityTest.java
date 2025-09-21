@@ -41,6 +41,7 @@ class ProductJpaEntityTest {
             "https://example.com/image.jpg",     // primaryImageUrl
             now,                                 // createdAt
             now,                                 // updatedAt
+            null,                                // deletedAt
             1L                                   // version
         );
 
