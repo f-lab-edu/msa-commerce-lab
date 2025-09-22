@@ -3,6 +3,7 @@ package com.msa.commerce.monolith.product.adapter.out.persistence;
 import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -20,6 +22,8 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.msa.commerce.common.config.QuerydslConfig;
+import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.domain.ProductVariantStatus;
@@ -29,8 +33,10 @@ import com.msa.commerce.monolith.product.domain.ProductVariantStatus;
 @TestPropertySource(properties = {
     "spring.flyway.enabled=false",
     "spring.jpa.hibernate.ddl-auto=create-drop",
-    "spring.jpa.show-sql=false"
+    "spring.jpa.show-sql=false",
+    "logging.level.org.hibernate.tool.schema=ERROR"  // DDL 경고 억제
 })
+@Import(QuerydslConfig.class)  // QueryDSL 설정 추가
 @Testcontainers
 @DisplayName("InventorySnapshotJpaRepository 테스트")
 class InventorySnapshotJpaRepositoryTest {
@@ -63,12 +69,12 @@ class InventorySnapshotJpaRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        // 더 간단한 테스트 데이터 생성 방식 사용
-        ProductJpaEntity product = createSimpleTestProduct();
+        // 도메인 객체를 통한 테스트 데이터 생성
+        ProductJpaEntity product = createTestProduct();
         entityManager.persistAndFlush(product);
         testProductId = product.getId();
 
-        ProductVariantJpaEntity variant = createSimpleTestVariant(product);
+        ProductVariantJpaEntity variant = createTestVariant(product);
         entityManager.persistAndFlush(variant);
         testVariantId = variant.getId();
 
@@ -79,32 +85,41 @@ class InventorySnapshotJpaRepositoryTest {
         entityManager.clear();
     }
 
-    private ProductJpaEntity createSimpleTestProduct() {
-        try {
-            ProductJpaEntity product = new ProductJpaEntity();
+    private ProductJpaEntity createTestProduct() {
+        // reconstitute 메소드를 사용하여 ACTIVE 상태의 Product 생성
+        Product domainProduct = Product.reconstitute(
+            null, // id (자동 생성)
+            "TEST-SKU-001",
+            "테스트 상품",
+            "테스트 요약",
+            "테스트 상품 설명",
+            null, // categoryId
+            "TestBrand",
+            ProductType.PHYSICAL,
+            ProductStatus.ACTIVE, // 이제 status 설정 가능
+            new BigDecimal("10000"),
+            null, // salePrice
+            "KRW",
+            null, // weightGrams
+            true, // requiresShipping
+            true, // isTaxable
+            false, // isFeatured
+            "test-product-001",
+            null, // searchTags
+            null, // primaryImageUrl
+            1, // minOrderQuantity
+            100, // maxOrderQuantity
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            null, // deletedAt
+            1L // version
+        );
 
-            // 리플렉션을 통한 필드 설정
-            setField(product, "sku", "TEST-SKU-001");
-            setField(product, "name", "테스트 상품");
-            setField(product, "description", "테스트 상품 설명");
-            setField(product, "shortDescription", "테스트 요약");
-            setField(product, "brand", "TestBrand");
-            setField(product, "productType", ProductType.PHYSICAL);
-            setField(product, "status", ProductStatus.ACTIVE);
-            setField(product, "basePrice", new BigDecimal("10000"));
-            setField(product, "currency", "KRW");
-            setField(product, "requiresShipping", true);
-            setField(product, "isTaxable", true);
-            setField(product, "isFeatured", false);
-            setField(product, "slug", "test-product-001");
-
-            return product;
-        } catch (Exception e) {
-            throw new RuntimeException("테스트 상품 생성 실패", e);
-        }
+        // 도메인 객체를 JPA 엔티티로 변환
+        return ProductJpaEntity.fromDomainEntityForCreation(domainProduct);
     }
 
-    private ProductVariantJpaEntity createSimpleTestVariant(ProductJpaEntity product) {
+    private ProductVariantJpaEntity createTestVariant(ProductJpaEntity product) {
         return ProductVariantJpaEntity.builder()
             .product(product)
             .variantSku("TEST-SKU-001-V1")
@@ -148,12 +163,6 @@ class InventorySnapshotJpaRepositoryTest {
             .lowStockThreshold(10)
             .build();
         entityManager.persist(outOfStockInventory);
-    }
-
-    private void setField(Object object, String fieldName, Object value) throws Exception {
-        var field = object.getClass().getDeclaredField(fieldName);
-        field.setAccessible(true);
-        field.set(object, value);
     }
 
     @Test
