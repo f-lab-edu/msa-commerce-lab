@@ -178,7 +178,7 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
     @Override
     public List<BrandStats> getBrandProductStats() {
         // QueryDSL avg() 함수의 Double 반환 타입 문제를 해결하기 위해 명시적 변환
-        List<BrandStatsImpl> rawResults = queryFactory
+        return queryFactory
             .select(Projections.bean(BrandStatsImpl.class,
                 product.brand.as("brand"),
                 product.count().as("productCount"),
@@ -193,6 +193,8 @@ public class ProductCustomRepositoryImpl implements ProductCustomRepository {
             )
             .groupBy(product.brand)
             .orderBy(product.count().desc())
+            .fetch()
+            .stream()
             .map(BrandStats.class::cast)
             .toList();
     }
