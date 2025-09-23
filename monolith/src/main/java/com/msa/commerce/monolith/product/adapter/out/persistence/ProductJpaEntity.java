@@ -246,4 +246,13 @@ public class ProductJpaEntity {
         this.name = name;
     }
 
+    // Test용 audit 필드 setter
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
 }

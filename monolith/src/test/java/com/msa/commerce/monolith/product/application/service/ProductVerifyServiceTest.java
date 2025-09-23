@@ -23,12 +23,16 @@ import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
+import com.msa.commerce.monolith.product.adapter.out.persistence.InventorySnapshotJpaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ProductVerifyServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private InventorySnapshotJpaRepository inventorySnapshotRepository;
 
     @InjectMocks
     private ProductVerifyService productVerifyService;
@@ -101,6 +105,7 @@ class ProductVerifyServiceTest {
             .build();
 
         when(productRepository.findAllByIds(anyList())).thenReturn(List.of(activeProduct));
+        when(inventorySnapshotRepository.getTotalAvailableQuantityByProductId(1L)).thenReturn(100);
 
         // When
         ProductVerifyResponse response = productVerifyService.verifyProducts(command);
@@ -134,6 +139,7 @@ class ProductVerifyServiceTest {
             .build();
 
         when(productRepository.findAllByIds(anyList())).thenReturn(List.of(inactiveProduct));
+        when(inventorySnapshotRepository.getTotalAvailableQuantityByProductId(2L)).thenReturn(50);
 
         // When
         ProductVerifyResponse response = productVerifyService.verifyProducts(command);
@@ -202,6 +208,8 @@ class ProductVerifyServiceTest {
 
         when(productRepository.findAllByIds(anyList()))
             .thenReturn(Arrays.asList(activeProduct, inactiveProduct));
+        when(inventorySnapshotRepository.getTotalAvailableQuantityByProductId(1L)).thenReturn(100);
+        when(inventorySnapshotRepository.getTotalAvailableQuantityByProductId(2L)).thenReturn(50);
 
         // When
         ProductVerifyResponse response = productVerifyService.verifyProducts(command);

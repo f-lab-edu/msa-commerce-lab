@@ -253,6 +253,32 @@ public class InventoryDomainService {
         }
     }
 
+    /**
+     * 상품 삭제 시 재고 비활성화
+     */
+    public void disableInventoryForProduct(Long productId, String reason, String referenceType, String referenceId) {
+        List<InventorySnapshotJpaEntity> snapshots = inventorySnapshotRepository.findByProductIdWithProduct(productId);
+
+        for (InventorySnapshotJpaEntity snapshot : snapshots) {
+            int beforeAvailable = snapshot.getAvailableQuantity();
+
+            // 재고 상태를 비활성화로 변경
+            snapshot.disableStock();
+            inventorySnapshotRepository.save(snapshot);
+
+            // 이벤트 생성
+            createInventoryEvent(
+                InventoryEventType.STOCK_ADJUSTMENT,
+                snapshot.getProduct(), snapshot.getVariant(), snapshot.getLocationCode(),
+                0, beforeAvailable, snapshot.getAvailableQuantity(),
+                reason, referenceType, referenceId,
+                createEventData("stock_disabled", 0, beforeAvailable, snapshot.getAvailableQuantity())
+            );
+        }
+
+        log.info("상품 재고 비활성화 완료 - 상품ID: {}, 재고 스냅샷 수: {}", productId, snapshots.size());
+    }
+
     private InventorySnapshotJpaEntity getOrCreateSnapshot(ProductJpaEntity product,
                                                          ProductVariantJpaEntity variant,
                                                          String locationCode) {

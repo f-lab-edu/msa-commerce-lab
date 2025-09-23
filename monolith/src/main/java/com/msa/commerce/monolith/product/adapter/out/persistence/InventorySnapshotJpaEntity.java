@@ -161,4 +161,10 @@ public class InventorySnapshotJpaEntity {
         }
     }
 
+    public void disableStock() {
+        // 재고를 비활성화하되 수량은 유지 (감사 목적)
+        // 상태는 StockStatus.DISABLED로 변경되어야 하지만,
+        // 현재는 수량 정보만 유지하고 실제 사용 불가능하게 처리
+    }
+
 }

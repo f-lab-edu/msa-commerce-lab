@@ -25,6 +25,7 @@ import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.domain.event.ProductEvent;
+import com.msa.commerce.monolith.product.domain.service.InventoryDomainService;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductDeleteService 단위 테스트")
@@ -35,6 +36,9 @@ class ProductDeleteServiceTest {
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
+
+    @Mock
+    private InventoryDomainService inventoryDomainService;
 
     @InjectMocks
     private ProductDeleteService productDeleteService;
@@ -81,6 +85,8 @@ class ProductDeleteServiceTest {
         // given
         when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
         when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        doNothing().when(inventoryDomainService).disableInventoryForProduct(
+            eq(productId), anyString(), anyString(), anyString());
 
         // when
         productDeleteService.deleteProduct(productId);
@@ -89,6 +95,8 @@ class ProductDeleteServiceTest {
         verify(productRepository).findById(productId);
         verify(productRepository).save(any(Product.class));
         verify(applicationEventPublisher).publishEvent(any(ProductEvent.class));
+        verify(inventoryDomainService).disableInventoryForProduct(
+            eq(productId), anyString(), eq("PRODUCT_DELETION"), anyString());
     }
 
     @Test
@@ -151,6 +159,28 @@ class ProductDeleteServiceTest {
 
         verify(productRepository).findById(productId);
         verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("재고 비활성화 실패해도 상품 삭제는 성공한다")
+    void deleteProduct_InventoryDisableFails_StillSucceeds() {
+        // given
+        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
+        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        doThrow(new RuntimeException("Inventory service error"))
+            .when(inventoryDomainService).disableInventoryForProduct(
+                eq(productId), anyString(), anyString(), anyString());
+
+        // when
+        assertThatCode(() -> productDeleteService.deleteProduct(productId))
+            .doesNotThrowAnyException();
+
+        // then
+        verify(productRepository).findById(productId);
+        verify(productRepository).save(any(Product.class));
+        verify(applicationEventPublisher).publishEvent(any(ProductEvent.class));
+        verify(inventoryDomainService).disableInventoryForProduct(
+            eq(productId), anyString(), eq("PRODUCT_DELETION"), anyString());
     }
 
 }

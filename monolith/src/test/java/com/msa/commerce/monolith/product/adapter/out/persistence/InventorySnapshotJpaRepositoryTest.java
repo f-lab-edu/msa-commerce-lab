@@ -34,7 +34,8 @@ import com.msa.commerce.monolith.product.domain.ProductVariantStatus;
     "spring.flyway.enabled=false",
     "spring.jpa.hibernate.ddl-auto=create-drop",
     "spring.jpa.show-sql=false",
-    "logging.level.org.hibernate.tool.schema=ERROR"  // DDL 경고 억제
+    "logging.level.org.hibernate.tool.schema=ERROR",  // DDL 경고 억제
+    "spring.data.jpa.auditing.enabled=false"  // JPA 감사 비활성화
 })
 @Import(QuerydslConfig.class)  // QueryDSL 설정 추가
 @Testcontainers
@@ -86,6 +87,8 @@ class InventorySnapshotJpaRepositoryTest {
     }
 
     private ProductJpaEntity createTestProduct() {
+        LocalDateTime now = LocalDateTime.now();
+
         // reconstitute 메소드를 사용하여 ACTIVE 상태의 Product 생성
         Product domainProduct = Product.reconstitute(
             null, // id (자동 생성)
@@ -109,14 +112,20 @@ class InventorySnapshotJpaRepositoryTest {
             null, // primaryImageUrl
             1, // minOrderQuantity
             100, // maxOrderQuantity
-            LocalDateTime.now(),
-            LocalDateTime.now(),
+            now, // createdAt - 명시적으로 설정
+            now, // updatedAt - 명시적으로 설정
             null, // deletedAt
             1L // version
         );
 
         // 도메인 객체를 JPA 엔티티로 변환
-        return ProductJpaEntity.fromDomainEntityForCreation(domainProduct);
+        ProductJpaEntity jpaEntity = ProductJpaEntity.fromDomainEntityForCreation(domainProduct);
+
+        // JPA 감사가 비활성화되어 있으므로 수동으로 설정
+        jpaEntity.setCreatedAt(now);
+        jpaEntity.setUpdatedAt(now);
+
+        return jpaEntity;
     }
 
     private ProductVariantJpaEntity createTestVariant(ProductJpaEntity product) {

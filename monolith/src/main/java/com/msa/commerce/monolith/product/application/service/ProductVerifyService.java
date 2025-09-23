@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.msa.commerce.monolith.product.adapter.out.persistence.InventorySnapshotJpaRepository;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
@@ -25,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ProductVerifyService implements ProductVerifyUseCase {
 
     private final ProductRepository productRepository;
+
+    private final InventorySnapshotJpaRepository inventorySnapshotRepository;
 
     @Override
     public ProductVerifyResponse verifyProducts(ProductVerifyCommand command) {
@@ -76,6 +79,8 @@ public class ProductVerifyService implements ProductVerifyUseCase {
         String unavailableReason = checkProductAvailability(product, requestedQuantity);
         Boolean available = StringUtils.isBlank(unavailableReason);
 
+        Integer availableStock = getTotalAvailableStock(product.getId());
+
         return ProductVerifyResponse.ProductVerifyResult.builder()
             .productId(product.getId())
             .sku(product.getSku())
@@ -83,7 +88,7 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .available(available)
             .status(product.getStatus())
             .requestedQuantity(requestedQuantity)
-            .availableStock(1)
+            .availableStock(availableStock)
             .currentPrice(product.getCurrnectPrice())
             .originalPrice(product.getOriginalPrice())
             .unavailableReason(unavailableReason)
@@ -95,16 +100,21 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             return String.format("Product is not active (status: %s )", product.getStatus());
         }
 
-        // TODO: InventorySnapshots 구현 시 실제 상품별 주문 수량 제한 적용
-        if (!isStockAvailable()) {
+        if (!isStockAvailable(product.getId(), requestedQuantity)) {
             return "Insufficient stock";
         }
 
         return product.isValidateOrderQuantity(requestedQuantity) ? null : "Invalid order quantity";
     }
 
-    private boolean isStockAvailable() {
-        return true;
+    private boolean isStockAvailable(Long productId, Integer requestedQuantity) {
+        Integer totalAvailableStock = getTotalAvailableStock(productId);
+        return totalAvailableStock != null && totalAvailableStock >= requestedQuantity;
+    }
+
+    private Integer getTotalAvailableStock(Long productId) {
+        Integer totalStock = inventorySnapshotRepository.getTotalAvailableQuantityByProductId(productId);
+        return totalStock != null ? totalStock : 0;
     }
 
 }
