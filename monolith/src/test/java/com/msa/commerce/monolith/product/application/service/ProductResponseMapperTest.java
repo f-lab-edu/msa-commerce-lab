@@ -8,12 +8,14 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
+@DisplayName("ProductResponseMapper - MapStruct 매핑 테스트")
 class ProductResponseMapperTest {
 
     private ProductResponseMapper productResponseMapper;
@@ -22,7 +24,8 @@ class ProductResponseMapperTest {
 
     @BeforeEach
     void setUp() {
-        productResponseMapper = new ProductResponseMapper();
+        // MapStruct에서 생성된 구현체를 직접 사용
+        productResponseMapper = Mappers.getMapper(ProductResponseMapper.class);
 
         // Product.reconstitute를 사용하여 테스트용 Product 객체 생성
         product = Product.reconstitute(
@@ -83,10 +86,21 @@ class ProductResponseMapperTest {
         assertThat(response.getVersion()).isEqualTo(1L);
         assertThat(response.getCreatedAt()).isNotNull();
         assertThat(response.getUpdatedAt()).isNotNull();
+
+        // MapStruct 상수 매핑 검증 - 비즈니스 로직 테스트
+        assertThat(response.getAvailableQuantity()).isEqualTo(0);
+        assertThat(response.getReservedQuantity()).isEqualTo(0);
+        assertThat(response.getTotalQuantity()).isEqualTo(0);
+        assertThat(response.getLowStockThreshold()).isEqualTo(0);
+        assertThat(response.getIsTrackingEnabled()).isTrue();
+        assertThat(response.getIsBackorderAllowed()).isFalse();
+        assertThat(response.getReorderPoint()).isEqualTo(10);
+        assertThat(response.getReorderQuantity()).isEqualTo(20);
+        assertThat(response.getLocationCode()).isEqualTo("MAIN");
     }
 
     @Test
-    @DisplayName("Product에서 null 값이 있어도 Response로 변환할 수 있다")
+    @DisplayName("MapStruct null 처리 - Product null 필드들이 올바르게 매핑된다")
     void toResponse_ShouldHandleNullValues() {
         // given
         Product productWithNulls = Product.reconstitute(
@@ -143,16 +157,35 @@ class ProductResponseMapperTest {
         assertThat(response.getVersion()).isEqualTo(1L);
         assertThat(response.getCreatedAt()).isNotNull();
         assertThat(response.getUpdatedAt()).isNotNull();
+
+        // MapStruct 상수 매핑이 null 값과 관계없이 동작하는지 검증
+        assertThat(response.getLocationCode()).isEqualTo("MAIN");
+        assertThat(response.getIsTrackingEnabled()).isTrue();
     }
 
     @Test
-    @DisplayName("null Product는 null Response를 반환한다")
+    @DisplayName("MapStruct null 안전성 - null Product 입력 시 null 반환")
     void toResponse_ShouldReturnNullForNullProduct() {
         // when
         ProductResponse response = productResponseMapper.toResponse(null);
 
-        // then
+        // then - MapStruct의 null 안전성 검증
         assertThat(response).isNull();
+    }
+
+    @Test
+    @DisplayName("ProductSearchResponse 매핑 - viewCount 상수 매핑 검증")
+    void toSearchResponse_ShouldMapWithDefaultViewCount() {
+        // when
+        var searchResponse = productResponseMapper.toSearchResponse(product);
+
+        // then - 기본 매핑 검증
+        assertThat(searchResponse).isNotNull();
+        assertThat(searchResponse.getId()).isEqualTo(product.getId());
+        assertThat(searchResponse.getName()).isEqualTo(product.getName());
+
+        // MapStruct 상수 매핑 검증
+        assertThat(searchResponse.getViewCount()).isEqualTo(0L);
     }
 
 }

@@ -1,79 +1,40 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.domain.Product;
 
-@Component
-public class ProductResponseMapper {
+@Mapper(
+    componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.ERROR
+)
+public interface ProductResponseMapper {
 
-    public ProductResponse toResponse(Product product) {
-        if (product == null) {
-            return null;
-        }
+    /**
+     * Product 도메인 객체를 ProductResponse로 변환
+     * Inventory 필드들은 기본값 또는 ignore 처리
+     */
+    @Mapping(target = "availableQuantity", constant = "0")
+    @Mapping(target = "reservedQuantity", constant = "0")
+    @Mapping(target = "totalQuantity", constant = "0")
+    @Mapping(target = "lowStockThreshold", constant = "0")
+    @Mapping(target = "isTrackingEnabled", constant = "true")
+    @Mapping(target = "isBackorderAllowed", constant = "false")
+    @Mapping(target = "reorderPoint", constant = "10")
+    @Mapping(target = "reorderQuantity", constant = "20")
+    @Mapping(target = "locationCode", constant = "MAIN")
+    ProductResponse toResponse(Product product);
 
-        return ProductResponse.builder()
-            .id(product.getId())
-            .sku(product.getSku())
-            .name(product.getName())
-            .shortDescription(product.getShortDescription())
-            .description(product.getDescription())
-            .categoryId(product.getCategoryId())
-            .brand(product.getBrand())
-            .productType(product.getProductType())
-            .status(product.getStatus())
-            .basePrice(product.getBasePrice())
-            .salePrice(product.getSalePrice())
-            .currency(product.getCurrency())
-            .weightGrams(product.getWeightGrams())
-            .requiresShipping(product.getRequiresShipping())
-            .isTaxable(product.getIsTaxable())
-            .isFeatured(product.getIsFeatured())
-            .slug(product.getSlug())
-            .searchTags(product.getSearchTags())
-            .primaryImageUrl(product.getPrimaryImageUrl())
-            .minOrderQuantity(product.getMinOrderQuantity())
-            .maxOrderQuantity(product.getMaxOrderQuantity())
-            .createdAt(product.getCreatedAt())
-            .updatedAt(product.getUpdatedAt())
-            .version(product.getVersion())
-            .build();
-    }
-
-    public ProductSearchResponse toSearchResponse(Product product) {
-        if (product == null) {
-            return null;
-        }
-
-        return ProductSearchResponse.builder()
-            .id(product.getId())
-            .sku(product.getSku())
-            .name(product.getName())
-            .shortDescription(product.getShortDescription())
-            .description(product.getDescription())
-            .categoryId(product.getCategoryId())
-            .brand(product.getBrand())
-            .productType(product.getProductType())
-            .status(product.getStatus())
-            .basePrice(product.getBasePrice())
-            .salePrice(product.getSalePrice())
-            .currency(product.getCurrency())
-            .weightGrams(product.getWeightGrams())
-            .requiresShipping(product.getRequiresShipping())
-            .isTaxable(product.getIsTaxable())
-            .isFeatured(product.getIsFeatured())
-            .slug(product.getSlug())
-            .searchTags(product.getSearchTags())
-            .primaryImageUrl(product.getPrimaryImageUrl())
-            .minOrderQuantity(product.getMinOrderQuantity())
-            .maxOrderQuantity(product.getMaxOrderQuantity())
-            .createdAt(product.getCreatedAt())
-            .updatedAt(product.getUpdatedAt())
-            .version(product.getVersion())
-            .viewCount(0L)
-            .build();
-    }
+    /**
+     * Product 도메인 객체를 ProductSearchResponse로 변환
+     * viewCount는 기본값 0L로 설정
+     */
+    @Mapping(target = "viewCount", constant = "0L")
+    ProductSearchResponse toSearchResponse(Product product);
 
 }
