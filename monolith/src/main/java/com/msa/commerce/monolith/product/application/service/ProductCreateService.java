@@ -77,10 +77,6 @@ public class ProductCreateService implements ProductCreateUseCase {
             throw new IllegalArgumentException("Slug is required");
         }
 
-        // Optional validation for categoryId - based on business logic, it might be required
-        // The test expects exception when categoryId is null, but the annotation doesn't mark it as @NotNull
-        // Let's check if this validation is needed based on the failing test
-
         if (command.getCategoryId() == null) {
             throw new IllegalArgumentException("Category ID is required.");
         }

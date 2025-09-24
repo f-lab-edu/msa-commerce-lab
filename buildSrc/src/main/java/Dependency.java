@@ -10,7 +10,7 @@ public enum Dependency {
     SPRING_BOOT_STARTER_TEST("org.springframework.boot", "spring-boot-starter-test", Version.SPRING_BOOT),
 
     // Database
-    MYSQL_CONNECTOR("mysql", "mysql-connector-java", "8.0.33"),
+    MYSQL_CONNECTOR("com.mysql", "mysql-connector-j", "9.3.0"),
     H2_DATABASE("com.h2database", "h2"),  // Version managed by Spring Boot
 
     // Database Migration

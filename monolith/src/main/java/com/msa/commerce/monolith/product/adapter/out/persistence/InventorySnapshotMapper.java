@@ -2,17 +2,26 @@ package com.msa.commerce.monolith.product.adapter.out.persistence;
 
 import java.util.List;
 
+import org.mapstruct.AfterMapping;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
 import com.msa.commerce.monolith.product.domain.InventorySnapshot;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+    componentModel = MappingConstants.ComponentModel.SPRING,
+    unmappedTargetPolicy = ReportingPolicy.ERROR,
+    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
+)
 public interface InventorySnapshotMapper {
 
-    @Mapping(target = "productId", expression = "java(entity.getProduct() != null ? entity.getProduct().getId() : null)")
-    @Mapping(target = "variantId", expression = "java(entity.getVariant() != null ? entity.getVariant().getId() : null)")
+    @Mapping(target = "productId", source = "product.id")
+    @Mapping(target = "variantId", source = "variant.id")
     @Mapping(target = "stockStatus", expression = "java(entity.calculateStockStatus())")
     InventorySnapshot toDomain(InventorySnapshotJpaEntity entity);
 
@@ -29,5 +38,4 @@ public interface InventorySnapshotMapper {
             .build();
     }
 
-    // updateEntity, 검증 로직은 별도 서비스/유틸로 분리 필요
 }
