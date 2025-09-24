@@ -1,4 +1,4 @@
-package com.msa.commerce.monolith.product.application.port.in;
+package com.msa.commerce.monolith.product.application.port.in.command;
 
 import java.math.BigDecimal;
 
@@ -7,20 +7,24 @@ import com.msa.commerce.monolith.product.domain.ProductType;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class ProductCreateCommand {
+public class ProductUpdateCommand {
 
-    @NotBlank(message = "SKU is required")
+    @NotNull(message = "Product ID is required")
+    @Positive(message = "Product ID must be positive")
+    private final Long productId;
+
     @Size(max = 100, message = "SKU must not exceed 100 characters")
     private final String sku;
 
-    @NotBlank(message = "Product name is required")
-    @Size(max = 255, message = "Product name must not exceed 255 characters")
+    @NotBlank(message = "Product name must not be empty")
+    @Size(max = 255, message = "Product name cannot exceed 255 characters")
     private final String name;
 
     @Size(max = 500, message = "Short description must not exceed 500 characters")
@@ -29,6 +33,7 @@ public class ProductCreateCommand {
     @Size(max = 1000, message = "Description must not exceed 1000 characters")
     private final String description;
 
+    @Positive(message = "Category ID must be positive")
     private final Long categoryId;
 
     @Size(max = 100, message = "Brand must not exceed 100 characters")
@@ -36,7 +41,6 @@ public class ProductCreateCommand {
 
     private final ProductType productType;
 
-    @NotNull(message = "Base price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Base price must be greater than 0")
     private final BigDecimal basePrice;
 
@@ -53,7 +57,6 @@ public class ProductCreateCommand {
 
     private final Boolean isFeatured;
 
-    @NotBlank(message = "Slug is required")
     @Size(max = 300, message = "Slug must not exceed 300 characters")
     private final String slug;
 

@@ -5,12 +5,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.msa.commerce.common.aop.ValidateCommand;
+import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +28,7 @@ public class ProductSearchService implements ProductSearchUseCase {
 
     private final ProductViewCountPort productViewCountPort;
 
-    private final ProductSearchMapper productSearchMapper;
+    private final ProductMapper productMapper;
 
     @Override
     @ValidateCommand(errorPrefix = "Product search validation failed")
@@ -37,47 +39,17 @@ public class ProductSearchService implements ProductSearchUseCase {
         Page<Product> productPage = productRepository.searchProducts(command);
 
         if (productPage == null) {
-            throw new IllegalStateException("Repository returned null result for search command");
+            throw new ResourceNotFoundException("Repository returned null result for search command");
         }
 
         Page<ProductSearchResponse> responsePage = productPage.map(this::enrichWithViewCount);
 
-        ProductPageResponse result = productSearchMapper.toPageResponse(responsePage);
-
-        log.info("Found {} products in {} pages", result.getTotalElements(), result.getTotalPages());
-
-        return result;
+        return productMapper.toPageResponse(responsePage);
     }
 
     private ProductSearchResponse enrichWithViewCount(Product product) {
-        ProductSearchResponse response = productSearchMapper.toSearchResponse(product);
         Long viewCount = productViewCountPort.getViewCount(product.getId());
-
-        return ProductSearchResponse.builder()
-            .id(response.getId())
-            .sku(response.getSku())
-            .name(response.getName())
-            .shortDescription(response.getShortDescription())
-            .description(response.getDescription())
-            .categoryId(response.getCategoryId())
-            .brand(response.getBrand())
-            .productType(response.getProductType())
-            .status(response.getStatus())
-            .basePrice(response.getBasePrice())
-            .salePrice(response.getSalePrice())
-            .currency(response.getCurrency())
-            .weightGrams(response.getWeightGrams())
-            .requiresShipping(response.getRequiresShipping())
-            .isTaxable(response.getIsTaxable())
-            .isFeatured(response.getIsFeatured())
-            .slug(response.getSlug())
-            .searchTags(response.getSearchTags())
-            .primaryImageUrl(response.getPrimaryImageUrl())
-            .createdAt(response.getCreatedAt())
-            .updatedAt(response.getUpdatedAt())
-            .version(response.getVersion())
-            .viewCount(viewCount != null ? viewCount : 0L)
-            .build();
+        return productMapper.toSearchResponseWithViewCount(product, viewCount != null ? viewCount : 0L);
     }
 
     private void validateCommand(ProductSearchCommand command) {

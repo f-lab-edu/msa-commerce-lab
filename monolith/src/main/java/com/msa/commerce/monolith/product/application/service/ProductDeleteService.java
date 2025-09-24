@@ -50,16 +50,12 @@ public class ProductDeleteService implements ProductDeleteUseCase {
 
         // 진행 중인 주문 확인
         if (hasActiveOrders(product.getId())) {
-            throw new ValidationException(
-                "Cannot delete product with active orders",
-                ErrorCode.PRODUCT_UPDATE_NOT_ALLOWED.getCode()
-            );
+            throw new ValidationException("Cannot delete product with active orders", ErrorCode.PRODUCT_UPDATE_NOT_ALLOWED.getCode());
         }
 
         // 장바구니 포함 여부 확인
         if (isInShoppingCarts(product.getId())) {
-            log.warn("Product {} is in shopping carts but deletion will proceed. Cart items will become invalid.",
-                product.getId());
+            log.warn("Product {} is in shopping carts but deletion will proceed. Cart items will become invalid.", product.getId());
             // 장바구니에 있어도 삭제는 진행하되, 장바구니 아이템은 무효화됨
         }
     }
@@ -87,30 +83,18 @@ public class ProductDeleteService implements ProductDeleteUseCase {
     }
 
     private void handleProductImagesDeletion(Long productId) {
-        // 현재 이미지 서비스가 구현되지 않았으므로 로그만 기록
-        // 실제 구현 시에는 이미지 상태를 ARCHIVED 또는 DISABLED로 변경
-        log.info("Product images status should be updated to DISABLED for product: {}", productId);
-
-        // 향후 이미지 서비스 구현 시 다음과 같이 호출:
+        // TODO: 이미지 서비스 구현 시 이미지 상태를 ARCHIVED 또는 DISABLED로 변경
         // imageService.disableImagesForProduct(productId);
     }
 
     private boolean hasActiveOrders(Long productId) {
-        // 현재 주문 시스템이 구현되지 않았으므로 false 반환
-        // 실제 구현 시에는 주문 서비스에서 활성 주문 확인
-        log.debug("Checking active orders for product: {} - Order service not implemented, returning false", productId);
-
-        // 향후 주문 서비스 구현 시 다음과 같이 호출:
+        // TODO: 주문 서비스 구현 시 활성 주문 확인
         // return orderService.hasActiveOrdersForProduct(productId);
         return false;
     }
 
     private boolean isInShoppingCarts(Long productId) {
-        // 현재 장바구니 시스템이 구현되지 않았으므로 false 반환
-        // 실제 구현 시에는 장바구니 서비스에서 포함 여부 확인
-        log.debug("Checking shopping cart inclusion for product: {} - Cart service not implemented, returning false", productId);
-
-        // 향후 장바구니 서비스 구현 시 다음과 같이 호출:
+        // TODO: 장바구니 서비스 구현 시 포함 여부 확인
         // return cartService.isProductInAnyCarts(productId);
         return false;
     }

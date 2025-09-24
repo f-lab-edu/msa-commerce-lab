@@ -15,10 +15,6 @@ import com.msa.commerce.monolith.product.adapter.out.persistence.ProductCategory
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 상품 카테고리 관리를 위한 도메인 서비스
- * 계층 구조 관리, 순환 참조 방지, 카테고리 이동 등의 복잡한 비즈니스 로직 처리
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -27,9 +23,6 @@ public class ProductCategoryDomainService {
 
     private final ProductCategoryJpaRepository categoryRepository;
 
-    /**
-     * 카테고리 생성 (중복 검증 포함)
-     */
     public ProductCategoryJpaEntity createCategory(String name, String description, String slug,
                                                  ProductCategoryJpaEntity parent, Integer displayOrder,
                                                  Boolean isActive, Boolean isFeatured, String imageUrl) {
@@ -62,9 +55,6 @@ public class ProductCategoryDomainService {
         return savedCategory;
     }
 
-    /**
-     * 카테고리 이동 (부모 변경)
-     */
     public void moveCategory(Long categoryId, ProductCategoryJpaEntity newParent) {
         ProductCategoryJpaEntity category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + categoryId));
@@ -88,9 +78,6 @@ public class ProductCategoryDomainService {
                 newParent != null ? newParent.getId() : "ROOT");
     }
 
-    /**
-     * 카테고리 순서 조정
-     */
     public void reorderCategories(ProductCategoryJpaEntity parent, List<Long> categoryIds) {
         List<ProductCategoryJpaEntity> categories = new ArrayList<>();
 
@@ -116,9 +103,6 @@ public class ProductCategoryDomainService {
                 parent != null ? parent.getId() : "ROOT", categories.size());
     }
 
-    /**
-     * 카테고리 삭제 (하위 카테고리 처리 포함)
-     */
     public void deleteCategory(Long categoryId, boolean moveChildrenToParent) {
         ProductCategoryJpaEntity category = categoryRepository.findById(categoryId)
             .orElseThrow(() -> new IllegalArgumentException("카테고리를 찾을 수 없습니다: " + categoryId));
@@ -142,9 +126,6 @@ public class ProductCategoryDomainService {
         log.info("카테고리 삭제 완료 - ID: {}, 이름: {}", categoryId, category.getName());
     }
 
-    /**
-     * 전체 카테고리 트리 조회 (계층 구조 유지)
-     */
     @Transactional(readOnly = true)
     public List<CategoryTreeNode> getCategoryTree() {
         List<ProductCategoryJpaEntity> allCategories = categoryRepository.findAll();
@@ -170,9 +151,6 @@ public class ProductCategoryDomainService {
             .toList();
     }
 
-    /**
-     * 특정 카테고리의 모든 조상 조회
-     */
     @Transactional(readOnly = true)
     public List<ProductCategoryJpaEntity> getCategoryAncestors(Long categoryId) {
         ProductCategoryJpaEntity category = categoryRepository.findById(categoryId)
@@ -181,17 +159,11 @@ public class ProductCategoryDomainService {
         return category.getAllAncestors();
     }
 
-    /**
-     * 특정 카테고리의 모든 후손 조회
-     */
     @Transactional(readOnly = true)
     public List<ProductCategoryJpaEntity> getCategoryDescendants(Long categoryId) {
         return categoryRepository.findAllSubCategories(categoryId);
     }
 
-    /**
-     * 카테고리 경로 문자열 조회 (예: "전자제품 > 스마트폰 > iPhone")
-     */
     @Transactional(readOnly = true)
     public String getCategoryPath(Long categoryId) {
         ProductCategoryJpaEntity category = categoryRepository.findById(categoryId)
@@ -200,9 +172,6 @@ public class ProductCategoryDomainService {
         return category.getFullPath();
     }
 
-    /**
-     * 활성 상태인 Featured 카테고리 조회
-     */
     @Transactional(readOnly = true)
     public List<ProductCategoryJpaEntity> getFeaturedCategories() {
         return categoryRepository.findByIsActiveAndIsFeaturedOrderByDisplayOrderAsc(true, true);
@@ -298,9 +267,6 @@ public class ProductCategoryDomainService {
             .build();
     }
 
-    /**
-     * 카테고리 트리 노드 표현 클래스
-     */
     @lombok.Builder
     @lombok.Getter
     public static class CategoryTreeNode {

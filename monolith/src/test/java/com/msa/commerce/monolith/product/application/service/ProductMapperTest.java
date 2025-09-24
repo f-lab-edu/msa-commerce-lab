@@ -11,21 +11,22 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
-@DisplayName("ProductResponseMapper - MapStruct 매핑 테스트")
-class ProductResponseMapperTest {
+@DisplayName("ProductMapper - MapStruct 매핑 테스트")
+class ProductMapperTest {
 
-    private ProductResponseMapper productResponseMapper;
+    private ProductMapper productMapper;
 
     private Product product;
 
     @BeforeEach
     void setUp() {
         // MapStruct에서 생성된 구현체를 직접 사용
-        productResponseMapper = Mappers.getMapper(ProductResponseMapper.class);
+        productMapper = Mappers.getMapper(ProductMapper.class);
 
         // Product.reconstitute를 사용하여 테스트용 Product 객체 생성
         product = Product.reconstitute(
@@ -61,7 +62,7 @@ class ProductResponseMapperTest {
     @DisplayName("Product 엔티티를 ProductResponse로 변환할 수 있다")
     void toResponse_ShouldMapEntityToResponse() {
         // when
-        ProductResponse response = productResponseMapper.toResponse(product);
+        ProductResponse response = productMapper.toResponse(product);
 
         // then
         assertThat(response).isNotNull();
@@ -132,7 +133,7 @@ class ProductResponseMapperTest {
         );
 
         // when
-        ProductResponse response = productResponseMapper.toResponse(productWithNulls);
+        ProductResponse response = productMapper.toResponse(productWithNulls);
 
         // then
         assertThat(response).isNotNull();
@@ -167,7 +168,7 @@ class ProductResponseMapperTest {
     @DisplayName("MapStruct null 안전성 - null Product 입력 시 null 반환")
     void toResponse_ShouldReturnNullForNullProduct() {
         // when
-        ProductResponse response = productResponseMapper.toResponse(null);
+        ProductResponse response = productMapper.toResponse(null);
 
         // then - MapStruct의 null 안전성 검증
         assertThat(response).isNull();
@@ -177,7 +178,7 @@ class ProductResponseMapperTest {
     @DisplayName("ProductSearchResponse 매핑 - viewCount 상수 매핑 검증")
     void toSearchResponse_ShouldMapWithDefaultViewCount() {
         // when
-        var searchResponse = productResponseMapper.toSearchResponse(product);
+        var searchResponse = productMapper.toSearchResponse(product);
 
         // then - 기본 매핑 검증
         assertThat(searchResponse).isNotNull();

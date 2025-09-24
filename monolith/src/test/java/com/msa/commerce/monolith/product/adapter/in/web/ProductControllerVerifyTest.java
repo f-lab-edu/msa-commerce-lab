@@ -26,9 +26,9 @@ import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCas
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
-import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 @ExtendWith(MockitoExtension.class)

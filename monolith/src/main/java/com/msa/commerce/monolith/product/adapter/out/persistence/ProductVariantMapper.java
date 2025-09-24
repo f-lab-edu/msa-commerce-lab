@@ -115,9 +115,6 @@ public class ProductVariantMapper {
         }
     }
 
-    /**
-     * 상품 변형 생성 시 기본 설정을 적용한 매핑
-     */
     public ProductVariantJpaEntity toEntityWithDefaults(ProductVariant domain, ProductJpaEntity productEntity) {
         ProductVariantJpaEntity entity = toEntity(domain, productEntity);
 
@@ -146,9 +143,6 @@ public class ProductVariantMapper {
         return entity;
     }
 
-    /**
-     * 배치 매핑을 위한 유틸리티 메서드
-     */
     public java.util.List<ProductVariant> toDomainList(java.util.List<ProductVariantJpaEntity> entities) {
         if (entities == null) {
             return new java.util.ArrayList<>();
@@ -160,9 +154,6 @@ public class ProductVariantMapper {
             .toList();
     }
 
-    /**
-     * 유효성 검증을 포함한 매핑
-     */
     public ProductVariant toDomainWithValidation(ProductVariantJpaEntity entity) {
         ProductVariant domain = toDomain(entity);
 

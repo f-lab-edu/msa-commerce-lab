@@ -17,13 +17,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
+import com.msa.commerce.monolith.product.adapter.out.persistence.InventorySnapshotJpaRepository;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
-import com.msa.commerce.monolith.product.adapter.out.persistence.InventorySnapshotJpaRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ProductVerifyServiceTest {

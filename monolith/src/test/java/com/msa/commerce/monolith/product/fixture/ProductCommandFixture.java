@@ -1,20 +1,16 @@
 package com.msa.commerce.monolith.product.fixture;
 
 import java.math.BigDecimal;
-import java.util.stream.Stream;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.params.provider.Arguments;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductCreateCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductType;
 
-/**
- * Product Command 객체들의 테스트 픽스처를 제공하는 유틸리티 클래스
- * @MethodSource와 함께 사용하여 반복적인 Command 객체 생성을 줄임
- */
 public class ProductCommandFixture {
 
     // ProductCreateCommand 관련 픽스처
@@ -284,7 +280,7 @@ public class ProductCommandFixture {
     public static Stream<Arguments> invalidProductBuilderScenarios() {
         return Stream.of(
             Arguments.of("null 상품명",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku("TEST-SKU")
                     .name(null)
                     .basePrice(new BigDecimal("10000"))
@@ -292,7 +288,7 @@ public class ProductCommandFixture {
                     .build(),
                 "Product name is required."),
             Arguments.of("빈 상품명",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku("TEST-SKU")
                     .name("")
                     .basePrice(new BigDecimal("10000"))
@@ -300,7 +296,7 @@ public class ProductCommandFixture {
                     .build(),
                 "Product name is required."),
             Arguments.of("null SKU",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku(null)
                     .name("테스트 상품")
                     .basePrice(new BigDecimal("10000"))
@@ -308,7 +304,7 @@ public class ProductCommandFixture {
                     .build(),
                 "SKU is required."),
             Arguments.of("음수 가격",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku("TEST-SKU")
                     .name("테스트 상품")
                     .basePrice(new BigDecimal("-1000"))
@@ -316,7 +312,7 @@ public class ProductCommandFixture {
                     .build(),
                 "Base price must be greater than 0."),
             Arguments.of("최대 가격 초과",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku("TEST-SKU")
                     .name("테스트 상품")
                     .basePrice(new BigDecimal("999999999999.9999").add(BigDecimal.ONE))
@@ -324,7 +320,7 @@ public class ProductCommandFixture {
                     .build(),
                 "Base price cannot exceed 999,999,999,999.9999."),
             Arguments.of("상품명 길이 초과",
-                (Supplier<Product>) () -> Product.builder()
+                (Supplier<Product>)() -> Product.builder()
                     .sku("TEST-SKU")
                     .name("A".repeat(256))
                     .basePrice(new BigDecimal("10000"))
@@ -358,4 +354,5 @@ public class ProductCommandFixture {
             Arguments.of("최대 수량 초과", validProduct, 11, false)
         );
     }
+
 }

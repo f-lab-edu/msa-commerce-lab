@@ -13,10 +13,10 @@ import com.msa.commerce.monolith.product.adapter.in.web.ProductCreateRequest;
 import com.msa.commerce.monolith.product.adapter.in.web.ProductSearchRequest;
 import com.msa.commerce.monolith.product.adapter.in.web.ProductUpdateRequest;
 import com.msa.commerce.monolith.product.adapter.in.web.ProductVerifyRequest;
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
-import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductCreateCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductVerifyCommand;
 
 @Mapper(
     componentModel = MappingConstants.ComponentModel.SPRING,
@@ -58,7 +58,7 @@ public interface ProductMapper {
     @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
-    
+
     @ValidateResult
     ProductVerifyCommand toVerifyCommand(ProductVerifyRequest request);
 
@@ -112,5 +112,6 @@ public interface ProductMapper {
             .trim()
             .replaceAll("\\s+", "-");
     }
+
 }
 

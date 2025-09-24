@@ -21,10 +21,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Sort;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
@@ -40,7 +41,7 @@ class ProductSearchServiceTest {
     private ProductViewCountPort productViewCountPort;
 
     @Mock
-    private ProductSearchMapper productSearchMapper;
+    private ProductMapper productMapper;
 
     @InjectMocks
     private ProductSearchService productSearchService;
@@ -190,8 +191,8 @@ class ProductSearchServiceTest {
 
         given(productRepository.searchProducts(any(ProductSearchCommand.class))).willReturn(productPage);
         given(productViewCountPort.getViewCount(anyLong())).willReturn(5L);
-        given(productSearchMapper.toSearchResponse(any(Product.class))).willReturn(response1, response2);
-        given(productSearchMapper.toPageResponse(any())).willReturn(pageResponse);
+        given(productMapper.toSearchResponseWithViewCount(any(Product.class), anyLong())).willReturn(response1, response2);
+        given(productMapper.toPageResponse(any())).willReturn(pageResponse);
 
         // When
         ProductPageResponse result = productSearchService.searchProducts(searchCommand);
@@ -227,7 +228,7 @@ class ProductSearchServiceTest {
             .build();
 
         given(productRepository.searchProducts(any(ProductSearchCommand.class))).willReturn(emptyPage);
-        given(productSearchMapper.toPageResponse(any())).willReturn(emptyPageResponse);
+        given(productMapper.toPageResponse(any())).willReturn(emptyPageResponse);
 
         // When
         ProductPageResponse result = productSearchService.searchProducts(searchCommand);

@@ -20,6 +20,7 @@ import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
@@ -35,7 +36,7 @@ class ProductGetServiceTest {
     private ProductViewCountPort viewCountPort;
 
     @Mock
-    private ProductResponseMapper responseMapper;
+    private ProductMapper productMapper;
 
     @InjectMocks
     private ProductGetService productGetService;
@@ -137,7 +138,7 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         // Inventory handling removed - using event sourcing approach
-        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
@@ -146,7 +147,7 @@ class ProductGetServiceTest {
         assertThat(result).isEqualTo(productResponse);
         then(productRepository).should(times(1)).findById(productId);
         // Inventory verification removed - using event sourcing approach
-        then(responseMapper).should(times(1)).toResponse(activeProduct);
+        then(productMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
 
@@ -157,7 +158,7 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         // Inventory handling removed - using event sourcing approach
-        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId, false);
@@ -180,7 +181,7 @@ class ProductGetServiceTest {
             .hasMessage("Product not found with id: " + productId);
 
         // Inventory verification removed - using event sourcing approach
-        then(responseMapper).should(never()).toResponse(any());
+        then(productMapper).should(never()).toResponse(any());
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -197,7 +198,7 @@ class ProductGetServiceTest {
             .hasMessage("Product not found with id: " + productId);
 
         // Inventory verification removed - using event sourcing approach
-        then(responseMapper).should(never()).toResponse(any());
+        then(productMapper).should(never()).toResponse(any());
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -208,14 +209,14 @@ class ProductGetServiceTest {
         Long productId = 1L;
         given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
         // Inventory handling removed - using event sourcing approach
-        given(responseMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(responseMapper).should(times(1)).toResponse(activeProduct);
+        then(productMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
 

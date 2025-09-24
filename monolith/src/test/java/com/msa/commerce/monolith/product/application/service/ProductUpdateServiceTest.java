@@ -23,8 +23,9 @@ import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
@@ -41,7 +42,7 @@ class ProductUpdateServiceTest {
     private ProductRepository productRepository;
 
     @Mock
-    private ProductResponseMapper productResponseMapper;
+    private ProductMapper productMapper;
 
     @Mock
     private Validator validator;
@@ -117,7 +118,7 @@ class ProductUpdateServiceTest {
         given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(updateCommand);
@@ -130,7 +131,7 @@ class ProductUpdateServiceTest {
 
         verify(productRepository).findById(1L);
         verify(productRepository).save(any(Product.class));
-        verify(productResponseMapper).toResponse(any(Product.class));
+        verify(productMapper).toResponse(any(Product.class));
     }
 
     @Test
@@ -223,7 +224,7 @@ class ProductUpdateServiceTest {
         // when & then - command.validate()가 예외를 던지지 않으면 정상 처리
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
 
         ProductResponse response = productUpdateService.updateProduct(emptyCommand);
 
@@ -242,7 +243,7 @@ class ProductUpdateServiceTest {
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(partialCommand);
@@ -310,7 +311,7 @@ class ProductUpdateServiceTest {
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(commandWithSameSku);
@@ -334,7 +335,7 @@ class ProductUpdateServiceTest {
 
         given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productResponseMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(commandWithSameName);

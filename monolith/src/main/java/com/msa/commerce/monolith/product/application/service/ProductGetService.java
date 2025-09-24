@@ -8,9 +8,10 @@ import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.application.port.out.ProductViewCountPort;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
@@ -27,7 +28,7 @@ public class ProductGetService implements ProductGetUseCase {
 
     private final ProductViewCountPort viewCountPort;
 
-    private final ProductResponseMapper responseMapper;
+    private final ProductMapper productMapper;
 
     @Override
     public ProductResponse getProduct(Long productId) {
@@ -45,7 +46,7 @@ public class ProductGetService implements ProductGetUseCase {
             throw new ResourceNotFoundException(String.format("Product not found with id: %d", productId));
         }
 
-        ProductResponse response = responseMapper.toResponse(product);
+        ProductResponse response = productMapper.toResponse(product);
 
         if (increaseViewCount) {
             try {
@@ -60,7 +61,8 @@ public class ProductGetService implements ProductGetUseCase {
     @Override
     public ProductPageResponse searchProducts(ProductSearchCommand searchCommand) {
         var productPage = productRepository.searchProducts(searchCommand);
-        return ProductPageResponse.from(productPage, responseMapper::toSearchResponse);
+        var responsePage = productPage.map(productMapper::toSearchResponse);
+        return productMapper.toPageResponse(responsePage);
     }
 
 }

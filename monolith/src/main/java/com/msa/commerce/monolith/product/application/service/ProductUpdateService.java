@@ -13,9 +13,10 @@ import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
@@ -32,7 +33,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private final ProductRepository productRepository;
 
-    private final ProductResponseMapper productResponseMapper;
+    private final ProductMapper productMapper;
 
     private final Validator validator;
 
@@ -52,7 +53,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
         applicationEventPublisher.publishEvent(ProductEvent.productUpdated(updatedProduct));
 
-        return productResponseMapper.toResponse(updatedProduct);
+        return productMapper.toResponse(updatedProduct);
     }
 
     private Product findAndValidateProduct(Long productId) {
@@ -106,65 +107,6 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         );
     }
 
-    private void performPostUpdateOperations(Product updatedProduct, ProductUpdateCommand command,
-        Product originalProduct) {
-        invalidateProductCache(updatedProduct.getId());
-        logProductChanges(originalProduct, updatedProduct, command);
-    }
-
-    private void logProductChanges(Product before, Product after, ProductUpdateCommand command) {
-        log.info("Product changes for ID: {} - Updated fields: {}",
-            after.getId(), getUpdatedFieldsDescription(command));
-    }
-
-    private String getUpdatedFieldsDescription(ProductUpdateCommand command) {
-        StringBuilder description = new StringBuilder();
-
-        appendBasicFieldUpdates(description, command);
-        appendPriceFieldUpdates(description, command);
-        appendMetadataFieldUpdates(description, command);
-
-        return description.length() > 0 ? description.substring(0, description.length() - 1) : "none";
-    }
-
-    private void appendBasicFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getSku(), "sku");
-        appendFieldIfNotNull(description, command.getName(), "name");
-        appendFieldIfNotNull(description, command.getShortDescription(), "shortDescription");
-        appendFieldIfNotNull(description, command.getDescription(), "description");
-        appendFieldIfNotNull(description, command.getCategoryId(), "categoryId");
-        appendFieldIfNotNull(description, command.getBrand(), "brand");
-        appendFieldIfNotNull(description, command.getProductType(), "productType");
-    }
-
-    private void appendPriceFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getBasePrice(), "basePrice");
-        appendFieldIfNotNull(description, command.getSalePrice(), "salePrice");
-        appendFieldIfNotNull(description, command.getCurrency(), "currency");
-        appendFieldIfNotNull(description, command.getWeightGrams(), "weightGrams");
-    }
-
-    private void appendMetadataFieldUpdates(StringBuilder description, ProductUpdateCommand command) {
-        appendFieldIfNotNull(description, command.getRequiresShipping(), "requiresShipping");
-        appendFieldIfNotNull(description, command.getIsTaxable(), "isTaxable");
-        appendFieldIfNotNull(description, command.getIsFeatured(), "isFeatured");
-        appendFieldIfNotNull(description, command.getSlug(), "slug");
-        appendFieldIfNotNull(description, command.getSearchTags(), "searchTags");
-        appendFieldIfNotNull(description, command.getPrimaryImageUrl(), "primaryImageUrl");
-        appendFieldIfNotNull(description, command.getMinOrderQuantity(), "minOrderQuantity");
-        appendFieldIfNotNull(description, command.getMaxOrderQuantity(), "maxOrderQuantity");
-    }
-
-    private void appendFieldIfNotNull(StringBuilder description, Object field, String fieldName) {
-        if (field != null) {
-            description.append(fieldName).append(",");
-        }
-    }
-
-    private void invalidateProductCache(Long productId) {
-        log.debug("Invalidating cache for product ID: {}", productId);
-        log.info("Cache invalidation completed for product ID: {}", productId);
-    }
 
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);

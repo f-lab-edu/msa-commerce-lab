@@ -7,10 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.msa.commerce.common.aop.ValidateCommand;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ErrorCode;
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 
@@ -23,7 +24,7 @@ public class ProductCreateService implements ProductCreateUseCase {
 
     private final ProductRepository productRepository;
 
-    private final ProductResponseMapper productResponseMapper;
+    private final ProductMapper productMapper;
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -36,34 +37,13 @@ public class ProductCreateService implements ProductCreateUseCase {
     }
 
     private ProductResponse executeProductCreation(ProductCreateCommand command) {
-        Product product = Product.builder()
-            .sku(command.getSku())
-            .name(command.getName())
-            .shortDescription(command.getShortDescription())
-            .description(command.getDescription())
-            .categoryId(command.getCategoryId())
-            .brand(command.getBrand())
-            .productType(command.getProductType())
-            .basePrice(command.getBasePrice())
-            .salePrice(command.getSalePrice())
-            .currency(command.getCurrency())
-            .weightGrams(command.getWeightGrams())
-            .requiresShipping(command.getRequiresShipping())
-            .isTaxable(command.getIsTaxable())
-            .isFeatured(command.getIsFeatured())
-            .slug(command.getSlug())
-            .searchTags(command.getSearchTags())
-            .primaryImageUrl(command.getPrimaryImageUrl())
-            .minOrderQuantity(command.getMinOrderQuantity())
-            .maxOrderQuantity(command.getMaxOrderQuantity())
-            .build();
-
+        Product product = productMapper.toProduct(command);
         Product savedProduct = productRepository.save(product);
 
         // 통합 이벤트 발행 (트랜잭션 커밋 후 캐시 무효화 처리)
         applicationEventPublisher.publishEvent(ProductEvent.productCreated(savedProduct));
 
-        return productResponseMapper.toResponse(savedProduct);
+        return productMapper.toResponse(savedProduct);
     }
 
     private void validateDuplicateSku(String sku) {

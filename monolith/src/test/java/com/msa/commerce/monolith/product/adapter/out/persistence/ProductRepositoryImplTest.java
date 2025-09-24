@@ -15,7 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.msa.commerce.monolith.config.TestBeansConfiguration;
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;

@@ -11,7 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 
@@ -76,7 +76,7 @@ public class ProductRepositoryImpl implements ProductRepository {
             .map(ProductJpaEntity::toDomainEntity)
             .collect(Collectors.toList());
     }
-    
+
     @Override
     public List<Product> findAllByIds(List<Long> ids) {
         return productJpaRepository.findAllById(ids)

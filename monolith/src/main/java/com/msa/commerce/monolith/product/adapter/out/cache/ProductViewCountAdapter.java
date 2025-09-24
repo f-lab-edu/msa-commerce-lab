@@ -36,7 +36,6 @@ public class ProductViewCountAdapter implements ProductViewCountPort {
                 redisTemplate.expire(key, VIEW_COUNT_TTL_HOURS, TimeUnit.HOURS);
             }
 
-            log.debug("View count incremented for product {}: {}", productId, newCount);
 
         } catch (Exception e) {
             log.error("Failed to increment view count for product {}", productId, e);

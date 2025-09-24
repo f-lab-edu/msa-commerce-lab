@@ -9,9 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.msa.commerce.monolith.product.adapter.out.persistence.InventorySnapshotJpaRepository;
-import com.msa.commerce.monolith.product.application.port.in.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductVerifyCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
 import com.msa.commerce.monolith.product.domain.Product;
 

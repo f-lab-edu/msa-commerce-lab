@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.domain.Specification;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 
 import jakarta.persistence.criteria.Predicate;

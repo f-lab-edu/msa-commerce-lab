@@ -19,14 +19,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
-import com.msa.commerce.monolith.product.application.port.in.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.application.port.in.command.ProductCreateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
-import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductCreateService 테스트")
@@ -36,7 +36,7 @@ class ProductCreateServiceTest {
     private ProductRepository productRepository;
 
     @Mock
-    private ProductResponseMapper productResponseMapper;
+    private ProductMapper productMapper;
 
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
@@ -87,8 +87,9 @@ class ProductCreateServiceTest {
         // given
         ProductResponse expectedResponse = createProductResponse();
         given(productRepository.existsBySku(validCommand.getSku())).willReturn(false);
+        given(productMapper.toProduct(validCommand)).willReturn(savedProduct);
         given(productRepository.save(any(Product.class))).willReturn(savedProduct);
-        given(productResponseMapper.toResponse(savedProduct)).willReturn(expectedResponse);
+        given(productMapper.toResponse(savedProduct)).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productCreateService.createProduct(validCommand);
@@ -103,7 +104,7 @@ class ProductCreateServiceTest {
 
         verify(productRepository).existsBySku(validCommand.getSku());
         verify(productRepository).save(any(Product.class));
-        verify(productResponseMapper).toResponse(savedProduct);
+        verify(productMapper).toResponse(savedProduct);
     }
 
     @Test
@@ -120,7 +121,7 @@ class ProductCreateServiceTest {
 
         verify(productRepository).existsBySku(duplicateSkuCommand.getSku());
         verify(productRepository, never()).save(any(Product.class));
-        verify(productResponseMapper, never()).toResponse(any(Product.class));
+        verify(productMapper, never()).toResponse(any(Product.class));
     }
 
     @ParameterizedTest(name = "{0} - 유효하지 않은 명령으로 생성 시 예외 발생")

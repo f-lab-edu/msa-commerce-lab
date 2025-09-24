@@ -1,4 +1,4 @@
-package com.msa.commerce.monolith.product.application.port.in;
+package com.msa.commerce.monolith.product.application.port.in.command;
 
 import java.util.List;
 

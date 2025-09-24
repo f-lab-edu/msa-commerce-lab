@@ -21,10 +21,6 @@ import com.msa.commerce.monolith.product.domain.StockStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * 재고 관리를 위한 도메인 서비스
- * Event Sourcing 패턴을 적용하여 모든 재고 변경 이력을 관리
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -32,15 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 public class InventoryDomainService {
 
     private final InventorySnapshotJpaRepository inventorySnapshotRepository;
+
     private final InventoryEventJpaRepository inventoryEventRepository;
+
     private final ObjectMapper objectMapper;
 
-    /**
-     * 재고 입고 처리
-     */
     public void stockIn(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                       String locationCode, int quantity, String reason,
-                       String referenceType, String referenceId) {
+        String locationCode, int quantity, String reason,
+        String referenceType, String referenceId) {
 
         validateStockOperation(quantity, "입고");
 
@@ -61,15 +56,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 입고 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
-                product.getId(), quantity, locationCode);
+            product.getId(), quantity, locationCode);
     }
 
-    /**
-     * 재고 출고 처리
-     */
     public void stockOut(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                        String locationCode, int quantity, String reason,
-                        String referenceType, String referenceId) {
+        String locationCode, int quantity, String reason,
+        String referenceType, String referenceId) {
 
         validateStockOperation(quantity, "출고");
 
@@ -95,15 +87,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 출고 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
-                product.getId(), quantity, locationCode);
+            product.getId(), quantity, locationCode);
     }
 
-    /**
-     * 재고 예약 처리
-     */
     public void reserveStock(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                           String locationCode, int quantity, String reason,
-                           String referenceType, String referenceId) {
+        String locationCode, int quantity, String reason,
+        String referenceType, String referenceId) {
 
         validateStockOperation(quantity, "예약");
 
@@ -125,15 +114,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 예약 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
-                product.getId(), quantity, locationCode);
+            product.getId(), quantity, locationCode);
     }
 
-    /**
-     * 재고 예약 해제
-     */
     public void releaseReservation(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                                 String locationCode, int quantity, String reason,
-                                 String referenceType, String referenceId) {
+        String locationCode, int quantity, String reason,
+        String referenceType, String referenceId) {
 
         validateStockOperation(quantity, "예약해제");
 
@@ -154,15 +140,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 예약 해제 완료 - 상품: {}, 수량: {}, 위치: {}",
-                product.getId(), quantity, locationCode);
+            product.getId(), quantity, locationCode);
     }
 
-    /**
-     * 재고 예약 확정
-     */
     public void confirmReservation(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                                 String locationCode, int quantity, String reason,
-                                 String referenceType, String referenceId) {
+        String locationCode, int quantity, String reason,
+        String referenceType, String referenceId) {
 
         validateStockOperation(quantity, "예약확정");
 
@@ -183,15 +166,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 예약 확정 완료 - 상품: {}, 수량: {}, 위치: {}",
-                product.getId(), quantity, locationCode);
+            product.getId(), quantity, locationCode);
     }
 
-    /**
-     * 재고 조정 (관리자용)
-     */
     public void adjustStock(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                          String locationCode, int adjustmentQuantity, String reason,
-                          String referenceType, String referenceId) {
+        String locationCode, int adjustmentQuantity, String reason,
+        String referenceType, String referenceId) {
 
         if (adjustmentQuantity == 0) {
             throw new IllegalArgumentException("조정 수량은 0이 될 수 없습니다.");
@@ -214,15 +194,12 @@ public class InventoryDomainService {
         );
 
         log.info("재고 조정 완료 - 상품: {}, 조정량: {}, 위치: {}",
-                product.getId(), adjustmentQuantity, locationCode);
+            product.getId(), adjustmentQuantity, locationCode);
     }
 
-    /**
-     * 재고 상태 조회
-     */
     @Transactional(readOnly = true)
     public StockStatus getStockStatus(ProductJpaEntity product, ProductVariantJpaEntity variant,
-                                    String locationCode) {
+        String locationCode) {
         return inventorySnapshotRepository
             .findByProductIdAndVariantIdAndLocationCode(
                 product.getId(),
@@ -233,17 +210,11 @@ public class InventoryDomainService {
             .orElse(StockStatus.OUT_OF_STOCK);
     }
 
-    /**
-     * 상품별 전체 재고 조회
-     */
     @Transactional(readOnly = true)
     public List<InventorySnapshotJpaEntity> getProductInventory(Long productId) {
         return inventorySnapshotRepository.findByProductIdWithProduct(productId);
     }
 
-    /**
-     * 재고 이벤트 이력 조회
-     */
     @Transactional(readOnly = true)
     public List<InventoryEventJpaEntity> getInventoryHistory(Long productId, LocalDateTime since) {
         if (since != null) {
@@ -253,9 +224,6 @@ public class InventoryDomainService {
         }
     }
 
-    /**
-     * 상품 삭제 시 재고 비활성화
-     */
     public void disableInventoryForProduct(Long productId, String reason, String referenceType, String referenceId) {
         List<InventorySnapshotJpaEntity> snapshots = inventorySnapshotRepository.findByProductIdWithProduct(productId);
 
@@ -280,8 +248,8 @@ public class InventoryDomainService {
     }
 
     private InventorySnapshotJpaEntity getOrCreateSnapshot(ProductJpaEntity product,
-                                                         ProductVariantJpaEntity variant,
-                                                         String locationCode) {
+        ProductVariantJpaEntity variant,
+        String locationCode) {
         return inventorySnapshotRepository
             .findByProductIdAndVariantIdAndLocationCode(
                 product.getId(),
@@ -292,8 +260,8 @@ public class InventoryDomainService {
     }
 
     private InventorySnapshotJpaEntity createNewSnapshot(ProductJpaEntity product,
-                                                       ProductVariantJpaEntity variant,
-                                                       String locationCode) {
+        ProductVariantJpaEntity variant,
+        String locationCode) {
         InventorySnapshotJpaEntity snapshot = InventorySnapshotJpaEntity.builder()
             .product(product)
             .variant(variant)
@@ -307,14 +275,14 @@ public class InventoryDomainService {
     }
 
     private void createInventoryEvent(InventoryEventType eventType, ProductJpaEntity product,
-                                    ProductVariantJpaEntity variant, String locationCode,
-                                    int quantityChange, int quantityBefore, int quantityAfter,
-                                    String reason, String referenceType, String referenceId,
-                                    String eventData) {
+        ProductVariantJpaEntity variant, String locationCode,
+        int quantityChange, int quantityBefore, int quantityAfter,
+        String reason, String referenceType, String referenceId,
+        String eventData) {
 
         String aggregateId = generateAggregateId(product.getId(),
-                                               variant != null ? variant.getId() : null,
-                                               locationCode);
+            variant != null ? variant.getId() : null,
+            locationCode);
 
         Long nextVersion = inventoryEventRepository.getNextVersionForAggregate(aggregateId);
 
@@ -368,4 +336,5 @@ public class InventoryDomainService {
             throw new IllegalArgumentException(String.format("%s 수량은 0보다 커야 합니다.", operationType));
         }
     }
+
 }
