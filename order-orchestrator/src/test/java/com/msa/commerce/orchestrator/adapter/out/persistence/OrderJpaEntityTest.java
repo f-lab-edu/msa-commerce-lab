@@ -1,6 +1,7 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderItem;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,7 +47,11 @@ class OrderJpaEntityTest {
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        // 주문 상태 변경
+        // 주문에 아이템을 추가하고 상태 변경
+        OrderItem orderItem = OrderItem.create(
+            1L, "테스트 상품", "TEST-001", null, null, 1, new BigDecimal("10000.00")
+        );
+        order.addOrderItem(orderItem);
         order.confirm();
         order.updateTaxAmount(new BigDecimal("1000.00"));
 
