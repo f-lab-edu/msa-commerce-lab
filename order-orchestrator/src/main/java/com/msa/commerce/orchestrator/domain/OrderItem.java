@@ -4,10 +4,6 @@ import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
-/**
- * Domain model representing an item within an order.
- * Contains product information and quantity details.
- */
 public class OrderItem {
 
     private UUID orderItemId;
@@ -20,15 +16,9 @@ public class OrderItem {
     private BigDecimal unitPrice;
     private BigDecimal totalPrice;
 
-    /**
-     * Protected constructor for JPA
-     */
     protected OrderItem() {
     }
 
-    /**
-     * Private constructor for creating OrderItem instances
-     */
     private OrderItem(UUID orderItemId, Long productId, String productName, String productSku,
                      Long productVariantId, String variantName, Integer quantity,
                      BigDecimal unitPrice) {
@@ -43,9 +33,6 @@ public class OrderItem {
         this.totalPrice = calculateTotalPrice();
     }
 
-    /**
-     * Factory method to create a new OrderItem
-     */
     public static OrderItem create(Long productId, String productName, String productSku,
                                   Long productVariantId, String variantName, Integer quantity,
                                   BigDecimal unitPrice) {
@@ -63,27 +50,18 @@ public class OrderItem {
         );
     }
 
-    /**
-     * Updates the quantity of this order item
-     */
     public void updateQuantity(Integer newQuantity) {
         validateQuantity(newQuantity);
         this.quantity = newQuantity;
         this.totalPrice = calculateTotalPrice();
     }
 
-    /**
-     * Updates the unit price of this order item
-     */
     public void updateUnitPrice(BigDecimal newUnitPrice) {
         validateUnitPrice(newUnitPrice);
         this.unitPrice = newUnitPrice;
         this.totalPrice = calculateTotalPrice();
     }
 
-    /**
-     * Calculates the total price for this order item
-     */
     private BigDecimal calculateTotalPrice() {
         if (quantity == null || unitPrice == null) {
             return BigDecimal.ZERO;
@@ -91,9 +69,6 @@ public class OrderItem {
         return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
-    /**
-     * Validates creation parameters
-     */
     private static void validateCreationParameters(Long productId, String productName,
                                                  String productSku, Integer quantity,
                                                  BigDecimal unitPrice) {
@@ -110,18 +85,12 @@ public class OrderItem {
         validateUnitPrice(unitPrice);
     }
 
-    /**
-     * Validates quantity value
-     */
     private static void validateQuantity(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new IllegalArgumentException("Quantity must be greater than 0");
         }
     }
 
-    /**
-     * Validates unit price value
-     */
     private static void validateUnitPrice(BigDecimal unitPrice) {
         if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Unit price cannot be null or negative");
