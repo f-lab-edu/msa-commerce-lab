@@ -114,9 +114,6 @@ public class OrderJpaEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItemJpaEntity> orderItems = new ArrayList<>();
 
-    /**
-     * Creates OrderJpaEntity from Order domain model
-     */
     public static OrderJpaEntity from(Order order) {
         OrderJpaEntity entity = new OrderJpaEntity();
         entity.orderUuid = order.getOrderId();
@@ -143,9 +140,6 @@ public class OrderJpaEntity {
         return entity;
     }
 
-    /**
-     * Converts to Order domain model
-     */
     public Order toDomain() {
         // Note: This creates a new Order but we need to use reflection or builder pattern
         // to properly hydrate the domain object with existing data
@@ -154,9 +148,6 @@ public class OrderJpaEntity {
         throw new UnsupportedOperationException("Domain conversion not yet implemented - requires proper hydration strategy");
     }
 
-    /**
-     * Updates entity from Order domain model (for existing entities)
-     */
     public void updateFrom(Order order) {
         this.status = order.getStatus();
         this.subtotalAmount = order.getSubtotalAmount();
