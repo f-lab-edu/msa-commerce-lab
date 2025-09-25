@@ -12,10 +12,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * JPA Entity for OrderItem domain model.
- * Maps to the order_items table in db_order database.
- */
 @Entity
 @Table(name = "order_items")
 @Getter
@@ -59,9 +55,6 @@ public class OrderItemJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Creates OrderItemJpaEntity from OrderItem domain model
-     */
     public static OrderItemJpaEntity from(OrderItem orderItem, OrderJpaEntity orderEntity) {
         OrderItemJpaEntity entity = new OrderItemJpaEntity();
         entity.order = orderEntity;
@@ -76,9 +69,6 @@ public class OrderItemJpaEntity {
         return entity;
     }
 
-    /**
-     * Converts to OrderItem domain model
-     */
     public OrderItem toDomain() {
         return OrderItem.create(
             productId,
@@ -91,9 +81,6 @@ public class OrderItemJpaEntity {
         );
     }
 
-    /**
-     * Updates entity from OrderItem domain model
-     */
     public void updateFrom(OrderItem orderItem) {
         this.quantity = orderItem.getQuantity();
         this.unitPrice = orderItem.getUnitPrice();

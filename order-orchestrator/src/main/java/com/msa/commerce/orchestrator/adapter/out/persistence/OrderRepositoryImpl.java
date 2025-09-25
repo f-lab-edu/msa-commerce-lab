@@ -12,14 +12,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Implementation of OrderRepository port using JPA.
- * Bridges the domain layer with the persistence layer.
- *
- * Note: This is a temporary implementation. The domain reconstitution
- * is not yet implemented, so some methods will throw exceptions.
- * This needs to be completed in the next iteration.
- */
 @Repository
 @RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepository {

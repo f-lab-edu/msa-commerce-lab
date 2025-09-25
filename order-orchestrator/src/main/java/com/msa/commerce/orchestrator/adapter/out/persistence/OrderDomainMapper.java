@@ -7,19 +7,9 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Mapper to convert between JPA entities and domain models.
- * Handles the conversion logic for Order and OrderItem.
- */
 @Component
 public class OrderDomainMapper {
 
-    /**
-     * Converts OrderJpaEntity to Order domain model
-     * Note: This is a temporary implementation. In a real scenario, we would need
-     * a proper reconstitution method in the domain model or use a more sophisticated
-     * mapping strategy that can handle private constructors and immutable objects.
-     */
     public Order toDomain(OrderJpaEntity entity) {
         // For now, we'll create a new order and then manually set the state
         // This is not ideal but works for the MVP implementation
@@ -39,18 +29,12 @@ public class OrderDomainMapper {
         );
     }
 
-    /**
-     * Converts list of OrderItemJpaEntity to list of OrderItem domain models
-     */
     public List<OrderItem> toOrderItemDomainList(List<OrderItemJpaEntity> entities) {
         return entities.stream()
                 .map(this::toOrderItemDomain)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Converts OrderItemJpaEntity to OrderItem domain model
-     */
     public OrderItem toOrderItemDomain(OrderItemJpaEntity entity) {
         return OrderItem.create(
             entity.getProductId(),
