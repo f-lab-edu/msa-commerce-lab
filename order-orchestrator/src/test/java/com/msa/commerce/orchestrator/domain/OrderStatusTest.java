@@ -75,7 +75,6 @@ class OrderStatusTest {
     void statusLogicalConsistency() {
         // given & when & then
         for (OrderStatus status : OrderStatus.values()) {
-            // 완료된 상태는 처리 중이거나 취소 가능하면 안됨
             if (status.isCompleted()) {
                 assertThat(status.isProcessing())
                     .as("완료된 상태 %s는 처리 중이면 안됨", status)
