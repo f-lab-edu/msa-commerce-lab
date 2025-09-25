@@ -308,7 +308,6 @@ class OrderTest {
         assertThat(order.getTotalAmount()).isEqualTo(new BigDecimal("24000.00")); // 20,000 + 2,000 + 3,000 - 1,000
     }
 
-    // 예외 테스트들
     @ParameterizedTest
     @ValueSource(strings = {"", " ", "   "})
     @DisplayName("빈 주문번호로 생성 시 예외")

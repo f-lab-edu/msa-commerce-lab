@@ -227,7 +227,6 @@ public class Order {
         }
     }
 
-    // Getters
     public UUID getOrderId() {
         return orderId;
     }
