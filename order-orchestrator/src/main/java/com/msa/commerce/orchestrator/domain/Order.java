@@ -4,10 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
-/**
- * Domain model representing an order in the e-commerce system.
- * Aggregates order items and manages order lifecycle.
- */
 public class Order {
 
     private UUID orderId;
@@ -34,16 +30,10 @@ public class Order {
 
     private List<OrderItem> orderItems;
 
-    /**
-     * Protected constructor for JPA
-     */
     protected Order() {
         this.orderItems = new ArrayList<>();
     }
 
-    /**
-     * Private constructor for creating Order instances
-     */
     private Order(UUID orderId, String orderNumber, Long customerId,
                  Map<String, Object> shippingAddress, String sourceChannel) {
         this.orderId = orderId;
@@ -65,9 +55,6 @@ public class Order {
         this.orderItems = new ArrayList<>();
     }
 
-    /**
-     * Factory method to create a new Order
-     */
     public static Order create(String orderNumber, Long customerId,
                               Map<String, Object> shippingAddress, String sourceChannel) {
         validateCreationParameters(orderNumber, customerId, shippingAddress);
@@ -81,9 +68,6 @@ public class Order {
         );
     }
 
-    /**
-     * Adds an order item to this order
-     */
     public void addOrderItem(OrderItem orderItem) {
         if (orderItem == null) {
             throw new IllegalArgumentException("Order item cannot be null");
@@ -97,9 +81,6 @@ public class Order {
         recalculateAmounts();
     }
 
-    /**
-     * Removes an order item from this order
-     */
     public void removeOrderItem(UUID orderItemId) {
         if (orderItemId == null) {
             throw new IllegalArgumentException("Order item ID cannot be null");
@@ -115,9 +96,6 @@ public class Order {
         }
     }
 
-    /**
-     * Confirms the order
-     */
     public void confirm() {
         if (status != OrderStatus.PENDING) {
             throw new IllegalStateException("Order must be in PENDING status to be confirmed");
@@ -132,9 +110,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Marks payment as pending
-     */
     public void markPaymentPending() {
         if (status != OrderStatus.CONFIRMED) {
             throw new IllegalStateException("Order must be confirmed before payment can be pending");
@@ -144,9 +119,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Marks payment as completed
-     */
     public void markPaymentCompleted() {
         if (status != OrderStatus.PAYMENT_PENDING) {
             throw new IllegalStateException("Payment must be pending before it can be completed");
@@ -157,9 +129,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Marks order as processing
-     */
     public void startProcessing() {
         if (status != OrderStatus.PAID) {
             throw new IllegalStateException("Order must be paid before processing can start");
@@ -169,9 +138,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Marks order as shipped
-     */
     public void markShipped() {
         if (status != OrderStatus.PROCESSING) {
             throw new IllegalStateException("Order must be processing before it can be shipped");
@@ -182,9 +148,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Marks order as delivered
-     */
     public void markDelivered() {
         if (status != OrderStatus.SHIPPED) {
             throw new IllegalStateException("Order must be shipped before it can be delivered");
@@ -195,9 +158,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Cancels the order
-     */
     public void cancel() {
         if (!status.canBeCancelled()) {
             throw new IllegalStateException("Order cannot be cancelled in status: " + status);
@@ -208,9 +168,6 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Updates shipping amount
-     */
     public void updateShippingAmount(BigDecimal shippingAmount) {
         if (shippingAmount == null || shippingAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Shipping amount cannot be null or negative");
@@ -220,9 +177,6 @@ public class Order {
         recalculateAmounts();
     }
 
-    /**
-     * Updates tax amount
-     */
     public void updateTaxAmount(BigDecimal taxAmount) {
         if (taxAmount == null || taxAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Tax amount cannot be null or negative");
@@ -232,9 +186,6 @@ public class Order {
         recalculateAmounts();
     }
 
-    /**
-     * Updates discount amount
-     */
     public void updateDiscountAmount(BigDecimal discountAmount) {
         if (discountAmount == null || discountAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Discount amount cannot be null or negative");
@@ -244,9 +195,6 @@ public class Order {
         recalculateAmounts();
     }
 
-    /**
-     * Recalculates order amounts based on order items
-     */
     private void recalculateAmounts() {
         this.subtotalAmount = orderItems.stream()
             .map(OrderItem::getTotalPrice)
@@ -260,18 +208,12 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Gets total item count
-     */
     public int getTotalItemCount() {
         return orderItems.stream()
             .mapToInt(OrderItem::getQuantity)
             .sum();
     }
 
-    /**
-     * Validates creation parameters
-     */
     private static void validateCreationParameters(String orderNumber, Long customerId,
                                                  Map<String, Object> shippingAddress) {
         if (orderNumber == null || orderNumber.trim().isEmpty()) {
