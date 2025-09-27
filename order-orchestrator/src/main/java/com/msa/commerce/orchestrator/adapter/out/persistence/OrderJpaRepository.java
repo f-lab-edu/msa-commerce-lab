@@ -1,18 +1,18 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.OrderStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
-                                           JpaSpecificationExecutor<OrderJpaEntity> {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import com.msa.commerce.orchestrator.domain.OrderStatus;
+
+public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>, JpaSpecificationExecutor<OrderJpaEntity> {
 
     Optional<OrderJpaEntity> findByOrderUuid(UUID orderUuid);
 
@@ -29,13 +29,10 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
     List<OrderJpaEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
     @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate,
-                                              @Param("endDate") LocalDateTime endDate);
+    List<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT o FROM OrderJpaEntity o WHERE o.userId = :userId AND o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findUserOrdersByDateRange(@Param("userId") Long userId,
-                                                   @Param("startDate") LocalDateTime startDate,
-                                                   @Param("endDate") LocalDateTime endDate);
+    List<OrderJpaEntity> findUserOrdersByDateRange(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     long countByStatus(OrderStatus status);
 
@@ -46,4 +43,5 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
 
     @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderUuid = :orderUuid")
     Optional<OrderJpaEntity> findByOrderUuidWithItems(@Param("orderUuid") UUID orderUuid);
+
 }

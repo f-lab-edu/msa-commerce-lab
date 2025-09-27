@@ -2,40 +2,100 @@ package com.msa.commerce.orchestrator.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(of = "orderId")
+@ToString(exclude = {"orderItems", "shippingAddress"})
 public class Order {
 
     private UUID orderId;
+
     private String orderNumber;
+
     private Long customerId;
+
     private OrderStatus status;
+
     private BigDecimal subtotalAmount;
+
     private BigDecimal taxAmount;
+
     private BigDecimal shippingAmount;
+
     private BigDecimal discountAmount;
+
     private BigDecimal totalAmount;
+
     private String currency;
+
     private Map<String, Object> shippingAddress;
+
     private LocalDateTime orderDate;
+
     private LocalDateTime confirmedAt;
+
     private LocalDateTime paymentCompletedAt;
+
     private LocalDateTime shippedAt;
+
     private LocalDateTime deliveredAt;
+
     private LocalDateTime cancelledAt;
+
     private String sourceChannel;
+
     private Long version;
+
     private LocalDateTime createdAt;
+
     private LocalDateTime updatedAt;
 
-    private List<OrderItem> orderItems;
+    private List<OrderItem> orderItems = new ArrayList<>();
 
-    protected Order() {
-        this.orderItems = new ArrayList<>();
+    @Builder
+    public Order(UUID orderId, String orderNumber, Long customerId, OrderStatus status, BigDecimal subtotalAmount, BigDecimal taxAmount, BigDecimal shippingAmount, BigDecimal discountAmount,
+        BigDecimal totalAmount, String currency, Map<String, Object> shippingAddress, LocalDateTime orderDate, LocalDateTime confirmedAt, LocalDateTime paymentCompletedAt, LocalDateTime shippedAt,
+        LocalDateTime deliveredAt, LocalDateTime cancelledAt, String sourceChannel, Long version, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems) {
+        this.orderId = orderId;
+        this.orderNumber = orderNumber;
+        this.customerId = customerId;
+        this.status = status;
+        this.subtotalAmount = subtotalAmount;
+        this.taxAmount = taxAmount;
+        this.shippingAmount = shippingAmount;
+        this.discountAmount = discountAmount;
+        this.totalAmount = totalAmount;
+        this.currency = currency;
+        this.shippingAddress = shippingAddress;
+        this.orderDate = orderDate;
+        this.confirmedAt = confirmedAt;
+        this.paymentCompletedAt = paymentCompletedAt;
+        this.shippedAt = shippedAt;
+        this.deliveredAt = deliveredAt;
+        this.cancelledAt = cancelledAt;
+        this.sourceChannel = sourceChannel;
+        this.version = version;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.orderItems = orderItems;
     }
 
     private Order(UUID orderId, String orderNumber, Long customerId,
-                 Map<String, Object> shippingAddress, String sourceChannel) {
+        Map<String, Object> shippingAddress, String sourceChannel) {
         this.orderId = orderId;
         this.orderNumber = orderNumber;
         this.customerId = customerId;
@@ -56,7 +116,7 @@ public class Order {
     }
 
     public static Order create(String orderNumber, Long customerId,
-                              Map<String, Object> shippingAddress, String sourceChannel) {
+        Map<String, Object> shippingAddress, String sourceChannel) {
         validateCreationParameters(orderNumber, customerId, shippingAddress);
 
         return new Order(
@@ -215,7 +275,7 @@ public class Order {
     }
 
     private static void validateCreationParameters(String orderNumber, Long customerId,
-                                                 Map<String, Object> shippingAddress) {
+        Map<String, Object> shippingAddress) {
         if (orderNumber == null || orderNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("Order number cannot be null or empty");
         }
@@ -227,117 +287,12 @@ public class Order {
         }
     }
 
-    public UUID getOrderId() {
-        return orderId;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public OrderStatus getStatus() {
-        return status;
-    }
-
-    public BigDecimal getSubtotalAmount() {
-        return subtotalAmount;
-    }
-
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-
-    public BigDecimal getShippingAmount() {
-        return shippingAmount;
-    }
-
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
     public Map<String, Object> getShippingAddress() {
         return Collections.unmodifiableMap(shippingAddress);
-    }
-
-    public LocalDateTime getOrderDate() {
-        return orderDate;
-    }
-
-    public LocalDateTime getConfirmedAt() {
-        return confirmedAt;
-    }
-
-    public LocalDateTime getPaymentCompletedAt() {
-        return paymentCompletedAt;
-    }
-
-    public LocalDateTime getShippedAt() {
-        return shippedAt;
-    }
-
-    public LocalDateTime getDeliveredAt() {
-        return deliveredAt;
-    }
-
-    public LocalDateTime getCancelledAt() {
-        return cancelledAt;
-    }
-
-    public String getSourceChannel() {
-        return sourceChannel;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
     }
 
     public List<OrderItem> getOrderItems() {
         return Collections.unmodifiableList(orderItems);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Order order = (Order) o;
-        return Objects.equals(orderId, order.orderId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(orderId);
-    }
-
-    @Override
-    public String toString() {
-        return "Order{" +
-                "orderId=" + orderId +
-                ", orderNumber='" + orderNumber + '\'' +
-                ", customerId=" + customerId +
-                ", status=" + status +
-                ", totalAmount=" + totalAmount +
-                ", currency='" + currency + '\'' +
-                ", orderItemsCount=" + orderItems.size() +
-                '}';
-    }
 }

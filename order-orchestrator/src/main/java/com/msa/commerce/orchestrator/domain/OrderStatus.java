@@ -1,6 +1,7 @@
 package com.msa.commerce.orchestrator.domain;
 
 public enum OrderStatus {
+
     PENDING,
 
     CONFIRMED,
@@ -32,4 +33,5 @@ public enum OrderStatus {
     public boolean isProcessing() {
         return this == PAID || this == PROCESSING || this == SHIPPED;
     }
+
 }
