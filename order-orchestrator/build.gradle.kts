@@ -4,6 +4,10 @@ dependencies {
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringKafka())
 
+    // MapStruct
+    implementation(BuildDependencies.getMapstruct())
+    annotationProcessor(BuildDependencies.getMapstructProcessor())
+
     // Database connector
     runtimeOnly(BuildDependencies.getMysqlConnectorRuntime())
 

@@ -1,12 +1,12 @@
 package com.msa.commerce.orchestrator.application.port.out;
 
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderStatus;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 public interface OrderRepository {
 
@@ -41,4 +41,5 @@ public interface OrderRepository {
     Optional<Order> findByOrderIdWithItems(UUID orderId);
 
     void deleteById(Long id);
+
 }

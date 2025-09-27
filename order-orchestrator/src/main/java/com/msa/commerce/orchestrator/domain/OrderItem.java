@@ -1,27 +1,56 @@
 package com.msa.commerce.orchestrator.domain;
 
 import java.math.BigDecimal;
-import java.util.Objects;
 import java.util.UUID;
 
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(of = "orderItemId")
+@ToString(exclude = {"orderItemId"})
 public class OrderItem {
 
     private UUID orderItemId;
+
     private Long productId;
+
     private String productName;
+
     private String productSku;
+
     private Long productVariantId;
+
     private String variantName;
+
     private Integer quantity;
+
     private BigDecimal unitPrice;
+
     private BigDecimal totalPrice;
 
-    protected OrderItem() {
+    @Builder
+    public OrderItem(UUID orderItemId, Long productId, String productName, String productSku, Long productVariantId, String variantName, Integer quantity, BigDecimal unitPrice,
+        BigDecimal totalPrice) {
+        this.orderItemId = orderItemId;
+        this.productId = productId;
+        this.productName = productName;
+        this.productSku = productSku;
+        this.productVariantId = productVariantId;
+        this.variantName = variantName;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = totalPrice;
     }
 
     private OrderItem(UUID orderItemId, Long productId, String productName, String productSku,
-                     Long productVariantId, String variantName, Integer quantity,
-                     BigDecimal unitPrice) {
+        Long productVariantId, String variantName, Integer quantity,
+        BigDecimal unitPrice) {
         this.orderItemId = orderItemId;
         this.productId = productId;
         this.productName = productName;
@@ -34,8 +63,8 @@ public class OrderItem {
     }
 
     public static OrderItem create(Long productId, String productName, String productSku,
-                                  Long productVariantId, String variantName, Integer quantity,
-                                  BigDecimal unitPrice) {
+        Long productVariantId, String variantName, Integer quantity,
+        BigDecimal unitPrice) {
         validateCreationParameters(productId, productName, productSku, quantity, unitPrice);
 
         return new OrderItem(
@@ -70,8 +99,8 @@ public class OrderItem {
     }
 
     private static void validateCreationParameters(Long productId, String productName,
-                                                 String productSku, Integer quantity,
-                                                 BigDecimal unitPrice) {
+        String productSku, Integer quantity,
+        BigDecimal unitPrice) {
         if (productId == null) {
             throw new IllegalArgumentException("Product ID cannot be null");
         }
@@ -97,64 +126,4 @@ public class OrderItem {
         }
     }
 
-    public UUID getOrderItemId() {
-        return orderItemId;
-    }
-
-    public Long getProductId() {
-        return productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public String getProductSku() {
-        return productSku;
-    }
-
-    public Long getProductVariantId() {
-        return productVariantId;
-    }
-
-    public String getVariantName() {
-        return variantName;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getUnitPrice() {
-        return unitPrice;
-    }
-
-    public BigDecimal getTotalPrice() {
-        return totalPrice;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        OrderItem orderItem = (OrderItem) o;
-        return Objects.equals(orderItemId, orderItem.orderItemId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(orderItemId);
-    }
-
-    @Override
-    public String toString() {
-        return "OrderItem{" +
-                "orderItemId=" + orderItemId +
-                ", productId=" + productId +
-                ", productName='" + productName + '\'' +
-                ", quantity=" + quantity +
-                ", unitPrice=" + unitPrice +
-                ", totalPrice=" + totalPrice +
-                '}';
-    }
 }

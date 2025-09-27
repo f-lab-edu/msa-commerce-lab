@@ -242,10 +242,9 @@ class OrderItemTest {
 
         // then
         assertThat(toString)
-            .contains("OrderItem{")
-            .contains("orderItemId=")
+            .contains("OrderItem(")
             .contains("productId=1")
-            .contains("productName='테스트 상품'")
+            .contains("productName=테스트 상품")
             .contains("quantity=2")
             .contains("unitPrice=10000")
             .contains("totalPrice=20000");

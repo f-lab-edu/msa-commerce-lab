@@ -1,16 +1,27 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.OrderItem;
-import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.UUID;
+import com.msa.commerce.orchestrator.domain.OrderItem;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "order_items")
@@ -55,6 +66,22 @@ public class OrderItemJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Builder
+    public OrderItemJpaEntity(Long id, OrderJpaEntity order, Long productId, Long productVariantId, String productName, String productSku, String variantName, Integer quantity, BigDecimal unitPrice,
+        BigDecimal totalPrice, LocalDateTime createdAt) {
+        this.id = id;
+        this.order = order;
+        this.productId = productId;
+        this.productVariantId = productVariantId;
+        this.productName = productName;
+        this.productSku = productSku;
+        this.variantName = variantName;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = totalPrice;
+        this.createdAt = createdAt;
+    }
+
     public static OrderItemJpaEntity from(OrderItem orderItem, OrderJpaEntity orderEntity) {
         OrderItemJpaEntity entity = new OrderItemJpaEntity();
         entity.order = orderEntity;
@@ -86,4 +113,5 @@ public class OrderItemJpaEntity {
         this.unitPrice = orderItem.getUnitPrice();
         this.totalPrice = orderItem.getTotalPrice();
     }
+
 }

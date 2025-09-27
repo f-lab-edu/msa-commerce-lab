@@ -467,14 +467,13 @@ class OrderTest {
 
         // then
         assertThat(toString)
-            .contains("Order{")
+            .contains("Order(")
             .contains("orderId=")
-            .contains("orderNumber='ORDER-TEST'")
+            .contains("orderNumber=ORDER-TEST")
             .contains("customerId=1")
             .contains("status=PENDING")
             .contains("totalAmount=20000.00")
-            .contains("currency='KRW'")
-            .contains("orderItemsCount=1");
+            .contains("currency=KRW");
     }
 
     // Helper methods

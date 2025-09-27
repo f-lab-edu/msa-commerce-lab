@@ -1,21 +1,23 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderItem;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
+
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderItem;
 
 @DisplayName("OrderDomainMapper 테스트")
 class OrderDomainMapperTest {
 
-    private final OrderDomainMapper mapper = new OrderDomainMapper();
+    private final OrderDomainMapper mapper = Mappers.getMapper(OrderDomainMapper.class);
 
     @Test
     @DisplayName("OrderItem 도메인 변환")
@@ -61,20 +63,6 @@ class OrderDomainMapperTest {
         assertThat(domainItems.get(1).getProductId()).isEqualTo(originalOrderItem2.getProductId());
     }
 
-    @Test
-    @DisplayName("Order 도메인 변환 시 미구현 예외")
-    void toDomain_ThrowsUnsupportedOperationException() {
-        // given
-        Order order = createValidOrder();
-        OrderJpaEntity entity = OrderJpaEntity.from(order);
-
-        // when & then
-        assertThatThrownBy(() -> mapper.toDomain(entity))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Domain reconstitution not yet implemented. Need to add reconstitute method to Order domain model " +
-                       "or implement a builder pattern that can handle existing data.");
-    }
-
     private OrderItem createValidOrderItem() {
         return OrderItem.create(
             1L,
@@ -101,4 +89,5 @@ class OrderDomainMapperTest {
             "WEB"
         );
     }
+
 }
