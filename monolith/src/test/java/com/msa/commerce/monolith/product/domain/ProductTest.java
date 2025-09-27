@@ -1,11 +1,16 @@
 package com.msa.commerce.monolith.product.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.function.Supplier;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
 
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
@@ -14,170 +19,56 @@ class ProductTest {
     @DisplayName("정상적인 상품 생성")
     void createProduct_Success() {
         // given
-        String name = "테스트 상품";
-        String description = "테스트 상품 설명";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
         String sku = "TEST1234";
+        String name = "테스트 상품";
+        String shortDescription = "간단한 설명";
+        String description = "테스트 상품 설명";
+        Long categoryId = 1L;
+        String brand = "TestBrand";
+        ProductType productType = ProductType.PHYSICAL;
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
 
         // when
         Product product = Product.builder()
-                .name(name)
-                .description(description)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build();
+            .sku(sku)
+            .name(name)
+            .shortDescription(shortDescription)
+            .description(description)
+            .categoryId(categoryId)
+            .brand(brand)
+            .productType(productType)
+            .basePrice(basePrice)
+            .slug(slug)
+            .build();
 
         // then
-        assertThat(product.getName()).isEqualTo(name);
-        assertThat(product.getDescription()).isEqualTo(description);
-        assertThat(product.getPrice()).isEqualTo(price);
-        assertThat(product.getCategoryId()).isEqualTo(categoryId);
         assertThat(product.getSku()).isEqualTo(sku);
+        assertThat(product.getName()).isEqualTo(name);
+        assertThat(product.getShortDescription()).isEqualTo(shortDescription);
+        assertThat(product.getDescription()).isEqualTo(description);
+        assertThat(product.getCategoryId()).isEqualTo(categoryId);
+        assertThat(product.getBrand()).isEqualTo(brand);
+        assertThat(product.getProductType()).isEqualTo(productType);
+        assertThat(product.getBasePrice()).isEqualTo(basePrice);
+        assertThat(product.getSlug()).isEqualTo(slug);
         assertThat(product.getStatus()).isEqualTo(ProductStatus.DRAFT);
-        assertThat(product.getVisibility()).isEqualTo("PUBLIC");
+        assertThat(product.getCurrency()).isEqualTo("KRW");
+        assertThat(product.getRequiresShipping()).isTrue();
+        assertThat(product.getIsTaxable()).isTrue();
         assertThat(product.getIsFeatured()).isFalse();
+        assertThat(product.getMinOrderQuantity()).isEqualTo(1);
+        assertThat(product.getMaxOrderQuantity()).isEqualTo(100);
     }
 
-    @Test
-    @DisplayName("상품명이 null인 경우 예외 발생")
-    void createProduct_NameIsNull_ThrowsException() {
-        // given
-        String name = null;
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = "TEST1234";
-
+    @ParameterizedTest(name = "{0} - Product 생성자 검증 실패")
+    @MethodSource("com.msa.commerce.monolith.product.fixture.ProductCommandFixture#invalidProductBuilderScenarios")
+    @DisplayName("Product 생성자 검증 실패 시나리오")
+    void createProduct_ValidationFailures_ThrowsException(String scenario, Supplier<Product> productSupplier, String expectedMessage) {
         // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name is required.");
-    }
-
-    @Test
-    @DisplayName("상품명이 빈 문자열인 경우 예외 발생")
-    void createProduct_NameIsEmpty_ThrowsException() {
-        // given
-        String name = "";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name is required.");
-    }
-
-    @Test
-    @DisplayName("SKU가 null인 경우 예외 발생")
-    void createProduct_SkuIsNull_ThrowsException() {
-        // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = null;
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("SKU is required.");
-    }
-
-    @Test
-    @DisplayName("가격이 0 이하인 경우 예외 발생")
-    void createProduct_PriceIsZeroOrNegative_ThrowsException() {
-        // given
-        String name = "테스트 상품";
-        BigDecimal price = BigDecimal.ZERO;
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price must be greater than 0.");
-    }
-
-    @Test
-    @DisplayName("가격이 99,999,999.99 초과인 경우 예외 발생")
-    void createProduct_PriceExceedsLimit_ThrowsException() {
-        // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("100000000.00");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Price cannot exceed 99,999,999.99.");
-    }
-
-    @Test
-    @DisplayName("카테고리 ID가 null인 경우 예외 발생")
-    void createProduct_CategoryIdIsNull_ThrowsException() {
-        // given
-        String name = "테스트 상품";
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = null;
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Category ID is required.");
-    }
-
-    @Test
-    @DisplayName("상품명이 255자 초과인 경우 예외 발생")
-    void createProduct_NameExceedsMaxLength_ThrowsException() {
-        // given
-        String name = "a".repeat(256); // 256자
-        BigDecimal price = new BigDecimal("10000");
-        Long categoryId = ProductCategory.ELECTRONICS.getId();
-        String sku = "TEST1234";
-
-        // when & then
-        assertThatThrownBy(() -> Product.builder()
-                .name(name)
-                .price(price)
-                .categoryId(categoryId)
-                .sku(sku)
-                .build())
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Product name cannot exceed 255 characters.");
+        assertThatThrownBy(productSupplier::get)
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage(expectedMessage);
     }
 
     @Test
@@ -227,24 +118,66 @@ class ProductTest {
         Product product = createValidProduct();
         String newName = "업데이트된 상품명";
         String newDescription = "업데이트된 설명";
-        BigDecimal newPrice = new BigDecimal("20000");
+        BigDecimal newBasePrice = new BigDecimal("20000");
 
         // when
-        product.updateProductInfo(newName, newDescription, newPrice);
+        product.updateProductInfo(newName, newDescription, newBasePrice);
 
         // then
         assertThat(product.getName()).isEqualTo(newName);
         assertThat(product.getDescription()).isEqualTo(newDescription);
-        assertThat(product.getPrice()).isEqualTo(newPrice);
+        assertThat(product.getBasePrice()).isEqualTo(newBasePrice);
+    }
+
+    @Test
+    @DisplayName("사용자 정의 최소/최대 주문 수량으로 상품 생성")
+    void createProduct_WithCustomOrderQuantities_Success() {
+        // given
+        String sku = "TEST1234";
+        String name = "테스트 상품";
+        BigDecimal basePrice = new BigDecimal("10000");
+        String slug = "test-product";
+        Integer minOrderQuantity = 5;
+        Integer maxOrderQuantity = 50;
+
+        // when
+        Product product = Product.builder()
+            .sku(sku)
+            .name(name)
+            .basePrice(basePrice)
+            .slug(slug)
+            .minOrderQuantity(minOrderQuantity)
+            .maxOrderQuantity(maxOrderQuantity)
+            .build();
+
+        // then
+        assertThat(product.getMinOrderQuantity()).isEqualTo(minOrderQuantity);
+        assertThat(product.getMaxOrderQuantity()).isEqualTo(maxOrderQuantity);
+    }
+
+    @ParameterizedTest(name = "{0} - 주문 수량 검증")
+    @MethodSource("com.msa.commerce.monolith.product.fixture.ProductCommandFixture#orderQuantityValidationScenarios")
+    @DisplayName("주문 수량 검증 시나리오")
+    void isValidateOrderQuantity_VariousScenarios(String scenario, Product product, Integer requestedQuantity, boolean expected) {
+        // when
+        boolean validationResult = product.isValidateOrderQuantity(requestedQuantity);
+
+        // then
+        assertThat(validationResult).isEqualTo(expected);
     }
 
     private Product createValidProduct() {
         return Product.builder()
-                .name("테스트 상품")
-                .description("테스트 상품 설명")
-                .price(new BigDecimal("10000"))
-                .categoryId(ProductCategory.ELECTRONICS.getId())
-                .sku("TEST1234")
-                .build();
+            .sku("TEST1234")
+            .name("테스트 상품")
+            .shortDescription("간단한 설명")
+            .description("테스트 상품 설명")
+            .categoryId(1L)
+            .brand("TestBrand")
+            .productType(ProductType.PHYSICAL)
+            .basePrice(new BigDecimal("10000"))
+            .slug("test-product")
+            .build();
     }
+
 }

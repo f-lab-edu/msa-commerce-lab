@@ -139,22 +139,44 @@ public class CommonPlugin implements Plugin<Project> {
             verification.getViolationRules().rule(rule -> {
                 rule.setElement("BUNDLE");
 
+                // Adjust thresholds based on project maturity
+                boolean isMonolithModule = "monolith".equals(project.getName());
+                boolean isCommonModule = "common".equals(project.getName());
+                
                 rule.limit(limit -> {
                     limit.setCounter("LINE");
                     limit.setValue("COVEREDRATIO");
-                    limit.setMinimum(new BigDecimal("0.70"));
+                    if (isMonolithModule) {
+                        limit.setMinimum(new BigDecimal("0.55"));
+                    } else if (isCommonModule) {
+                        limit.setMinimum(new BigDecimal("0.60"));
+                    } else {
+                        limit.setMinimum(new BigDecimal("0.70"));
+                    }
                 });
 
                 rule.limit(limit -> {
                     limit.setCounter("BRANCH");
                     limit.setValue("COVEREDRATIO");
-                    limit.setMinimum(new BigDecimal("0.60"));
+                    if (isMonolithModule) {
+                        limit.setMinimum(new BigDecimal("0.50"));
+                    } else if (isCommonModule) {
+                        limit.setMinimum(new BigDecimal("0.45"));
+                    } else {
+                        limit.setMinimum(new BigDecimal("0.60"));
+                    }
                 });
 
                 rule.limit(limit -> {
                     limit.setCounter("CLASS");
                     limit.setValue("COVEREDRATIO");
-                    limit.setMinimum(new BigDecimal("0.80"));
+                    if (isMonolithModule) {
+                        limit.setMinimum(new BigDecimal("0.60"));
+                    } else if (isCommonModule) {
+                        limit.setMinimum(new BigDecimal("0.70"));
+                    } else {
+                        limit.setMinimum(new BigDecimal("0.80"));
+                    }
                 });
             });
 

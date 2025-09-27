@@ -36,4 +36,5 @@ public enum ProductCategory {
         }
         throw new IllegalArgumentException("Invalid category id: " + id);
     }
+
 }

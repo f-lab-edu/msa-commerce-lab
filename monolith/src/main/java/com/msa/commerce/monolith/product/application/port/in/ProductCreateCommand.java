@@ -1,131 +1,84 @@
 package com.msa.commerce.monolith.product.application.port.in;
 
-import com.msa.commerce.monolith.product.domain.ProductCategory;
+import java.math.BigDecimal;
+
+import com.msa.commerce.monolith.product.domain.ProductType;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.math.BigDecimal;
-import java.util.Arrays;
 
 @Getter
 @Builder
 public class ProductCreateCommand {
-    
-    private final Long categoryId;              // DB 스키마의 category_id와 일치
-    private final String sku;                   // 필수 필드
-    private final String name;
-    private final String description;
-    private final String shortDescription;
-    private final String brand;
-    private final String model;
-    private final BigDecimal price;
-    private final BigDecimal comparePrice;      // 할인 전 원가
-    private final BigDecimal costPrice;         // 원가
-    private final BigDecimal weight;
-    private final String productAttributes;     // JSON 속성 (단순화)
-    private final String visibility;            // 공개/비공개
-    private final String taxClass;              // 세금 분류
-    private final String metaTitle;             // SEO 제목
-    private final String metaDescription;       // SEO 설명
-    private final String searchKeywords;        // 검색 키워드
-    private final Boolean isFeatured;           // 추천 상품 여부
-    
-    // 재고 관련 (별도 ProductInventory로 관리)
-    private final Integer initialStock;         // 초기 재고 수량
-    private final Integer lowStockThreshold;    // 재고 부족 임계값
-    private final Boolean isTrackingEnabled;   // 재고 추적 여부
-    private final Boolean isBackorderAllowed;  // 품절 시 주문 허용 여부
-    
-    // 확장된 재고 관리 필드
-    private final Integer minOrderQuantity;     // 최소 주문 수량
-    private final Integer maxOrderQuantity;     // 최대 주문 수량
-    private final Integer reorderPoint;         // 재주문 임계점
-    private final Integer reorderQuantity;      // 재주문 수량
-    private final String locationCode;          // 창고 위치 코드
 
-    public void validate() {
-        if (categoryId == null) {
-            throw new IllegalArgumentException("Category ID is required.");
-        }
-        
-        // 유효한 카테고리 ID인지 검증
-        boolean isValidCategory = Arrays.stream(ProductCategory.values())
-                .anyMatch(category -> category.getId().equals(categoryId));
-        if (!isValidCategory) {
-            throw new IllegalArgumentException("Invalid category ID: " + categoryId);
-        }
-        
-        if (sku == null || sku.trim().isEmpty()) {
-            throw new IllegalArgumentException("SKU is required.");
-        }
-        
-        if (sku.length() > 100) {
-            throw new IllegalArgumentException("SKU cannot exceed 100 characters.");
-        }
-        
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Product name is required.");
-        }
-        
-        if (name.length() > 255) {
-            throw new IllegalArgumentException("Product name cannot exceed 255 characters.");
-        }
-        
-        if (price == null) {
-            throw new IllegalArgumentException("Price is required.");
-        }
-        
-        if (price.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Price must be greater than 0.");
-        }
-        
-        if (price.compareTo(new BigDecimal("99999999.99")) > 0) {
-            throw new IllegalArgumentException("Price cannot exceed 99,999,999.99.");
-        }
-        
-        if (description != null && description.length() > 5000) {
-            throw new IllegalArgumentException("Product description cannot exceed 5000 characters.");
-        }
-        
-        if (shortDescription != null && shortDescription.length() > 500) {
-            throw new IllegalArgumentException("Short description cannot exceed 500 characters.");
-        }
-        
-        if (brand != null && brand.length() > 100) {
-            throw new IllegalArgumentException("Brand cannot exceed 100 characters.");
-        }
-        
-        if (model != null && model.length() > 100) {
-            throw new IllegalArgumentException("Model cannot exceed 100 characters.");
-        }
-        
-        if (initialStock != null && initialStock < 0) {
-            throw new IllegalArgumentException("Initial stock cannot be negative.");
-        }
-        
-        if (lowStockThreshold != null && lowStockThreshold < 0) {
-            throw new IllegalArgumentException("Low stock threshold cannot be negative.");
-        }
-        
-        // 확장된 재고 필드 유효성 검증
-        if (minOrderQuantity != null && minOrderQuantity <= 0) {
-            throw new IllegalArgumentException("Minimum order quantity must be positive.");
-        }
-        
-        if (maxOrderQuantity != null && minOrderQuantity != null && maxOrderQuantity < minOrderQuantity) {
-            throw new IllegalArgumentException("Maximum order quantity cannot be less than minimum order quantity.");
-        }
-        
-        if (reorderPoint != null && reorderPoint < 0) {
-            throw new IllegalArgumentException("Reorder point cannot be negative.");
-        }
-        
-        if (reorderQuantity != null && reorderQuantity < 0) {
-            throw new IllegalArgumentException("Reorder quantity cannot be negative.");
-        }
-        
-        if (locationCode != null && locationCode.trim().isEmpty()) {
-            throw new IllegalArgumentException("Location code cannot be empty.");
-        }
-    }
+    @NotBlank(message = "SKU is required")
+    @Size(max = 100, message = "SKU must not exceed 100 characters")
+    private final String sku;
+
+    @NotBlank(message = "Product name is required")
+    @Size(max = 255, message = "Product name must not exceed 255 characters")
+    private final String name;
+
+    @Size(max = 500, message = "Short description must not exceed 500 characters")
+    private final String shortDescription;
+
+    @Size(max = 1000, message = "Description must not exceed 1000 characters")
+    private final String description;
+
+    private final Long categoryId;
+
+    @Size(max = 100, message = "Brand must not exceed 100 characters")
+    private final String brand;
+
+    private final ProductType productType;
+
+    @NotNull(message = "Base price is required")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Base price must be greater than 0")
+    private final BigDecimal basePrice;
+
+    private final BigDecimal salePrice;
+
+    @Size(max = 3, message = "Currency must be 3 characters")
+    private final String currency;
+
+    private final Integer weightGrams;
+
+    private final Boolean requiresShipping;
+
+    private final Boolean isTaxable;
+
+    private final Boolean isFeatured;
+
+    @NotBlank(message = "Slug is required")
+    @Size(max = 300, message = "Slug must not exceed 300 characters")
+    private final String slug;
+
+    private final String searchTags;
+
+    @Size(max = 500, message = "Primary image URL must not exceed 500 characters")
+    private final String primaryImageUrl;
+
+    // Inventory fields
+    private final Integer initialStock;
+
+    private final Integer lowStockThreshold;
+
+    private final Boolean isTrackingEnabled;
+
+    private final Boolean isBackorderAllowed;
+
+    private final Integer minOrderQuantity;
+
+    private final Integer maxOrderQuantity;
+
+    private final Integer reorderPoint;
+
+    private final Integer reorderQuantity;
+
+    private final String locationCode;
+
 }

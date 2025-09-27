@@ -1,10 +1,17 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
-import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
 
 @Getter
 @NoArgsConstructor
@@ -71,7 +78,6 @@ public class ProductCreateRequest {
 
     private Boolean isFeatured;
 
-    // 재고 관련 필드 (별도 도메인으로 관리)
     @Min(value = 0, message = "Initial stock cannot be negative.")
     private Integer initialStock;
 
@@ -82,7 +88,6 @@ public class ProductCreateRequest {
 
     private Boolean isBackorderAllowed;
 
-    // 확장된 재고 관리 필드
     @Min(value = 1, message = "Minimum order quantity must be at least 1.")
     private Integer minOrderQuantity;
 
@@ -97,4 +102,5 @@ public class ProductCreateRequest {
 
     @Size(max = 50, message = "Location code cannot exceed 50 characters.")
     private String locationCode;
+
 }

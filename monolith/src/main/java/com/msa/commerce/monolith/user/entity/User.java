@@ -96,7 +96,13 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    // --- 편의 메서드 ---
+    public User(String username, String email, String password) {
+        this.username = username;
+        this.email = email;
+        this.password = password;
+        this.status = UserStatus.ACTIVE;
+    }
+
     public void markEmailVerified() {
         this.emailVerified = true;
     }
@@ -117,17 +123,9 @@ public class User {
         this.status = UserStatus.DELETED;
     }
 
+
     public void loginNow() {
         this.lastLoginAt = LocalDateTime.now();
-    }
-
-    // Lombok이 자동으로 생성: getter, toString, equals(id만), hashCode(id만), noArgsConstructor(protected)
-    
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.status = UserStatus.ACTIVE;
     }
 
 }

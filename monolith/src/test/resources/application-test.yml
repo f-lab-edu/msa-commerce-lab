@@ -1,0 +1,67 @@
+server:
+  port: 0  # Random port for tests
+
+spring:
+  application:
+    name: monolith-service-test
+  
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+    hikari:
+      maximum-pool-size: 1
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # Create schema for tests
+    show-sql: false  # Reduce noise in test logs
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+    open-in-view: false
+  
+  h2:
+    console:
+      enabled: false
+  
+  # Enable JPA auditing and disable Redis for tests
+  data:
+    jpa:
+      repositories:
+        enabled: true
+    redis:
+      repositories:
+        enabled: false
+  cache:
+    type: none
+  
+  # Disable Kafka for tests
+  kafka:
+    bootstrap-servers: 
+  
+  # Disable web security for tests
+  security:
+    enabled: false
+  
+  # Flyway and Liquibase disabled for tests
+  flyway:
+    enabled: false
+  liquibase:
+    enabled: false
+
+logging:
+  level:
+    com.msa.commerce: WARN  # Reduce log noise in tests
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.hibernate.sql: DEBUG
+    org.hibernate.type.descriptor.sql: trace
+    ROOT: WARN
+
+# Test-specific configuration
+management:
+  endpoints:
+    enabled-by-default: false

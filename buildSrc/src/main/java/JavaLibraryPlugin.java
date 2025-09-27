@@ -39,13 +39,14 @@ public class JavaLibraryPlugin implements Plugin<Project> {
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_WEB.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_DATA_JPA.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_VALIDATION.getCoordinate());
+        project.getDependencies().add("api", Dependency.SPRING_BOOT_STARTER_DATA_REDIS.getCoordinate());
         project.getDependencies().add("api", Dependency.MYSQL_CONNECTOR.getCoordinate());
 
         project.getDependencies().add("compileOnly", Dependency.LOMBOK.getCoordinate());
         project.getDependencies().add("annotationProcessor", Dependency.LOMBOK.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.SPRING_BOOT_STARTER_TEST.getCoordinate());
         project.getDependencies().add("api", Dependency.SPRING_KAFKA.getCoordinate());
-        
+
         project.getDependencies().add("testImplementation", Dependency.H2_DATABASE.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.SPRING_KAFKA_TEST.getCoordinate());
         project.getDependencies().add("testImplementation", Dependency.AWAITILITY.getCoordinate());

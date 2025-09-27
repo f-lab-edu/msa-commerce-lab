@@ -39,3 +39,5 @@ spring:
 logging:
   level:
     com.msa.commerce: DEBUG
+    org.hibernate.sql: DEBUG
+    org.hibernate.type.descriptor.sql: trace

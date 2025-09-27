@@ -1,51 +1,56 @@
 package com.msa.commerce.monolith.product.application.service;
 
-import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
-import com.msa.commerce.monolith.product.domain.Product;
-import com.msa.commerce.monolith.product.domain.ProductCategory;
-import com.msa.commerce.monolith.product.domain.ProductStatus;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
+import com.msa.commerce.monolith.product.domain.Product;
+import com.msa.commerce.monolith.product.domain.ProductStatus;
+import com.msa.commerce.monolith.product.domain.ProductType;
 
 class ProductResponseMapperTest {
 
     private ProductResponseMapper productResponseMapper;
+
     private Product product;
 
     @BeforeEach
     void setUp() {
         productResponseMapper = new ProductResponseMapper();
-        
+
         // Product.reconstitute를 사용하여 테스트용 Product 객체 생성
         product = Product.reconstitute(
-                1L,                                    // id
-                ProductCategory.ELECTRONICS.getId(),   // categoryId
-                "TEST1234",                           // sku
-                "Test Product",                       // name
-                "Test Description",                   // description
-                "Short description",                  // shortDescription
-                "Test Brand",                        // brand
-                "Test Model",                        // model
-                new BigDecimal("29.99"),             // price
-                new BigDecimal("39.99"),             // comparePrice
-                new BigDecimal("19.99"),             // costPrice
-                new BigDecimal("1.5"),               // weight
-                "{\"color\": \"red\"}",              // productAttributes
-                ProductStatus.ACTIVE,                // status
-                "PUBLIC",                            // visibility
-                "STANDARD",                          // taxClass
-                "Test Meta Title",                   // metaTitle
-                "Test Meta Description",             // metaDescription
-                "test, product, electronics",       // searchKeywords
-                false,                               // isFeatured
-                LocalDateTime.now(),                 // createdAt
-                LocalDateTime.now()                  // updatedAt
+            1L,                                    // id
+            "TEST1234",                           // sku
+            "Test Product",                       // name
+            "Short description",                  // shortDescription
+            "Test Description",                   // description
+            1L,                                   // categoryId
+            "Test Brand",                        // brand
+            ProductType.PHYSICAL,                 // productType
+            ProductStatus.ACTIVE,                 // status
+            new BigDecimal("29.99"),             // basePrice
+            new BigDecimal("39.99"),             // salePrice
+            "KRW",                               // currency
+            1500,                                 // weightGrams
+            true,                                 // requiresShipping
+            true,                                 // isTaxable
+            false,                                // isFeatured
+            "test-product",                      // slug
+            "test, product, electronics",       // searchTags
+            null,                                 // primaryImageUrl
+            5,                                    // minOrderQuantity
+            50,                                   // maxOrderQuantity
+            LocalDateTime.now(),                  // createdAt
+            LocalDateTime.now(),                  // updatedAt
+            null,                         // deletedAt
+            1L                                    // version
         );
     }
 
@@ -58,25 +63,24 @@ class ProductResponseMapperTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getCategoryId()).isEqualTo(ProductCategory.ELECTRONICS.getId());
+        assertThat(response.getCategoryId()).isEqualTo(1L);
         assertThat(response.getSku()).isEqualTo("TEST1234");
         assertThat(response.getName()).isEqualTo("Test Product");
         assertThat(response.getDescription()).isEqualTo("Test Description");
         assertThat(response.getShortDescription()).isEqualTo("Short description");
         assertThat(response.getBrand()).isEqualTo("Test Brand");
-        assertThat(response.getModel()).isEqualTo("Test Model");
-        assertThat(response.getPrice()).isEqualTo(new BigDecimal("29.99"));
-        assertThat(response.getComparePrice()).isEqualTo(new BigDecimal("39.99"));
-        assertThat(response.getCostPrice()).isEqualTo(new BigDecimal("19.99"));
-        assertThat(response.getWeight()).isEqualTo(new BigDecimal("1.5"));
-        assertThat(response.getProductAttributes()).isEqualTo("{\"color\": \"red\"}");
+        assertThat(response.getProductType()).isEqualTo(ProductType.PHYSICAL);
+        assertThat(response.getBasePrice()).isEqualTo(new BigDecimal("29.99"));
+        assertThat(response.getSalePrice()).isEqualTo(new BigDecimal("39.99"));
+        assertThat(response.getCurrency()).isEqualTo("KRW");
+        assertThat(response.getWeightGrams()).isEqualTo(1500);
+        assertThat(response.getRequiresShipping()).isTrue();
+        assertThat(response.getIsTaxable()).isTrue();
+        assertThat(response.getSearchTags()).isEqualTo("test, product, electronics");
+        assertThat(response.getSlug()).isEqualTo("test-product");
         assertThat(response.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-        assertThat(response.getVisibility()).isEqualTo("PUBLIC");
-        assertThat(response.getTaxClass()).isEqualTo("STANDARD");
-        assertThat(response.getMetaTitle()).isEqualTo("Test Meta Title");
-        assertThat(response.getMetaDescription()).isEqualTo("Test Meta Description");
-        assertThat(response.getSearchKeywords()).isEqualTo("test, product, electronics");
         assertThat(response.getIsFeatured()).isFalse();
+        assertThat(response.getVersion()).isEqualTo(1L);
         assertThat(response.getCreatedAt()).isNotNull();
         assertThat(response.getUpdatedAt()).isNotNull();
     }
@@ -86,28 +90,31 @@ class ProductResponseMapperTest {
     void toResponse_ShouldHandleNullValues() {
         // given
         Product productWithNulls = Product.reconstitute(
-                2L,                                  // id
-                ProductCategory.BOOKS.getId(),       // categoryId
-                "BOOK1234",                         // sku
-                "Test Product",                     // name
-                null,                               // description null
-                null,                               // shortDescription null
-                null,                               // brand null
-                null,                               // model null
-                new BigDecimal("19.99"),           // price
-                null,                               // comparePrice null
-                null,                               // costPrice null
-                null,                               // weight null
-                null,                               // productAttributes null
-                ProductStatus.ACTIVE,               // status
-                "PUBLIC",                           // visibility
-                null,                               // taxClass null
-                null,                               // metaTitle null
-                null,                               // metaDescription null
-                null,                               // searchKeywords null
-                true,                               // isFeatured
-                LocalDateTime.now(),                // createdAt
-                LocalDateTime.now()                 // updatedAt
+            2L,                                  // id
+            "BOOK1234",                         // sku
+            "Test Product",                     // name
+            null,                               // shortDescription null
+            null,                               // description null
+            2L,                                 // categoryId
+            null,                               // brand null
+            ProductType.DIGITAL,                // productType
+            ProductStatus.ACTIVE,               // status
+            new BigDecimal("19.99"),           // basePrice
+            null,                               // salePrice null
+            "USD",                              // currency
+            null,                               // weightGrams null
+            false,                              // requiresShipping
+            true,                               // isTaxable
+            true,                               // isFeatured
+            "test-book",                       // slug
+            null,                               // searchTags null
+            null,                               // primaryImageUrl null
+            1,                                  // minOrderQuantity
+            100,                                // maxOrderQuantity
+            LocalDateTime.now(),                // createdAt
+            LocalDateTime.now(),                // updatedAt
+            null,                         // deletedAt
+            1L                                  // version
         );
 
         // when
@@ -116,25 +123,24 @@ class ProductResponseMapperTest {
         // then
         assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(2L);
-        assertThat(response.getCategoryId()).isEqualTo(ProductCategory.BOOKS.getId());
+        assertThat(response.getCategoryId()).isEqualTo(2L);
         assertThat(response.getSku()).isEqualTo("BOOK1234");
         assertThat(response.getName()).isEqualTo("Test Product");
         assertThat(response.getDescription()).isNull();
         assertThat(response.getShortDescription()).isNull();
         assertThat(response.getBrand()).isNull();
-        assertThat(response.getModel()).isNull();
-        assertThat(response.getPrice()).isEqualTo(new BigDecimal("19.99"));
-        assertThat(response.getComparePrice()).isNull();
-        assertThat(response.getCostPrice()).isNull();
-        assertThat(response.getWeight()).isNull();
-        assertThat(response.getProductAttributes()).isNull();
+        assertThat(response.getProductType()).isEqualTo(ProductType.DIGITAL);
+        assertThat(response.getBasePrice()).isEqualTo(new BigDecimal("19.99"));
+        assertThat(response.getSalePrice()).isNull();
+        assertThat(response.getCurrency()).isEqualTo("USD");
+        assertThat(response.getWeightGrams()).isNull();
+        assertThat(response.getRequiresShipping()).isFalse();
+        assertThat(response.getIsTaxable()).isTrue();
+        assertThat(response.getSearchTags()).isNull();
+        assertThat(response.getSlug()).isEqualTo("test-book");
         assertThat(response.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-        assertThat(response.getVisibility()).isEqualTo("PUBLIC");
-        assertThat(response.getTaxClass()).isNull();
-        assertThat(response.getMetaTitle()).isNull();
-        assertThat(response.getMetaDescription()).isNull();
-        assertThat(response.getSearchKeywords()).isNull();
         assertThat(response.getIsFeatured()).isTrue();
+        assertThat(response.getVersion()).isEqualTo(1L);
         assertThat(response.getCreatedAt()).isNotNull();
         assertThat(response.getUpdatedAt()).isNotNull();
     }
@@ -148,4 +154,5 @@ class ProductResponseMapperTest {
         // then
         assertThat(response).isNull();
     }
+
 }
