@@ -82,57 +82,33 @@ public class InventorySnapshotJpaEntity {
         this.lowStockThreshold = lowStockThreshold != null ? lowStockThreshold : 10;
     }
 
-    public void adjustAvailableQuantity(int quantity) {
-        if (this.availableQuantity + quantity < 0) {
-            throw new IllegalArgumentException("사용 가능한 재고가 0보다 작을 수 없습니다.");
-        }
-        this.availableQuantity += quantity;
+    // Domain conversion method
+    public com.msa.commerce.monolith.product.domain.InventorySnapshot toDomain() {
+        return com.msa.commerce.monolith.product.domain.InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.product != null ? this.product.getId() : null)
+            .variantId(this.variant != null ? this.variant.getId() : null)
+            .locationCode(this.locationCode)
+            .availableQuantity(this.availableQuantity)
+            .reservedQuantity(this.reservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(calculateStockStatus())
+            .lastUpdatedAt(this.lastUpdatedAt)
+            .version(this.version)
+            .build();
     }
 
-    public void adjustReservedQuantity(int quantity) {
-        if (this.reservedQuantity + quantity < 0) {
-            throw new IllegalArgumentException("예약된 재고가 0보다 작을 수 없습니다.");
-        }
-        this.reservedQuantity += quantity;
+    // Setters for updating from domain
+    public void setAvailableQuantity(Integer availableQuantity) {
+        this.availableQuantity = availableQuantity;
     }
 
-    public void reserveStock(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("예약 수량은 0보다 커야 합니다.");
-        }
-        if (this.availableQuantity < quantity) {
-            throw new IllegalArgumentException("사용 가능한 재고가 부족합니다.");
-        }
-        this.availableQuantity -= quantity;
-        this.reservedQuantity += quantity;
+    public void setReservedQuantity(Integer reservedQuantity) {
+        this.reservedQuantity = reservedQuantity;
     }
 
-    public void releaseReservedStock(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("해제 수량은 0보다 커야 합니다.");
-        }
-        if (this.reservedQuantity < quantity) {
-            throw new IllegalArgumentException("예약된 재고가 부족합니다.");
-        }
-        this.reservedQuantity -= quantity;
-        this.availableQuantity += quantity;
-    }
-
-    public void confirmReservedStock(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("확정 수량은 0보다 커야 합니다.");
-        }
-        if (this.reservedQuantity < quantity) {
-            throw new IllegalArgumentException("예약된 재고가 부족합니다.");
-        }
-        this.reservedQuantity -= quantity;
-    }
-
-    public void updateLowStockThreshold(int threshold) {
-        if (threshold < 0) {
-            throw new IllegalArgumentException("재고 임계값은 0 이상이어야 합니다.");
-        }
-        this.lowStockThreshold = threshold;
+    public void setLowStockThreshold(Integer lowStockThreshold) {
+        this.lowStockThreshold = lowStockThreshold;
     }
 
     public boolean isLowStock() {

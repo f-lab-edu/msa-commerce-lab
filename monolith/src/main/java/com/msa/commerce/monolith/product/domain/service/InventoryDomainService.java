@@ -39,20 +39,25 @@ public class InventoryDomainService {
 
         validateStockOperation(quantity, "입고");
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeQuantity = snapshot.getAvailableQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
 
-        // 재고 증가
-        snapshot.adjustAvailableQuantity(quantity);
-        inventorySnapshotRepository.save(snapshot);
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeQuantity = domain.getAvailableQuantity();
+
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.adjustAvailableQuantity(quantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_IN,
             product, variant, locationCode,
-            quantity, beforeQuantity, snapshot.getAvailableQuantity(),
+            quantity, beforeQuantity, updated.getAvailableQuantity(),
             reason, referenceType, referenceId,
-            createEventData("stock_in", quantity, beforeQuantity, snapshot.getAvailableQuantity())
+            createEventData("stock_in", quantity, beforeQuantity, updated.getAvailableQuantity())
         );
 
         log.info("재고 입고 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
@@ -65,25 +70,30 @@ public class InventoryDomainService {
 
         validateStockOperation(quantity, "출고");
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeQuantity = snapshot.getAvailableQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
+
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeQuantity = domain.getAvailableQuantity();
 
         if (beforeQuantity < quantity) {
             throw new IllegalArgumentException(
                 String.format("재고가 부족합니다. 현재 재고: %d, 출고 요청: %d", beforeQuantity, quantity));
         }
 
-        // 재고 감소
-        snapshot.adjustAvailableQuantity(-quantity);
-        inventorySnapshotRepository.save(snapshot);
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.adjustAvailableQuantity(-quantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_OUT,
             product, variant, locationCode,
-            -quantity, beforeQuantity, snapshot.getAvailableQuantity(),
+            -quantity, beforeQuantity, updated.getAvailableQuantity(),
             reason, referenceType, referenceId,
-            createEventData("stock_out", quantity, beforeQuantity, snapshot.getAvailableQuantity())
+            createEventData("stock_out", quantity, beforeQuantity, updated.getAvailableQuantity())
         );
 
         log.info("재고 출고 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
@@ -96,21 +106,26 @@ public class InventoryDomainService {
 
         validateStockOperation(quantity, "예약");
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeAvailable = snapshot.getAvailableQuantity();
-        int beforeReserved = snapshot.getReservedQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
 
-        // 재고 예약
-        snapshot.reserveStock(quantity);
-        inventorySnapshotRepository.save(snapshot);
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeAvailable = domain.getAvailableQuantity();
+        int beforeReserved = domain.getReservedQuantity();
+
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.reserveStock(quantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_RESERVATION,
             product, variant, locationCode,
-            quantity, beforeAvailable, snapshot.getAvailableQuantity(),
+            quantity, beforeAvailable, updated.getAvailableQuantity(),
             reason, referenceType, referenceId,
-            createEventData("stock_reservation", quantity, beforeReserved, snapshot.getReservedQuantity())
+            createEventData("stock_reservation", quantity, beforeReserved, updated.getReservedQuantity())
         );
 
         log.info("재고 예약 처리 완료 - 상품: {}, 수량: {}, 위치: {}",
@@ -123,20 +138,25 @@ public class InventoryDomainService {
 
         validateStockOperation(quantity, "예약해제");
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeReserved = snapshot.getReservedQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
 
-        // 예약 해제
-        snapshot.releaseReservedStock(quantity);
-        inventorySnapshotRepository.save(snapshot);
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeReserved = domain.getReservedQuantity();
+
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.releaseReservedStock(quantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_RESERVATION_RELEASE,
             product, variant, locationCode,
-            quantity, beforeReserved, snapshot.getReservedQuantity(),
+            quantity, beforeReserved, updated.getReservedQuantity(),
             reason, referenceType, referenceId,
-            createEventData("reservation_release", quantity, beforeReserved, snapshot.getReservedQuantity())
+            createEventData("reservation_release", quantity, beforeReserved, updated.getReservedQuantity())
         );
 
         log.info("재고 예약 해제 완료 - 상품: {}, 수량: {}, 위치: {}",
@@ -149,20 +169,25 @@ public class InventoryDomainService {
 
         validateStockOperation(quantity, "예약확정");
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeReserved = snapshot.getReservedQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
 
-        // 예약 확정 (예약 수량 감소)
-        snapshot.confirmReservedStock(quantity);
-        inventorySnapshotRepository.save(snapshot);
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeReserved = domain.getReservedQuantity();
+
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.confirmReservedStock(quantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_RESERVATION_CONFIRM,
             product, variant, locationCode,
-            quantity, beforeReserved, snapshot.getReservedQuantity(),
+            quantity, beforeReserved, updated.getReservedQuantity(),
             reason, referenceType, referenceId,
-            createEventData("reservation_confirm", quantity, beforeReserved, snapshot.getReservedQuantity())
+            createEventData("reservation_confirm", quantity, beforeReserved, updated.getReservedQuantity())
         );
 
         log.info("재고 예약 확정 완료 - 상품: {}, 수량: {}, 위치: {}",
@@ -177,20 +202,25 @@ public class InventoryDomainService {
             throw new IllegalArgumentException("조정 수량은 0이 될 수 없습니다.");
         }
 
-        InventorySnapshotJpaEntity snapshot = getOrCreateSnapshot(product, variant, locationCode);
-        int beforeQuantity = snapshot.getAvailableQuantity();
+        InventorySnapshotJpaEntity snapshotEntity = getOrCreateSnapshot(product, variant, locationCode);
 
-        // 재고 조정
-        snapshot.adjustAvailableQuantity(adjustmentQuantity);
-        inventorySnapshotRepository.save(snapshot);
+        // Domain 모델로 변환하여 비즈니스 로직 수행
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = snapshotEntity.toDomain();
+        int beforeQuantity = domain.getAvailableQuantity();
+
+        com.msa.commerce.monolith.product.domain.InventorySnapshot updated = domain.adjustAvailableQuantity(adjustmentQuantity);
+
+        // 변경된 Domain을 다시 Entity로 변환하여 저장
+        updateEntityFromDomain(snapshotEntity, updated);
+        inventorySnapshotRepository.save(snapshotEntity);
 
         // 이벤트 생성
         createInventoryEvent(
             InventoryEventType.STOCK_ADJUSTMENT,
             product, variant, locationCode,
-            adjustmentQuantity, beforeQuantity, snapshot.getAvailableQuantity(),
+            adjustmentQuantity, beforeQuantity, updated.getAvailableQuantity(),
             reason, referenceType, referenceId,
-            createEventData("stock_adjustment", adjustmentQuantity, beforeQuantity, snapshot.getAvailableQuantity())
+            createEventData("stock_adjustment", adjustmentQuantity, beforeQuantity, updated.getAvailableQuantity())
         );
 
         log.info("재고 조정 완료 - 상품: {}, 조정량: {}, 위치: {}",
@@ -304,6 +334,13 @@ public class InventoryDomainService {
             .build();
 
         inventoryEventRepository.save(event);
+    }
+
+    private void updateEntityFromDomain(InventorySnapshotJpaEntity entity,
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain) {
+        entity.setAvailableQuantity(domain.getAvailableQuantity());
+        entity.setReservedQuantity(domain.getReservedQuantity());
+        entity.setLowStockThreshold(domain.getLowStockThreshold());
     }
 
     private String generateAggregateId(Long productId, Long variantId, String locationCode) {

@@ -254,43 +254,48 @@ class InventorySnapshotJpaRepositoryTest {
     @DisplayName("재고 조정 로직 테스트")
     void inventoryAdjustmentTest() {
         // Given
-        InventorySnapshotJpaEntity inventory = inventoryRepository
+        InventorySnapshotJpaEntity inventoryEntity = inventoryRepository
             .findByProductIdAndLocationCode(testProductId, "MAIN")
             .orElseThrow();
 
-        int initialAvailable = inventory.getAvailableQuantity();
-        int initialReserved = inventory.getReservedQuantity();
+        // Domain 모델로 변환하여 비즈니스 로직 테스트
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = inventoryEntity.toDomain();
+        int initialAvailable = domain.getAvailableQuantity();
+        int initialReserved = domain.getReservedQuantity();
 
         // When - 재고 예약
-        inventory.reserveStock(30);
+        com.msa.commerce.monolith.product.domain.InventorySnapshot reserved = domain.reserveStock(30);
 
         // Then
-        assertThat(inventory.getAvailableQuantity()).isEqualTo(initialAvailable - 30);
-        assertThat(inventory.getReservedQuantity()).isEqualTo(initialReserved + 30);
+        assertThat(reserved.getAvailableQuantity()).isEqualTo(initialAvailable - 30);
+        assertThat(reserved.getReservedQuantity()).isEqualTo(initialReserved + 30);
 
         // When - 예약 해제
-        inventory.releaseReservedStock(10);
+        com.msa.commerce.monolith.product.domain.InventorySnapshot released = reserved.releaseReservedStock(10);
 
         // Then
-        assertThat(inventory.getAvailableQuantity()).isEqualTo(initialAvailable - 20);
-        assertThat(inventory.getReservedQuantity()).isEqualTo(initialReserved + 20);
+        assertThat(released.getAvailableQuantity()).isEqualTo(initialAvailable - 20);
+        assertThat(released.getReservedQuantity()).isEqualTo(initialReserved + 20);
     }
 
     @Test
     @DisplayName("재고 예외 상황 테스트")
     void inventoryExceptionTest() {
         // Given
-        InventorySnapshotJpaEntity inventory = inventoryRepository
+        InventorySnapshotJpaEntity inventoryEntity = inventoryRepository
             .findByProductIdAndLocationCode(testProductId, "MAIN")
             .orElseThrow();
 
+        // Domain 모델로 변환하여 예외 상황 테스트
+        com.msa.commerce.monolith.product.domain.InventorySnapshot domain = inventoryEntity.toDomain();
+
         // When & Then - 재고 부족 시 예외
-        assertThatThrownBy(() -> inventory.reserveStock(200))
+        assertThatThrownBy(() -> domain.reserveStock(200))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("사용 가능한 재고가 부족합니다.");
 
         // When & Then - 예약 재고 부족 시 예외
-        assertThatThrownBy(() -> inventory.releaseReservedStock(100))
+        assertThatThrownBy(() -> domain.releaseReservedStock(100))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("예약된 재고가 부족합니다.");
     }

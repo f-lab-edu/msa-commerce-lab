@@ -78,6 +78,141 @@ public class InventorySnapshot {
             .build();
     }
 
+    public InventorySnapshot adjustAvailableQuantity(int quantity) {
+        if (this.availableQuantity + quantity < 0) {
+            throw new IllegalArgumentException("사용 가능한 재고가 0보다 작을 수 없습니다.");
+        }
+
+        int newAvailableQuantity = availableQuantity + quantity;
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(newAvailableQuantity)
+            .reservedQuantity(this.reservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(calculateStockStatusForQuantity(newAvailableQuantity))
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
+    public InventorySnapshot adjustReservedQuantity(int quantity) {
+        if (this.reservedQuantity + quantity < 0) {
+            throw new IllegalArgumentException("예약된 재고가 0보다 작을 수 없습니다.");
+        }
+
+        int newReservedQuantity = reservedQuantity + quantity;
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(this.availableQuantity)
+            .reservedQuantity(newReservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(this.stockStatus)
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
+    public InventorySnapshot updateLowStockThreshold(int threshold) {
+        if (threshold < 0) {
+            throw new IllegalArgumentException("재고 임계값은 0 이상이어야 합니다.");
+        }
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(this.availableQuantity)
+            .reservedQuantity(this.reservedQuantity)
+            .lowStockThreshold(threshold)
+            .stockStatus(calculateStockStatusForQuantity(this.availableQuantity))
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
+    public InventorySnapshot reserveStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("예약 수량은 0보다 커야 합니다.");
+        }
+        if (this.availableQuantity < quantity) {
+            throw new IllegalArgumentException("사용 가능한 재고가 부족합니다.");
+        }
+
+        int newAvailableQuantity = availableQuantity - quantity;
+        int newReservedQuantity = reservedQuantity + quantity;
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(newAvailableQuantity)
+            .reservedQuantity(newReservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(calculateStockStatusForQuantity(newAvailableQuantity))
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
+    public InventorySnapshot releaseReservedStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("해제 수량은 0보다 커야 합니다.");
+        }
+        if (this.reservedQuantity < quantity) {
+            throw new IllegalArgumentException("예약된 재고가 부족합니다.");
+        }
+
+        int newAvailableQuantity = availableQuantity + quantity;
+        int newReservedQuantity = reservedQuantity - quantity;
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(newAvailableQuantity)
+            .reservedQuantity(newReservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(calculateStockStatusForQuantity(newAvailableQuantity))
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
+    public InventorySnapshot confirmReservedStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("확정 수량은 0보다 커야 합니다.");
+        }
+        if (this.reservedQuantity < quantity) {
+            throw new IllegalArgumentException("예약된 재고가 부족합니다.");
+        }
+
+        int newReservedQuantity = reservedQuantity - quantity;
+
+        return InventorySnapshot.builder()
+            .id(this.id)
+            .productId(this.productId)
+            .variantId(this.variantId)
+            .locationCode(this.locationCode)
+            .availableQuantity(this.availableQuantity)
+            .reservedQuantity(newReservedQuantity)
+            .lowStockThreshold(this.lowStockThreshold)
+            .stockStatus(this.stockStatus)
+            .lastUpdatedAt(LocalDateTime.now())
+            .version(this.version)
+            .build();
+    }
+
     public InventorySnapshot reserveQuantity(int quantity) {
         if (!canReserve(quantity)) {
             throw new IllegalArgumentException(
