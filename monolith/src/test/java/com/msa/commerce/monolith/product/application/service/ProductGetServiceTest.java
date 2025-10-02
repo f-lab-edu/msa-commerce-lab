@@ -30,6 +30,9 @@ import com.msa.commerce.monolith.product.domain.ProductType;
 class ProductGetServiceTest {
 
     @Mock
+    private ProductCacheService productCacheService;
+
+    @Mock
     private ProductRepository productRepository;
 
     @Mock
@@ -136,18 +139,14 @@ class ProductGetServiceTest {
     void getProduct_Success() {
         // Given
         Long productId = 1L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
-        // Inventory handling removed - using event sourcing approach
-        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(productRepository).should(times(1)).findById(productId);
-        // Inventory verification removed - using event sourcing approach
-        then(productMapper).should(times(1)).toResponse(activeProduct);
+        then(productCacheService).should(times(1)).getCachedProduct(productId);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
 
@@ -156,15 +155,14 @@ class ProductGetServiceTest {
     void getProduct_WithoutViewCountIncrement_Success() {
         // Given
         Long productId = 1L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
-        // Inventory handling removed - using event sourcing approach
-        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId, false);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
+        then(productCacheService).should(times(1)).getCachedProduct(productId);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -173,15 +171,15 @@ class ProductGetServiceTest {
     void getProduct_NotFound_ThrowsException() {
         // Given
         Long productId = 999L;
-        given(productRepository.findById(productId)).willReturn(Optional.empty());
+        given(productCacheService.getCachedProduct(productId))
+            .willThrow(new ResourceNotFoundException("Product not found with id: " + productId));
 
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
 
-        // Inventory verification removed - using event sourcing approach
-        then(productMapper).should(never()).toResponse(any());
+        then(productCacheService).should(times(1)).getCachedProduct(productId);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -190,15 +188,15 @@ class ProductGetServiceTest {
     void getProduct_ArchivedProduct_ThrowsException() {
         // Given
         Long productId = 2L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(archivedProduct));
+        given(productCacheService.getCachedProduct(productId))
+            .willThrow(new ResourceNotFoundException("Product not found with id: " + productId));
 
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
 
-        // Inventory verification removed - using event sourcing approach
-        then(productMapper).should(never()).toResponse(any());
+        then(productCacheService).should(times(1)).getCachedProduct(productId);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -207,16 +205,14 @@ class ProductGetServiceTest {
     void getProduct_WithoutInventory_Success() {
         // Given
         Long productId = 1L;
-        given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
-        // Inventory handling removed - using event sourcing approach
-        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
+        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(productMapper).should(times(1)).toResponse(activeProduct);
+        then(productCacheService).should(times(1)).getCachedProduct(productId);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
 

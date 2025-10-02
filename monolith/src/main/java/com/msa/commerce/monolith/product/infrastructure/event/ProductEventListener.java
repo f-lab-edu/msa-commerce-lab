@@ -1,6 +1,7 @@
 package com.msa.commerce.monolith.product.infrastructure.event;
 
 import org.springframework.cache.CacheManager;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -18,15 +19,13 @@ public class ProductEventListener {
 
     private static final String PRODUCT_CACHE = "product";
 
-    private static final String PRODUCTS_CACHE = "products";
-
     private final CacheManager cacheManager;
 
     private final ProductEventPublisher productEventPublisher;
 
+    @Async("taskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleProductEvent(ProductEvent event) {
-        // 캐시 무효화 처리
         invalidateCache(event);
 
         // 외부 이벤트 발행
@@ -35,14 +34,12 @@ public class ProductEventListener {
 
     private void invalidateCache(ProductEvent event) {
         switch (event.eventType()) {
-            case PRODUCT_CREATED:
-                evictProductsCache();
+            case PRODUCT_UPDATED:
+                evictProductCache(event.productId());
                 break;
 
-            case PRODUCT_UPDATED:
             case PRODUCT_DELETED:
                 evictProductCache(event.productId());
-                evictProductsCache();
                 break;
         }
     }
@@ -68,16 +65,7 @@ public class ProductEventListener {
             var cache = cacheManager.getCache(PRODUCT_CACHE);
             if (cache != null) {
                 cache.evict(productId);
-                log.debug("Evicted product cache for productId: {}", productId);
             }
-        }
-    }
-
-    private void evictProductsCache() {
-        var cache = cacheManager.getCache(PRODUCTS_CACHE);
-        if (cache != null) {
-            cache.clear();
-            log.debug("Cleared all products cache");
         }
     }
 
