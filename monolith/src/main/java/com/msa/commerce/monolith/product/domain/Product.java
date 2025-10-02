@@ -291,7 +291,7 @@ public class Product {
         }
     }
 
-    public BigDecimal getCurrnectPrice() {
+    public BigDecimal getCurrentPrice() {
         return this.salePrice != null ? this.salePrice : this.basePrice;
     }
 

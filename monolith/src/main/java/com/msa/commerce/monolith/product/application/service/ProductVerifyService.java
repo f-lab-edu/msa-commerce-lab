@@ -89,7 +89,7 @@ public class ProductVerifyService implements ProductVerifyUseCase {
             .status(product.getStatus())
             .requestedQuantity(requestedQuantity)
             .availableStock(availableStock)
-            .currentPrice(product.getCurrnectPrice())
+            .currentPrice(product.getCurrentPrice())
             .originalPrice(product.getOriginalPrice())
             .unavailableReason(unavailableReason)
             .build();
