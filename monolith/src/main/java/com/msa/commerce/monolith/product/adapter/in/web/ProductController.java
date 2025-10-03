@@ -1,5 +1,6 @@
 package com.msa.commerce.monolith.product.adapter.in.web;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -55,6 +56,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
+    @Cacheable(value = "product", key = "#productId")
     public ResponseEntity<ProductResponse> retrieveProduct(@PathVariable("id") Long productId) {
         return ResponseEntity.ok(productGetUseCase.getProduct(productId));
     }

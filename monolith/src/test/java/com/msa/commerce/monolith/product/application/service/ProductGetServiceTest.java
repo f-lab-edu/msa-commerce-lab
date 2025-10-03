@@ -30,9 +30,6 @@ import com.msa.commerce.monolith.product.domain.ProductType;
 class ProductGetServiceTest {
 
     @Mock
-    private ProductCacheService productCacheService;
-
-    @Mock
     private ProductRepository productRepository;
 
     @Mock
@@ -139,31 +136,17 @@ class ProductGetServiceTest {
     void getProduct_Success() {
         // Given
         Long productId = 1L;
-        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
+        given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
+        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(productCacheService).should(times(1)).getCachedProduct(productId);
+        then(productRepository).should(times(1)).findById(productId);
+        then(productMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
-    }
-
-    @Test
-    @DisplayName("조회수 증가 없이 상품 조회가 성공해야 한다")
-    void getProduct_WithoutViewCountIncrement_Success() {
-        // Given
-        Long productId = 1L;
-        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
-
-        // When
-        ProductResponse result = productGetService.getProduct(productId, false);
-
-        // Then
-        assertThat(result).isEqualTo(productResponse);
-        then(productCacheService).should(times(1)).getCachedProduct(productId);
-        then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
     @Test
@@ -171,15 +154,14 @@ class ProductGetServiceTest {
     void getProduct_NotFound_ThrowsException() {
         // Given
         Long productId = 999L;
-        given(productCacheService.getCachedProduct(productId))
-            .willThrow(new ResourceNotFoundException("Product not found with id: " + productId));
+        given(productRepository.findById(productId)).willReturn(Optional.empty());
 
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
 
-        then(productCacheService).should(times(1)).getCachedProduct(productId);
+        then(productRepository).should(times(1)).findById(productId);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -188,15 +170,14 @@ class ProductGetServiceTest {
     void getProduct_ArchivedProduct_ThrowsException() {
         // Given
         Long productId = 2L;
-        given(productCacheService.getCachedProduct(productId))
-            .willThrow(new ResourceNotFoundException("Product not found with id: " + productId));
+        given(productRepository.findById(productId)).willReturn(Optional.of(archivedProduct));
 
         // When & Then
         assertThatThrownBy(() -> productGetService.getProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessage("Product not found with id: " + productId);
 
-        then(productCacheService).should(times(1)).getCachedProduct(productId);
+        then(productRepository).should(times(1)).findById(productId);
         then(viewCountPort).should(never()).incrementViewCount(any());
     }
 
@@ -205,14 +186,16 @@ class ProductGetServiceTest {
     void getProduct_WithoutInventory_Success() {
         // Given
         Long productId = 1L;
-        given(productCacheService.getCachedProduct(productId)).willReturn(productResponse);
+        given(productRepository.findById(productId)).willReturn(Optional.of(activeProduct));
+        given(productMapper.toResponse(activeProduct)).willReturn(productResponse);
 
         // When
         ProductResponse result = productGetService.getProduct(productId);
 
         // Then
         assertThat(result).isEqualTo(productResponse);
-        then(productCacheService).should(times(1)).getCachedProduct(productId);
+        then(productRepository).should(times(1)).findById(productId);
+        then(productMapper).should(times(1)).toResponse(activeProduct);
         then(viewCountPort).should(times(1)).incrementViewCount(productId);
     }
 
