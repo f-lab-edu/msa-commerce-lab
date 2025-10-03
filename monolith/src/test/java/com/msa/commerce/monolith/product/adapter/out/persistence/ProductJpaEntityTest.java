@@ -15,43 +15,45 @@ import com.msa.commerce.monolith.product.domain.ProductType;
 class ProductJpaEntityTest {
 
     @Test
-    @DisplayName("도메인 엔티티를 JPA 엔티티로 변환할 수 있다")
-    void fromDomainEntity_ShouldMapCorrectly() {
+    @DisplayName("도메인 엔티티를 JPA 엔티티로 변환할 수 있다 (updateFromDomain)")
+    void updateFromDomain_ShouldMapCorrectly() {
         // given
         LocalDateTime now = LocalDateTime.now();
         Product domainProduct = Product.reconstitute(
-            1L,                                    // id
-            "TEST-SKU-001",                       // sku
-            "Test Product",                       // name
-            "Short description",                  // shortDescription
-            "Test Description",                   // description
-            10L,                                  // categoryId
-            "TestBrand",                         // brand
-            ProductType.PHYSICAL,                // productType
-            ProductStatus.ACTIVE,                // status
-            new BigDecimal("29.99"),             // basePrice
-            new BigDecimal("25.99"),             // salePrice
-            "KRW",                               // currency
-            1500,                                // weightGrams
-            true,                                // requiresShipping
-            true,                                // isTaxable
-            true,                                // isFeatured
-            "test-product",                      // slug
-            "test, product, electronics",        // searchTags
-            "https://example.com/image.jpg",     // primaryImageUrl
-            1,                                   // minOrderQuantity
-            100,                                 // maxOrderQuantity
-            now,                                 // createdAt
-            now,                                 // updatedAt
-            null,                                // deletedAt
-            1L                                   // version
+            1L,
+            "TEST-SKU-001",
+            "Test Product",
+            "Short description",
+            "Test Description",
+            10L,
+            "TestBrand",
+            ProductType.PHYSICAL,
+            ProductStatus.ACTIVE,
+            new BigDecimal("29.99"),
+            new BigDecimal("25.99"),
+            "KRW",
+            1500,
+            true,
+            true,
+            true,
+            "test-product",
+            "test, product, electronics",
+            "https://example.com/image.jpg",
+            1,
+            100,
+            now,
+            now,
+            null,
+            1L
         );
 
+        ProductJpaEntity jpaEntity = new ProductJpaEntity();
+        setField(jpaEntity, "id", 1L);
+
         // when
-        ProductJpaEntity jpaEntity = ProductJpaEntity.fromDomainEntity(domainProduct);
+        jpaEntity.updateFromDomain(domainProduct);
 
         // then
-        assertThat(jpaEntity.getId()).isEqualTo(1L);
         assertThat(jpaEntity.getSku()).isEqualTo("TEST-SKU-001");
         assertThat(jpaEntity.getName()).isEqualTo("Test Product");
         assertThat(jpaEntity.getShortDescription()).isEqualTo("Short description");
@@ -70,9 +72,7 @@ class ProductJpaEntityTest {
         assertThat(jpaEntity.getSlug()).isEqualTo("test-product");
         assertThat(jpaEntity.getSearchTags()).isEqualTo("test, product, electronics");
         assertThat(jpaEntity.getPrimaryImageUrl()).isEqualTo("https://example.com/image.jpg");
-        assertThat(jpaEntity.getCreatedAt()).isEqualTo(now);
-        assertThat(jpaEntity.getUpdatedAt()).isEqualTo(now);
-        assertThat(jpaEntity.getVersion()).isEqualTo(1L);
+        assertThat(jpaEntity.getDeletedAt()).isNull();
     }
 
     @Test

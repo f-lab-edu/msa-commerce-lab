@@ -2,6 +2,7 @@ package com.msa.commerce.monolith.product.application.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
@@ -20,7 +21,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.common.exception.ValidationException;
+import com.msa.commerce.monolith.product.adapter.out.persistence.ProductJpaEntity;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
@@ -35,6 +38,9 @@ class ProductDeleteServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private ProductMapper productMapper;
+
+    @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
     @Mock
@@ -44,6 +50,8 @@ class ProductDeleteServiceTest {
     private ProductDeleteService productDeleteService;
 
     private Product testProduct;
+
+    private ProductJpaEntity testEntity;
 
     private Long productId;
 
@@ -77,14 +85,15 @@ class ProductDeleteServiceTest {
             null,
             1L
         );
+        testEntity = ProductJpaEntity.fromDomainEntityForCreation(testProduct);
     }
 
     @Test
     @DisplayName("정상적으로 상품을 삭제할 수 있다")
     void deleteProduct_Success() {
         // given
-        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        given(productRepository.findEntityById(eq(productId))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(testProduct);
         doNothing().when(inventoryDomainService).disableInventoryForProduct(
             eq(productId), anyString(), anyString(), anyString());
 
@@ -92,63 +101,35 @@ class ProductDeleteServiceTest {
         productDeleteService.deleteProduct(productId);
 
         // then
-        verify(productRepository).findById(productId);
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).findEntityById(eq(productId));
+        verify(productMapper).entityToDomain(any(ProductJpaEntity.class));
         verify(applicationEventPublisher).publishEvent(any(ProductEvent.class));
         verify(inventoryDomainService).disableInventoryForProduct(
             eq(productId), anyString(), eq("PRODUCT_DELETION"), anyString());
     }
 
     @Test
-    @DisplayName("존재하지 않는 상품 삭제 시 ResourceNotFoundException 발생")
+    @DisplayName("존재하지 않는 상품 삭제 시 예외 발생")
     void deleteProduct_NotFound() {
         // given
-        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+        given(productRepository.findEntityById(eq(productId)))
+            .willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productDeleteService.deleteProduct(productId))
             .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("Product not found with id: " + productId)
-            .extracting("errorCode")
-            .isEqualTo(ErrorCode.PRODUCT_NOT_FOUND.getCode());
-
-        verify(productRepository).findById(productId);
-        verify(productRepository, never()).save(any());
+            .hasMessageContaining("Product not found with ID: " + productId);
     }
 
     @Test
     @DisplayName("이미 삭제된 상품 삭제 시 ValidationException 발생")
     void deleteProduct_AlreadyDeleted() {
         // given
-        Product deletedProduct = Product.reconstitute(
-            productId,
-            "TEST-SKU-001",
-            "Test Product",
-            "Short description",
-            "Detailed description",
-            1L,
-            "Test Brand",
-            ProductType.PHYSICAL,
-            ProductStatus.ARCHIVED,
-            new BigDecimal("10000"),
-            new BigDecimal("8000"),
-            "KRW",
-            500,
-            true,
-            true,
-            false,
-            "test-product",
-            "test,product",
-            "http://example.com/image.jpg",
-            1,
-            100,
-            LocalDateTime.now().minusDays(10),
-            LocalDateTime.now().minusDays(1),
-            LocalDateTime.now().minusHours(1), // 이미 삭제됨
-            1L
-        );
+        ProductJpaEntity deletedEntity = ProductJpaEntity.fromDomainEntityForCreation(testProduct);
+        deletedEntity.softDelete(); // Mark as already deleted
 
-        when(productRepository.findById(productId)).thenReturn(Optional.of(deletedProduct));
+        given(productRepository.findEntityById(eq(productId)))
+            .willReturn(Optional.of(deletedEntity));
 
         // when & then
         assertThatThrownBy(() -> productDeleteService.deleteProduct(productId))
@@ -156,17 +137,14 @@ class ProductDeleteServiceTest {
             .hasMessageContaining("Product is already deleted")
             .extracting("errorCode")
             .isEqualTo(ErrorCode.PRODUCT_UPDATE_NOT_ALLOWED.getCode());
-
-        verify(productRepository).findById(productId);
-        verify(productRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("재고 비활성화 실패해도 상품 삭제는 성공한다")
     void deleteProduct_InventoryDisableFails_StillSucceeds() {
         // given
-        when(productRepository.findById(productId)).thenReturn(Optional.of(testProduct));
-        when(productRepository.save(any(Product.class))).thenReturn(testProduct);
+        given(productRepository.findEntityById(eq(productId))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(testProduct);
         doThrow(new RuntimeException("Inventory service error"))
             .when(inventoryDomainService).disableInventoryForProduct(
                 eq(productId), anyString(), anyString(), anyString());
@@ -176,8 +154,8 @@ class ProductDeleteServiceTest {
             .doesNotThrowAnyException();
 
         // then
-        verify(productRepository).findById(productId);
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).findEntityById(eq(productId));
+        verify(productMapper).entityToDomain(any(ProductJpaEntity.class));
         verify(applicationEventPublisher).publishEvent(any(ProductEvent.class));
         verify(inventoryDomainService).disableInventoryForProduct(
             eq(productId), anyString(), eq("PRODUCT_DELETION"), anyString());

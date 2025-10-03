@@ -147,34 +147,68 @@ public class ProductJpaEntity {
     @Column(nullable = false)
     private Long version = 1L;
 
-    public static ProductJpaEntity fromDomainEntity(Product product) {
-        ProductJpaEntity jpaEntity = new ProductJpaEntity();
-        jpaEntity.id = product.getId();
-        jpaEntity.sku = product.getSku();
-        jpaEntity.name = product.getName();
-        jpaEntity.shortDescription = product.getShortDescription();
-        jpaEntity.description = product.getDescription();
-        jpaEntity.categoryId = product.getCategoryId();
-        jpaEntity.brand = product.getBrand();
-        jpaEntity.productType = product.getProductType();
-        jpaEntity.status = product.getStatus();
-        jpaEntity.basePrice = product.getBasePrice();
-        jpaEntity.salePrice = product.getSalePrice();
-        jpaEntity.currency = product.getCurrency();
-        jpaEntity.weightGrams = product.getWeightGrams();
-        jpaEntity.requiresShipping = product.getRequiresShipping();
-        jpaEntity.isTaxable = product.getIsTaxable();
-        jpaEntity.isFeatured = product.getIsFeatured();
-        jpaEntity.slug = product.getSlug();
-        jpaEntity.searchTags = product.getSearchTags();
-        jpaEntity.primaryImageUrl = product.getPrimaryImageUrl();
-        jpaEntity.minOrderQuantity = product.getMinOrderQuantity();
-        jpaEntity.maxOrderQuantity = product.getMaxOrderQuantity();
-        jpaEntity.createdAt = product.getCreatedAt();
-        jpaEntity.updatedAt = product.getUpdatedAt();
-        jpaEntity.deletedAt = product.getDeletedAt();
-        jpaEntity.version = product.getVersion();
-        return jpaEntity;
+    public void updateFromDomain(Product product) {
+        this.sku = product.getSku();
+        this.name = product.getName();
+        this.shortDescription = product.getShortDescription();
+        this.description = product.getDescription();
+        this.categoryId = product.getCategoryId();
+        this.brand = product.getBrand();
+        this.productType = product.getProductType();
+        this.status = product.getStatus();
+        this.basePrice = product.getBasePrice();
+        this.salePrice = product.getSalePrice();
+        this.currency = product.getCurrency();
+        this.weightGrams = product.getWeightGrams();
+        this.requiresShipping = product.getRequiresShipping();
+        this.isTaxable = product.getIsTaxable();
+        this.isFeatured = product.getIsFeatured();
+        this.slug = product.getSlug();
+        this.searchTags = product.getSearchTags();
+        this.primaryImageUrl = product.getPrimaryImageUrl();
+        this.minOrderQuantity = product.getMinOrderQuantity();
+        this.maxOrderQuantity = product.getMaxOrderQuantity();
+        this.deletedAt = product.getDeletedAt();
+    }
+
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+        this.status = ProductStatus.ARCHIVED;
+    }
+
+    public boolean isUpdatable() {
+        return this.status == ProductStatus.ACTIVE || this.status == ProductStatus.DRAFT;
+    }
+
+    public boolean isDeleted() {
+        return this.deletedAt != null;
+    }
+
+    public void updateProductInfo(String sku, String name, String shortDescription, String description,
+                                   Long categoryId, String brand, ProductType productType,
+                                   BigDecimal basePrice, BigDecimal salePrice, String currency,
+                                   Integer weightGrams, Boolean requiresShipping, Boolean isTaxable,
+                                   Boolean isFeatured, String slug, String searchTags,
+                                   String primaryImageUrl, Integer minOrderQuantity, Integer maxOrderQuantity) {
+        if (sku != null) this.sku = sku;
+        if (name != null) this.name = name;
+        if (shortDescription != null) this.shortDescription = shortDescription;
+        if (description != null) this.description = description;
+        if (categoryId != null) this.categoryId = categoryId;
+        if (brand != null) this.brand = brand;
+        if (productType != null) this.productType = productType;
+        if (basePrice != null) this.basePrice = basePrice;
+        if (salePrice != null) this.salePrice = salePrice;
+        if (currency != null) this.currency = currency;
+        if (weightGrams != null) this.weightGrams = weightGrams;
+        if (requiresShipping != null) this.requiresShipping = requiresShipping;
+        if (isTaxable != null) this.isTaxable = isTaxable;
+        if (isFeatured != null) this.isFeatured = isFeatured;
+        if (slug != null) this.slug = slug;
+        if (searchTags != null) this.searchTags = searchTags;
+        if (primaryImageUrl != null) this.primaryImageUrl = primaryImageUrl;
+        if (minOrderQuantity != null) this.minOrderQuantity = minOrderQuantity;
+        if (maxOrderQuantity != null) this.maxOrderQuantity = maxOrderQuantity;
     }
 
     public static ProductJpaEntity fromDomainEntityForCreation(Product product) {

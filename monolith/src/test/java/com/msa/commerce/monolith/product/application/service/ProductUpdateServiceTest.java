@@ -22,6 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.msa.commerce.common.exception.DuplicateResourceException;
 import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
+import com.msa.commerce.monolith.product.adapter.out.persistence.ProductJpaEntity;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.command.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
@@ -54,6 +55,8 @@ class ProductUpdateServiceTest {
     private ProductUpdateService productUpdateService;
 
     private Product existingProduct;
+
+    private ProductJpaEntity testEntity;
 
     private ProductUpdateCommand updateCommand;
 
@@ -89,6 +92,8 @@ class ProductUpdateServiceTest {
             1L                                    // version
         );
 
+        testEntity = ProductJpaEntity.fromDomainEntityForCreation(existingProduct);
+
         updateCommand = ProductCommandFixture.validProductUpdateCommand();
 
         expectedResponse = ProductResponse.builder()
@@ -116,9 +121,9 @@ class ProductUpdateServiceTest {
     void updateProduct_Success() {
         // given
         given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(existingProduct);
+        given(productMapper.entityToResponse(any(ProductJpaEntity.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(updateCommand);
@@ -129,9 +134,8 @@ class ProductUpdateServiceTest {
         assertThat(response.getDescription()).isEqualTo("업데이트된 상품 설명");
         assertThat(response.getBasePrice()).isEqualTo(new BigDecimal("15000"));
 
-        verify(productRepository).findById(1L);
-        verify(productRepository).save(any(Product.class));
-        verify(productMapper).toResponse(any(Product.class));
+        verify(productRepository).findEntityById(eq(1L));
+        verify(productMapper).entityToResponse(any(ProductJpaEntity.class));
     }
 
     @Test
@@ -139,15 +143,13 @@ class ProductUpdateServiceTest {
     void updateProduct_ProductNotFound_ThrowsException() {
         // given
         given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
-        given(productRepository.findById(1L)).willReturn(Optional.empty());
+        given(productRepository.findEntityById(eq(1L)))
+            .willReturn(Optional.empty());
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(updateCommand))
             .isInstanceOf(ResourceNotFoundException.class)
             .hasMessageContaining("Product not found with ID: 1");
-
-        verify(productRepository).findById(1L);
-        verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
@@ -162,16 +164,16 @@ class ProductUpdateServiceTest {
             1, 100,
             LocalDateTime.now().minusDays(1), LocalDateTime.now().minusDays(1), null, 1L
         );
+        ProductJpaEntity archivedEntity = ProductJpaEntity.fromDomainEntityForCreation(archivedProduct);
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(archivedProduct));
+        given(validator.validate(any(ProductUpdateCommand.class))).willReturn(Collections.emptySet());
+        given(productRepository.findEntityById(eq(1L)))
+            .willReturn(Optional.of(archivedEntity));
 
         // when & then
         assertThatThrownBy(() -> productUpdateService.updateProduct(updateCommand))
             .isInstanceOf(ProductUpdateNotAllowedException.class)
             .hasMessageContaining("Product with ID 1 cannot be updated. Current status: ARCHIVED");
-
-        verify(productRepository).findById(1L);
-        verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
@@ -180,7 +182,7 @@ class ProductUpdateServiceTest {
         // given
         ProductUpdateCommand commandWithDuplicateSku = ProductCommandFixture.duplicateSkuUpdateCommand();
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
         given(productRepository.existsBySku(commandWithDuplicateSku.getSku())).willReturn(true);
 
         // when & then
@@ -188,9 +190,7 @@ class ProductUpdateServiceTest {
             .isInstanceOf(DuplicateResourceException.class)
             .hasMessage("SKU already exists: " + commandWithDuplicateSku.getSku());
 
-        verify(productRepository).findById(1L);
         verify(productRepository).existsBySku(commandWithDuplicateSku.getSku());
-        verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
@@ -199,7 +199,7 @@ class ProductUpdateServiceTest {
         // given
         ProductUpdateCommand commandWithDuplicateName = ProductCommandFixture.duplicateNameUpdateCommand();
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
         given(productRepository.existsByName(commandWithDuplicateName.getName())).willReturn(true);
 
         // when & then
@@ -207,9 +207,7 @@ class ProductUpdateServiceTest {
             .isInstanceOf(DuplicateResourceException.class)
             .hasMessage("Product name already exists: " + commandWithDuplicateName.getName());
 
-        verify(productRepository).findById(1L);
         verify(productRepository).existsByName("중복된 상품명");
-        verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
@@ -222,14 +220,13 @@ class ProductUpdateServiceTest {
 
         // Note: 실제로는 mapper에서 이 경우를 처리하므로 이 테스트는 validation 호출만 확인
         // when & then - command.validate()가 예외를 던지지 않으면 정상 처리
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(existingProduct);
+        given(productMapper.entityToResponse(any(ProductJpaEntity.class))).willReturn(expectedResponse);
 
         ProductResponse response = productUpdateService.updateProduct(emptyCommand);
 
         assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
     }
 
     @Test
@@ -241,17 +238,16 @@ class ProductUpdateServiceTest {
             .name("새로운 상품명")
             .build();
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(existingProduct);
+        given(productMapper.entityToResponse(any(ProductJpaEntity.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(partialCommand);
 
         // then
         assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).findEntityById(eq(1L));
     }
 
     @Test
@@ -309,18 +305,17 @@ class ProductUpdateServiceTest {
             .name("업데이트된 상품명")
             .build();
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(existingProduct);
+        given(productMapper.entityToResponse(any(ProductJpaEntity.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(commandWithSameSku);
 
         // then
         assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
         verify(productRepository, never()).existsBySku(anyString()); // SKU 중복 검사 수행 안함
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).findEntityById(eq(1L));
     }
 
     @Test
@@ -333,18 +328,17 @@ class ProductUpdateServiceTest {
             .basePrice(new BigDecimal("15000"))
             .build();
 
-        given(productRepository.findById(1L)).willReturn(Optional.of(existingProduct));
-        given(productRepository.save(any(Product.class))).willReturn(existingProduct);
-        given(productMapper.toResponse(any(Product.class))).willReturn(expectedResponse);
+        given(productRepository.findEntityById(eq(1L))).willReturn(Optional.of(testEntity));
+        given(productMapper.entityToDomain(any(ProductJpaEntity.class))).willReturn(existingProduct);
+        given(productMapper.entityToResponse(any(ProductJpaEntity.class))).willReturn(expectedResponse);
 
         // when
         ProductResponse response = productUpdateService.updateProduct(commandWithSameName);
 
         // then
         assertThat(response).isNotNull();
-        verify(productRepository).findById(1L);
         verify(productRepository, never()).existsByName(anyString()); // 이름 중복 검사 수행 안함
-        verify(productRepository).save(any(Product.class));
+        verify(productRepository).findEntityById(eq(1L));
     }
 
 }

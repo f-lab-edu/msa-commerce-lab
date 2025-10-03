@@ -6,6 +6,7 @@ import org.mapstruct.MappingConstants;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
+import com.msa.commerce.monolith.product.adapter.out.persistence.ProductJpaEntity;
 import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
@@ -28,6 +29,19 @@ public interface ProductMapper {
     @Mapping(target = "reorderQuantity", constant = "20")
     @Mapping(target = "locationCode", constant = "MAIN")
     ProductResponse toResponse(Product product);
+
+    @Mapping(target = "availableQuantity", constant = "0")
+    @Mapping(target = "reservedQuantity", constant = "0")
+    @Mapping(target = "totalQuantity", constant = "0")
+    @Mapping(target = "lowStockThreshold", constant = "0")
+    @Mapping(target = "isTrackingEnabled", constant = "true")
+    @Mapping(target = "isBackorderAllowed", constant = "false")
+    @Mapping(target = "reorderPoint", constant = "10")
+    @Mapping(target = "reorderQuantity", constant = "20")
+    @Mapping(target = "locationCode", constant = "MAIN")
+    ProductResponse entityToResponse(ProductJpaEntity entity);
+
+    Product entityToDomain(ProductJpaEntity entity);
 
     @Mapping(target = "viewCount", constant = "0L")
     ProductSearchResponse toSearchResponse(Product product);

@@ -25,18 +25,14 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Product save(Product product) {
-        ProductJpaEntity jpaEntity;
-
-        if (product.getId() == null) {
-            // 새로운 엔티티 생성
-            jpaEntity = ProductJpaEntity.fromDomainEntityForCreation(product);
-        } else {
-            // 기존 엔티티 업데이트
-            jpaEntity = ProductJpaEntity.fromDomainEntity(product);
-        }
-
-        ProductJpaEntity savedEntity = productJpaRepository.save(jpaEntity);
+        ProductJpaEntity newEntity = ProductJpaEntity.fromDomainEntityForCreation(product);
+        ProductJpaEntity savedEntity = productJpaRepository.save(newEntity);
         return savedEntity.toDomainEntity();
+    }
+
+    @Override
+    public Optional<ProductJpaEntity> findEntityById(Long id) {
+        return productJpaRepository.findById(id);
     }
 
     @Override

@@ -5,12 +5,15 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 
+import com.msa.commerce.monolith.product.adapter.out.persistence.ProductJpaEntity;
 import com.msa.commerce.monolith.product.application.port.in.command.ProductSearchCommand;
 import com.msa.commerce.monolith.product.domain.Product;
 
 public interface ProductRepository {
 
     Product save(Product product);
+
+    Optional<ProductJpaEntity> findEntityById(Long id);
 
     Optional<Product> findById(Long id);
 

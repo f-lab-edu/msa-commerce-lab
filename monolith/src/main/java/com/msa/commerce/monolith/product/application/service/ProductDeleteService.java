@@ -7,8 +7,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.msa.commerce.common.exception.ErrorCode;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
 import com.msa.commerce.common.exception.ValidationException;
+import com.msa.commerce.monolith.product.adapter.out.persistence.ProductJpaEntity;
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;
+import com.msa.commerce.monolith.product.application.service.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.event.ProductEvent;
 import com.msa.commerce.monolith.product.domain.service.InventoryDomainService;
@@ -24,38 +26,41 @@ public class ProductDeleteService implements ProductDeleteUseCase {
 
     private final ProductRepository productRepository;
 
+    private final ProductMapper productMapper;
+
     private final ApplicationEventPublisher applicationEventPublisher;
 
     private final InventoryDomainService inventoryDomainService;
 
     @Override
     public void deleteProduct(Long productId) {
-        Product product = productRepository.findById(productId)
-            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId, ErrorCode.PRODUCT_NOT_FOUND.getCode()));
+        ProductJpaEntity entity = productRepository.findEntityById(productId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                "Product not found with ID: " + productId,
+                ErrorCode.PRODUCT_NOT_FOUND.getCode()));
 
-        validateProductDeletable(product);
+        validateProductDeletable(entity);
 
-        product.softDelete();
-        Product deletedProduct = productRepository.save(product);
+        entity.softDelete();
 
         handleProductDeletion(productId);
 
-        applicationEventPublisher.publishEvent(ProductEvent.productDeleted(deletedProduct));
+        applicationEventPublisher.publishEvent(ProductEvent.productDeleted(productMapper.entityToDomain(entity)));
     }
 
-    private void validateProductDeletable(Product product) {
-        if (product.isDeleted()) {
+    private void validateProductDeletable(ProductJpaEntity entity) {
+        if (entity.isDeleted()) {
             throw new ValidationException("Product is already deleted", ErrorCode.PRODUCT_UPDATE_NOT_ALLOWED.getCode());
         }
 
         // 진행 중인 주문 확인
-        if (hasActiveOrders(product.getId())) {
+        if (hasActiveOrders(entity.getId())) {
             throw new ValidationException("Cannot delete product with active orders", ErrorCode.PRODUCT_UPDATE_NOT_ALLOWED.getCode());
         }
 
         // 장바구니 포함 여부 확인
-        if (isInShoppingCarts(product.getId())) {
-            log.warn("Product {} is in shopping carts but deletion will proceed. Cart items will become invalid.", product.getId());
+        if (isInShoppingCarts(entity.getId())) {
+            log.warn("Product {} is in shopping carts but deletion will proceed. Cart items will become invalid.", entity.getId());
             // 장바구니에 있어도 삭제는 진행하되, 장바구니 아이템은 무효화됨
         }
     }
