@@ -1,7 +1,13 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderStatus;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,13 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderRepositoryImpl 테스트")
@@ -227,7 +228,7 @@ class OrderRepositoryImplTest {
 
         // then
         assertThat(orders).hasSize(1);
-        assertThat(orders.get(0)).isEqualTo(order);
+        assertThat(orders.getFirst()).isEqualTo(order);
         verify(orderJpaRepository).findByCustomerIdAndStatus(customerId, status);
     }
 
@@ -396,4 +397,5 @@ class OrderRepositoryImplTest {
             "WEB"
         );
     }
+
 }
