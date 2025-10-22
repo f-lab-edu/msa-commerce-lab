@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -109,21 +110,81 @@ class OrderRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("주문 조회 시 미구현 예외")
-    void findById_ThrowsUnsupportedOperationException() {
-        // when & then
-        assertThatThrownBy(() -> orderRepository.findById(1L))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order findById not yet implemented - requires domain reconstitution");
+    @DisplayName("ID로 주문 조회 성공")
+    void findById_Success() {
+        // given
+        Long orderId = 1L;
+        Order order = createValidOrder();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findById(orderId)).thenReturn(java.util.Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findById(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findById(orderId);
+        verify(orderMapper).toDomain(orderEntity);
     }
 
     @Test
-    @DisplayName("주문 UUID로 조회 시 미구현 예외")
-    void findByOrderId_ThrowsUnsupportedOperationException() {
-        // when & then
-        assertThatThrownBy(() -> orderRepository.findByOrderId(UUID.randomUUID()))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order findByOrderId not yet implemented - requires domain reconstitution");
+    @DisplayName("ID로 주문 조회 실패 - 존재하지 않음")
+    void findById_NotFound() {
+        // given
+        Long orderId = 999L;
+        when(orderJpaRepository.findById(orderId)).thenReturn(java.util.Optional.empty());
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findById(orderId);
+
+        // then
+        assertThat(foundOrder).isEmpty();
+        verify(orderJpaRepository).findById(orderId);
+    }
+
+    @Test
+    @DisplayName("UUID로 주문 조회 성공")
+    void findByOrderId_Success() {
+        // given
+        Order order = createValidOrder();
+        UUID orderId = order.getOrderId();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderId(orderId)).thenReturn(java.util.Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderId(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByOrderId(orderId);
+        verify(orderMapper).toDomain(orderEntity);
+    }
+
+    @Test
+    @DisplayName("주문 번호로 조회 성공")
+    void findByOrderNumber_Success() {
+        // given
+        Order order = createValidOrder();
+        String orderNumber = order.getOrderNumber();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderNumber(orderNumber)).thenReturn(java.util.Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderNumber(orderNumber);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByOrderNumber(orderNumber);
+        verify(orderMapper).toDomain(orderEntity);
     }
 
     private Order createValidOrder() {
