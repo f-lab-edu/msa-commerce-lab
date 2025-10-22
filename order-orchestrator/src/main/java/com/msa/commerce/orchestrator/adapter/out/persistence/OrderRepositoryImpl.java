@@ -1,28 +1,49 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderStatus;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Repository;
+
+import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderStatus;
+
+import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class OrderRepositoryImpl implements OrderRepository {
 
     private final OrderJpaRepository orderJpaRepository;
+
     private final OrderDomainMapper orderMapper;
 
     @Override
     public Order save(Order order) {
-        // TODO: Implement save logic with proper domain-to-entity mapping
-        throw new UnsupportedOperationException("Order save not yet implemented - requires domain reconstitution");
+        OrderJpaEntity orderEntity;
+
+        if (order.getOrderId() != null) {
+            orderEntity = orderJpaRepository.findByOrderId(order.getOrderId())
+                .map(existingEntity -> {
+                    existingEntity.updateFrom(order);
+                    return existingEntity;
+                })
+                .orElseGet(() -> OrderJpaEntity.from(order));
+        } else {
+            orderEntity = OrderJpaEntity.from(order);
+        }
+
+        orderEntity.getOrderItems().clear();
+        order.getOrderItems().forEach(orderItem -> {
+            OrderItemJpaEntity itemEntity = OrderItemJpaEntity.from(orderItem, orderEntity);
+            orderEntity.getOrderItems().add(itemEntity);
+        });
+
+        OrderJpaEntity savedEntity = orderJpaRepository.save(orderEntity);
+        return orderMapper.toDomain(savedEntity);
     }
 
     @Override
@@ -110,4 +131,5 @@ public class OrderRepositoryImpl implements OrderRepository {
     public void deleteById(Long id) {
         orderJpaRepository.deleteById(id);
     }
+
 }

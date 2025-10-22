@@ -34,46 +34,33 @@ class OrderItemJpaEntityTest {
     }
 
     @Test
-    @DisplayName("JPA 엔티티에서 OrderItem 도메인 생성")
-    void toDomain_Success() {
+    @DisplayName("OrderItem 도메인으로 JPA 엔티티 업데이트")
+    void updateFromOrderItem_Success() {
         // given
         OrderItem originalOrderItem = createValidOrderItem();
         OrderJpaEntity orderEntity = new OrderJpaEntity();
         OrderItemJpaEntity entity = OrderItemJpaEntity.from(originalOrderItem, orderEntity);
 
-        // when
-        OrderItem domainOrderItem = entity.toDomain();
-
-        // then
-        assertThat(domainOrderItem.getProductId()).isEqualTo(originalOrderItem.getProductId());
-        assertThat(domainOrderItem.getProductName()).isEqualTo(originalOrderItem.getProductName());
-        assertThat(domainOrderItem.getProductSku()).isEqualTo(originalOrderItem.getProductSku());
-        assertThat(domainOrderItem.getProductVariantId()).isEqualTo(originalOrderItem.getProductVariantId());
-        assertThat(domainOrderItem.getVariantName()).isEqualTo(originalOrderItem.getVariantName());
-        assertThat(domainOrderItem.getQuantity()).isEqualTo(originalOrderItem.getQuantity());
-        assertThat(domainOrderItem.getUnitPrice()).isEqualTo(originalOrderItem.getUnitPrice());
-        assertThat(domainOrderItem.getTotalPrice()).isEqualTo(originalOrderItem.getTotalPrice());
-    }
-
-    @Test
-    @DisplayName("OrderItem 도메인으로 JPA 엔티티 업데이트")
-    void updateFromOrderItem_Success() {
-        // given
-        OrderItem orderItem = createValidOrderItem();
-        OrderJpaEntity orderEntity = new OrderJpaEntity();
-        OrderItemJpaEntity entity = OrderItemJpaEntity.from(orderItem, orderEntity);
-
-        // 수량과 단가 변경
-        orderItem.updateQuantity(5);
-        orderItem.updateUnitPrice(new BigDecimal("12000.00"));
+        // 수량과 가격을 변경한 새로운 OrderItem 생성
+        OrderItem updatedOrderItem = OrderItem.builder()
+            .orderItemId(originalOrderItem.getOrderItemId())
+            .productId(originalOrderItem.getProductId())
+            .productVariantId(originalOrderItem.getProductVariantId())
+            .productName(originalOrderItem.getProductName())
+            .productSku(originalOrderItem.getProductSku())
+            .variantName(originalOrderItem.getVariantName())
+            .quantity(10)
+            .unitPrice(new BigDecimal("15000.0000"))
+            .totalPrice(new BigDecimal("150000.0000"))
+            .build();
 
         // when
-        entity.updateFrom(orderItem);
+        entity.updateFrom(updatedOrderItem);
 
         // then
-        assertThat(entity.getQuantity()).isEqualTo(5);
-        assertThat(entity.getUnitPrice()).isEqualTo(new BigDecimal("12000.00"));
-        assertThat(entity.getTotalPrice()).isEqualTo(new BigDecimal("60000.00"));
+        assertThat(entity.getQuantity()).isEqualTo(10);
+        assertThat(entity.getUnitPrice()).isEqualByComparingTo(new BigDecimal("15000.0000"));
+        assertThat(entity.getTotalPrice()).isEqualByComparingTo(new BigDecimal("150000.0000"));
     }
 
     private OrderItem createValidOrderItem() {

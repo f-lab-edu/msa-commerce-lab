@@ -23,6 +23,9 @@ class OrderRepositoryImplTest {
     @Mock
     private OrderJpaRepository orderJpaRepository;
 
+    @Mock
+    private OrderDomainMapper orderMapper;
+
     @InjectMocks
     private OrderRepositoryImpl orderRepository;
 
@@ -61,14 +64,14 @@ class OrderRepositoryImplTest {
     void countByCustomerId_Success() {
         // given
         Long customerId = 1L;
-        when(orderJpaRepository.countByUserId(customerId)).thenReturn(3L);
+        when(orderJpaRepository.countByCustomerId(customerId)).thenReturn(3L);
 
         // when
         long count = orderRepository.countByCustomerId(customerId);
 
         // then
         assertThat(count).isEqualTo(3L);
-        verify(orderJpaRepository).countByUserId(customerId);
+        verify(orderJpaRepository).countByCustomerId(customerId);
     }
 
     @Test
@@ -85,15 +88,24 @@ class OrderRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("주문 저장 시 미구현 예외")
-    void save_ThrowsUnsupportedOperationException() {
+    @DisplayName("주문 저장 성공")
+    void save_Success() {
         // given
         Order order = createValidOrder();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        // when & then
-        assertThatThrownBy(() -> orderRepository.save(order))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order save not yet implemented - requires domain reconstitution");
+        when(orderJpaRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.empty());
+        when(orderJpaRepository.save(any(OrderJpaEntity.class))).thenReturn(orderEntity);
+        when(orderMapper.toDomain(any(OrderJpaEntity.class))).thenReturn(order);
+
+        // when
+        Order savedOrder = orderRepository.save(order);
+
+        // then
+        assertThat(savedOrder).isNotNull();
+        verify(orderJpaRepository).findByOrderId(order.getOrderId());
+        verify(orderJpaRepository).save(any(OrderJpaEntity.class));
+        verify(orderMapper).toDomain(any(OrderJpaEntity.class));
     }
 
     @Test
