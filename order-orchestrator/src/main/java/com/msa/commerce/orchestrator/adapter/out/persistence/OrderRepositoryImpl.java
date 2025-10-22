@@ -123,14 +123,14 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findByIdWithItems(Long id) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByIdWithItems not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByIdWithItems(id)
+            .map(orderMapper::toDomain);
     }
 
     @Override
     public Optional<Order> findByOrderIdWithItems(UUID orderId) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByOrderIdWithItems not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByOrderIdWithItems(orderId)
+            .map(orderMapper::toDomain);
     }
 
     @Override

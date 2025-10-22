@@ -310,6 +310,78 @@ class OrderRepositoryImplTest {
         verify(orderJpaRepository).findCustomerOrdersByDateRange(customerId, startDate, endDate);
     }
 
+    @Test
+    @DisplayName("ID로 주문과 항목 함께 조회")
+    void findByIdWithItems_Success() {
+        // given
+        Long orderId = 1L;
+        Order order = createValidOrder();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByIdWithItems(orderId);
+        verify(orderMapper).toDomain(orderEntity);
+    }
+
+    @Test
+    @DisplayName("ID로 주문과 항목 함께 조회 실패 - 존재하지 않음")
+    void findByIdWithItems_NotFound() {
+        // given
+        Long orderId = 999L;
+        when(orderJpaRepository.findByIdWithItems(orderId)).thenReturn(Optional.empty());
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isEmpty();
+        verify(orderJpaRepository).findByIdWithItems(orderId);
+    }
+
+    @Test
+    @DisplayName("UUID로 주문과 항목 함께 조회")
+    void findByOrderIdWithItems_Success() {
+        // given
+        Order order = createValidOrder();
+        UUID orderId = order.getOrderId();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderIdWithItems(orderId)).thenReturn(Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByOrderIdWithItems(orderId);
+        verify(orderMapper).toDomain(orderEntity);
+    }
+
+    @Test
+    @DisplayName("UUID로 주문과 항목 함께 조회 실패 - 존재하지 않음")
+    void findByOrderIdWithItems_NotFound() {
+        // given
+        UUID orderId = UUID.randomUUID();
+        when(orderJpaRepository.findByOrderIdWithItems(orderId)).thenReturn(Optional.empty());
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isEmpty();
+        verify(orderJpaRepository).findByOrderIdWithItems(orderId);
+    }
+
     private Order createValidOrder() {
         Map<String, Object> shippingAddress = new HashMap<>();
         shippingAddress.put("recipient", "홍길동");
