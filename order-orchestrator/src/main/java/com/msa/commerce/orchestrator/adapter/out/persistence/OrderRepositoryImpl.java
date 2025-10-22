@@ -17,8 +17,7 @@ import java.util.stream.Collectors;
 public class OrderRepositoryImpl implements OrderRepository {
 
     private final OrderJpaRepository orderJpaRepository;
-    // TODO: Implement proper domain mapping once reconstitute method is added
-    // private final OrderDomainMapper orderMapper;
+    private final OrderDomainMapper orderMapper;
 
     @Override
     public Order save(Order order) {

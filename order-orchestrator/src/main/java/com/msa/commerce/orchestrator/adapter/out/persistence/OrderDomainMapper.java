@@ -19,20 +19,12 @@ public interface OrderDomainMapper {
 
     List<OrderItem> toOrderItemDomainList(List<OrderItemJpaEntity> entities);
 
-    @Mapping(source = "id", target = "orderItemId")
+    @Mapping(source = "orderItemId", target = "orderItemId")
     OrderItem toOrderItemDomain(OrderItemJpaEntity entity);
 
-    @Mapping(source = "id", target = "orderId")
+    @Mapping(source = "orderUuid", target = "orderId")
     @Mapping(source = "userId", target = "customerId")
     @Mapping(source = "orderItems", target = "orderItems")
     Order toDomain(OrderJpaEntity entity);
-
-    default UUID map(Long value) {
-        return value == null ? null : new UUID(0L, value);
-    }
-
-    default Long map(UUID value) {
-        return value == null ? null : value.getLeastSignificantBits();
-    }
 
 }

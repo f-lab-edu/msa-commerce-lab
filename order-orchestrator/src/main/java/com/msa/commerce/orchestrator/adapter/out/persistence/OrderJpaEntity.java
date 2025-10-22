@@ -140,14 +140,6 @@ public class OrderJpaEntity {
         return entity;
     }
 
-    public Order toDomain() {
-        // Note: This creates a new Order but we need to use reflection or builder pattern
-        // to properly hydrate the domain object with existing data
-        // For now, this is a placeholder - proper implementation would require
-        // either making domain constructors more flexible or using a mapper
-        throw new UnsupportedOperationException("Domain conversion not yet implemented - requires proper hydration strategy");
-    }
-
     public void updateFrom(Order order) {
         this.status = order.getStatus();
         this.subtotalAmount = order.getSubtotalAmount();

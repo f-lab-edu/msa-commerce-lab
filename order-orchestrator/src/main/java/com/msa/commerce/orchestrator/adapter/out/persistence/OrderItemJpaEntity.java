@@ -2,6 +2,7 @@ package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -33,6 +34,9 @@ public class OrderItemJpaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "order_item_id", nullable = false, unique = true, length = 36)
+    private UUID orderItemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
@@ -67,9 +71,10 @@ public class OrderItemJpaEntity {
     private LocalDateTime createdAt;
 
     @Builder
-    public OrderItemJpaEntity(Long id, OrderJpaEntity order, Long productId, Long productVariantId, String productName, String productSku, String variantName, Integer quantity, BigDecimal unitPrice,
+    public OrderItemJpaEntity(Long id, UUID orderItemId, OrderJpaEntity order, Long productId, Long productVariantId, String productName, String productSku, String variantName, Integer quantity, BigDecimal unitPrice,
         BigDecimal totalPrice, LocalDateTime createdAt) {
         this.id = id;
+        this.orderItemId = orderItemId;
         this.order = order;
         this.productId = productId;
         this.productVariantId = productVariantId;
@@ -84,6 +89,7 @@ public class OrderItemJpaEntity {
 
     public static OrderItemJpaEntity from(OrderItem orderItem, OrderJpaEntity orderEntity) {
         OrderItemJpaEntity entity = new OrderItemJpaEntity();
+        entity.orderItemId = orderItem.getOrderItemId();
         entity.order = orderEntity;
         entity.productId = orderItem.getProductId();
         entity.productVariantId = orderItem.getProductVariantId();
@@ -94,18 +100,6 @@ public class OrderItemJpaEntity {
         entity.unitPrice = orderItem.getUnitPrice();
         entity.totalPrice = orderItem.getTotalPrice();
         return entity;
-    }
-
-    public OrderItem toDomain() {
-        return OrderItem.create(
-            productId,
-            productName,
-            productSku,
-            productVariantId,
-            variantName,
-            quantity,
-            unitPrice
-        );
     }
 
     public void updateFrom(OrderItem orderItem) {
