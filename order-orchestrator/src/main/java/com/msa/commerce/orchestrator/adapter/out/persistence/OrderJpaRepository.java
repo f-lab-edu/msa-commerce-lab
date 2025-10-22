@@ -14,15 +14,15 @@ import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>, JpaSpecificationExecutor<OrderJpaEntity> {
 
-    Optional<OrderJpaEntity> findByOrderUuid(UUID orderUuid);
+    Optional<OrderJpaEntity> findByOrderId(UUID orderId);
 
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 
     boolean existsByOrderNumber(String orderNumber);
 
-    List<OrderJpaEntity> findByUserId(Long userId);
+    List<OrderJpaEntity> findByCustomerId(Long customerId);
 
-    List<OrderJpaEntity> findByUserIdAndStatus(Long userId, OrderStatus status);
+    List<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status);
 
     List<OrderJpaEntity> findByStatus(OrderStatus status);
 
@@ -31,17 +31,17 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
     @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
     List<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.userId = :userId AND o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findUserOrdersByDateRange(@Param("userId") Long userId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    @Query("SELECT o FROM OrderJpaEntity o WHERE o.customerId = :customerId AND o.orderDate BETWEEN :startDate AND :endDate")
+    List<OrderJpaEntity> findCustomerOrdersByDateRange(@Param("customerId") Long customerId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     long countByStatus(OrderStatus status);
 
-    long countByUserId(Long userId);
+    long countByCustomerId(Long customerId);
 
     @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.id = :id")
     Optional<OrderJpaEntity> findByIdWithItems(@Param("id") Long id);
 
-    @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderUuid = :orderUuid")
-    Optional<OrderJpaEntity> findByOrderUuidWithItems(@Param("orderUuid") UUID orderUuid);
+    @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderId = :orderId")
+    Optional<OrderJpaEntity> findByOrderIdWithItems(@Param("orderId") UUID orderId);
 
 }

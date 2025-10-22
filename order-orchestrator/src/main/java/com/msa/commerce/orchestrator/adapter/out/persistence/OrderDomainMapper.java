@@ -22,8 +22,8 @@ public interface OrderDomainMapper {
     @Mapping(source = "orderItemId", target = "orderItemId")
     OrderItem toOrderItemDomain(OrderItemJpaEntity entity);
 
-    @Mapping(source = "orderUuid", target = "orderId")
-    @Mapping(source = "userId", target = "customerId")
+    @Mapping(source = "orderId", target = "orderId")
+    @Mapping(source = "customerId", target = "customerId")
     @Mapping(source = "orderItems", target = "orderItems")
     Order toDomain(OrderJpaEntity entity);
 

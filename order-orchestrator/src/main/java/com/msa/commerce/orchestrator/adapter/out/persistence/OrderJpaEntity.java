@@ -44,14 +44,14 @@ public class OrderJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_uuid", nullable = false, unique = true, length = 36)
-    private UUID orderUuid;
+    @Column(name = "order_id", nullable = false, unique = true, length = 36)
+    private UUID orderId;
 
     @Column(name = "order_number", nullable = false, unique = true, length = 100)
     private String orderNumber;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -116,9 +116,9 @@ public class OrderJpaEntity {
 
     public static OrderJpaEntity from(Order order) {
         OrderJpaEntity entity = new OrderJpaEntity();
-        entity.orderUuid = order.getOrderId();
+        entity.orderId = order.getOrderId();
         entity.orderNumber = order.getOrderNumber();
-        entity.userId = order.getCustomerId();
+        entity.customerId = order.getCustomerId();
         entity.status = order.getStatus();
         entity.subtotalAmount = order.getSubtotalAmount();
         entity.taxAmount = order.getTaxAmount();

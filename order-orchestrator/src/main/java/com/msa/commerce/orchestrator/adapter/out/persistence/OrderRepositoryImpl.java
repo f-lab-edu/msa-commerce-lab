@@ -91,7 +91,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public long countByCustomerId(Long customerId) {
-        return orderJpaRepository.countByUserId(customerId);
+        return orderJpaRepository.countByCustomerId(customerId);
     }
 
     @Override
