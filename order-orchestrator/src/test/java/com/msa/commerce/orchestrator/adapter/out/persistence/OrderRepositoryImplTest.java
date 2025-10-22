@@ -187,6 +187,129 @@ class OrderRepositoryImplTest {
         verify(orderMapper).toDomain(orderEntity);
     }
 
+    @Test
+    @DisplayName("고객 ID로 주문 목록 조회")
+    void findByCustomerId_Success() {
+        // given
+        Long customerId = 1L;
+        Order order1 = createValidOrder();
+        Order order2 = createValidOrder();
+        OrderJpaEntity entity1 = OrderJpaEntity.from(order1);
+        OrderJpaEntity entity2 = OrderJpaEntity.from(order2);
+
+        when(orderJpaRepository.findByCustomerId(customerId)).thenReturn(java.util.List.of(entity1, entity2));
+        when(orderMapper.toDomain(entity1)).thenReturn(order1);
+        when(orderMapper.toDomain(entity2)).thenReturn(order2);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByCustomerId(customerId);
+
+        // then
+        assertThat(orders).hasSize(2);
+        assertThat(orders).containsExactly(order1, order2);
+        verify(orderJpaRepository).findByCustomerId(customerId);
+    }
+
+    @Test
+    @DisplayName("고객 ID와 상태로 주문 목록 조회")
+    void findByCustomerIdAndStatus_Success() {
+        // given
+        Long customerId = 1L;
+        OrderStatus status = OrderStatus.PENDING;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByCustomerIdAndStatus(customerId, status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByCustomerIdAndStatus(customerId, status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        assertThat(orders.get(0)).isEqualTo(order);
+        verify(orderJpaRepository).findByCustomerIdAndStatus(customerId, status);
+    }
+
+    @Test
+    @DisplayName("상태로 주문 목록 조회")
+    void findByStatus_Success() {
+        // given
+        OrderStatus status = OrderStatus.CONFIRMED;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByStatus(status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByStatus(status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByStatus(status);
+    }
+
+    @Test
+    @DisplayName("상태로 주문 목록 조회 (생성일 역순)")
+    void findByStatusOrderByCreatedAtDesc_Success() {
+        // given
+        OrderStatus status = OrderStatus.PAID;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByStatusOrderByCreatedAtDesc(status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByStatusOrderByCreatedAtDesc(status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    @Test
+    @DisplayName("기간으로 주문 목록 조회")
+    void findOrdersByDateRange_Success() {
+        // given
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(7);
+        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findOrdersByDateRange(startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findOrdersByDateRange(startDate, endDate);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findOrdersByDateRange(startDate, endDate);
+    }
+
+    @Test
+    @DisplayName("고객별 기간 주문 목록 조회")
+    void findCustomerOrdersByDateRange_Success() {
+        // given
+        Long customerId = 1L;
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(30);
+        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findCustomerOrdersByDateRange(customerId, startDate, endDate);
+    }
+
     private Order createValidOrder() {
         Map<String, Object> shippingAddress = new HashMap<>();
         shippingAddress.put("recipient", "홍길동");

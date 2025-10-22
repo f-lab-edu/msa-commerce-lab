@@ -71,38 +71,44 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public List<Order> findByCustomerId(Long customerId) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByCustomerId not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByCustomerId(customerId).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
     public List<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByCustomerIdAndStatus not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByCustomerIdAndStatus(customerId, status).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
     public List<Order> findByStatus(OrderStatus status) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByStatus not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByStatus(status).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
     public List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findByStatusOrderByCreatedAtDesc not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findByStatusOrderByCreatedAtDesc(status).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
     public List<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findOrdersByDateRange not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findOrdersByDateRange(startDate, endDate).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
     public List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate) {
-        // TODO: Implement with proper entity-to-domain mapping
-        throw new UnsupportedOperationException("Order findCustomerOrdersByDateRange not yet implemented - requires domain reconstitution");
+        return orderJpaRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
     @Override
