@@ -2,6 +2,7 @@ package com.msa.commerce.orchestrator.adapter.in.web.dto;
 
 import java.math.BigDecimal;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
@@ -17,7 +18,7 @@ public record OrderItemRequest(
     Integer quantity,
 
     @NotNull(message = "Unit price is required")
-    @Min(value = 0, message = "Unit price must be non-negative")
+    @DecimalMin(value = "0.01", message = "Unit price must be greater than 0")
     BigDecimal unitPrice
 ) {
 }
