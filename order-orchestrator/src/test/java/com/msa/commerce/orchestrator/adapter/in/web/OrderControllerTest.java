@@ -196,4 +196,48 @@ class OrderControllerTest {
 
         verify(createOrderUseCase, never()).createOrder(any());
     }
+
+    @Test
+    @DisplayName("POST /api/v1/orders - quantity가 0 이하인 경우 400 반환")
+    void createOrder_InvalidQuantity() throws Exception {
+        // given
+        CreateOrderRequest request = CreateOrderRequest.builder()
+            .customerId(1L)
+            .orderItems(List.of(
+                OrderItemRequest.builder()
+                    .productId(101L)
+                    .quantity(0)
+                    .unitPrice(BigDecimal.valueOf(10000))
+                    .build()
+            ))
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists())
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").value("orderItems[0].quantity"))
+            .andExpect(jsonPath("$.validationErrors[0].message").value("Quantity must be at least 1"));
+
+        verify(createOrderUseCase, never()).createOrder(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/orders - 잘못된 JSON 형식인 경우 400 반환")
+    void createOrder_InvalidJsonFormat() throws Exception {
+        // given
+        String invalidJson = "{invalid json}";
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidJson))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Invalid request body format"));
+
+        verify(createOrderUseCase, never()).createOrder(any());
+    }
 }
