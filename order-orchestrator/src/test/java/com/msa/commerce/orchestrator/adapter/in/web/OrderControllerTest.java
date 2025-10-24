@@ -118,4 +118,82 @@ class OrderControllerTest {
         verify(createOrderUseCase, times(1)).createOrder(any());
         verify(orderDtoMapper, times(1)).toOrderResponse(any());
     }
+
+    @Test
+    @DisplayName("POST /api/v1/orders - customerId가 null인 경우 400 반환")
+    void createOrder_NullCustomerId() throws Exception {
+        // given
+        CreateOrderRequest request = CreateOrderRequest.builder()
+            .customerId(null)
+            .orderItems(List.of(
+                OrderItemRequest.builder()
+                    .productId(101L)
+                    .quantity(1)
+                    .unitPrice(BigDecimal.valueOf(10000))
+                    .build()
+            ))
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists())
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").value("customerId"))
+            .andExpect(jsonPath("$.validationErrors[0].message").value("Customer ID is required"));
+
+        verify(createOrderUseCase, never()).createOrder(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/orders - orderItems가 비어있는 경우 400 반환")
+    void createOrder_EmptyOrderItems() throws Exception {
+        // given
+        CreateOrderRequest request = CreateOrderRequest.builder()
+            .customerId(1L)
+            .orderItems(List.of())
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists())
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").value("orderItems"))
+            .andExpect(jsonPath("$.validationErrors[0].message").value("Order items cannot be empty"));
+
+        verify(createOrderUseCase, never()).createOrder(any());
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/orders - unitPrice가 0인 경우 400 반환")
+    void createOrder_InvalidUnitPrice() throws Exception {
+        // given
+        CreateOrderRequest request = CreateOrderRequest.builder()
+            .customerId(1L)
+            .orderItems(List.of(
+                OrderItemRequest.builder()
+                    .productId(101L)
+                    .quantity(1)
+                    .unitPrice(BigDecimal.ZERO)
+                    .build()
+            ))
+            .build();
+
+        // when & then
+        mockMvc.perform(post("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").exists())
+            .andExpect(jsonPath("$.validationErrors").isArray())
+            .andExpect(jsonPath("$.validationErrors[0].field").value("orderItems[0].unitPrice"))
+            .andExpect(jsonPath("$.validationErrors[0].message").value("Unit price must be greater than 0"));
+
+        verify(createOrderUseCase, never()).createOrder(any());
+    }
 }
