@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderQueryController {
 
     private final GetOrderUseCase getOrderUseCase;
+
     private final OrderResponseMapper orderResponseMapper;
 
     @GetMapping("/{orderId}")

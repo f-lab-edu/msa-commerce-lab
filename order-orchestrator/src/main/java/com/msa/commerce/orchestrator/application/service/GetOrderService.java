@@ -3,6 +3,7 @@ package com.msa.commerce.orchestrator.application.service;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class GetOrderService implements GetOrderUseCase {
     private final OrderRepository orderRepository;
 
     @Override
+    @Cacheable(value = "orders", key = "#orderId", unless = "#result == null")
     public Order getOrderById(UUID orderId) {
         return orderRepository.findByOrderIdWithItems(orderId)
             .orElseThrow(() -> new OrderNotFoundException("주문을 찾을 수 없습니다. orderId: " + orderId));
