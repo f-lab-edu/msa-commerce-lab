@@ -1,6 +1,8 @@
 apis:
   monolith@v1:
     root: docs/api-specs/monolith-openapi.yml
+  order-orchestrator@v1:
+    root: docs/api-specs/order-orchestrator-openapi.yml
 
 extends:
   - recommended

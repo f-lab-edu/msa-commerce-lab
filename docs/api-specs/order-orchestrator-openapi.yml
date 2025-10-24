@@ -1,0 +1,754 @@
+openapi: 3.0.3
+info:
+  title: MSA Commerce Lab - Order Orchestrator API
+  version: 1.0.0
+  description: |
+    API specification for MSA Commerce Lab Order Orchestrator service.
+    Implemented based on hexagonal architecture and CQRS pattern.
+
+    ### Features
+    - Order retrieval with Redis caching
+    - Pagination and sorting support
+    - Dynamic query filtering (customer, status, date range)
+    - Read-optimized with @Cacheable
+  contact:
+    name: MSA Commerce Lab Team
+    email: dev@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+  - url: https://order-api-dev.msa-commerce-lab.com
+    description: Development environment
+  - url: https://order-api.msa-commerce-lab.com
+    description: Production environment
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Order Query
+    description: Order retrieval API (CQRS Read side)
+    externalDocs:
+      description: Order Query API Guide
+      url: https://docs.example.com/order-query-api
+
+paths:
+  /api/v1/orders/{orderId}:
+    get:
+      tags: [Order Query]
+      summary: Get Order by ID
+      description: |
+        Retrieves detailed information about a specific order by its ID.
+
+        ### Business Rules
+        - Returns complete order information including all order items
+        - Cached with Redis (TTL: 1 hour)
+        - Order items are fetched with order (N+1 optimization)
+
+        ### Performance
+        - First call: ~100-200ms (DB query + items fetch)
+        - Cached call: ~5-10ms (Redis hit)
+
+        ### Architecture
+        - Hexagonal Architecture: Input Port (GetOrderUseCase)
+        - CQRS Read side: Query-optimized repository
+        - Caching Layer: @Cacheable with Redis
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: Order UUID
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Order found successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                completedOrder:
+                  summary: Completed Order Example
+                  description: Successfully delivered order with multiple items
+                  value:
+                    orderId: "550e8400-e29b-41d4-a716-446655440000"
+                    orderNumber: "ORD-20251025-0001"
+                    customerId: 1001
+                    status: "DELIVERED"
+                    subtotalAmount: 3519900
+                    taxAmount: 351990
+                    shippingAmount: 3000
+                    discountAmount: 100000
+                    totalAmount: 3774890
+                    currency: "KRW"
+                    shippingAddress:
+                      recipientName: "김철수"
+                      phone: "010-1234-5678"
+                      zipCode: "06234"
+                      address: "서울특별시 강남구 테헤란로 123"
+                      addressDetail: "456호"
+                    orderDate: "2025-10-20T10:30:00"
+                    confirmedAt: "2025-10-20T10:35:00"
+                    paymentCompletedAt: "2025-10-20T10:40:00"
+                    shippedAt: "2025-10-21T14:00:00"
+                    deliveredAt: "2025-10-23T16:30:00"
+                    cancelledAt: null
+                    sourceChannel: "WEB"
+                    totalItemCount: 2
+                    orderItems:
+                      - orderItemId: "660e8400-e29b-41d4-a716-446655440001"
+                        productId: 100
+                        productName: "MacBook Pro 16"
+                        productSku: "MACB-16-M3MAX"
+                        productVariantId: 1001
+                        variantName: "Space Gray / 36GB / 1TB"
+                        quantity: 1
+                        unitPrice: 3490000
+                        totalPrice: 3490000
+                      - orderItemId: "660e8400-e29b-41d4-a716-446655440002"
+                        productId: 101
+                        productName: "Magic Mouse"
+                        productSku: "MAGIC-MOUSE-BLK"
+                        productVariantId: null
+                        variantName: null
+                        quantity: 1
+                        unitPrice: 29900
+                        totalPrice: 29900
+                    createdAt: "2025-10-20T10:30:00"
+                    updatedAt: "2025-10-23T16:30:00"
+                pendingOrder:
+                  summary: Pending Order Example
+                  description: Recently created order waiting for payment
+                  value:
+                    orderId: "550e8400-e29b-41d4-a716-446655440001"
+                    orderNumber: "ORD-20251025-0002"
+                    customerId: 1002
+                    status: "PAYMENT_PENDING"
+                    subtotalAmount: 59800
+                    taxAmount: 5980
+                    shippingAmount: 3000
+                    discountAmount: 0
+                    totalAmount: 68780
+                    currency: "KRW"
+                    shippingAddress:
+                      recipientName: "이영희"
+                      phone: "010-9876-5432"
+                      zipCode: "13494"
+                      address: "경기도 성남시 분당구 판교역로 123"
+                      addressDetail: "A동 1502호"
+                    orderDate: "2025-10-25T09:15:00"
+                    confirmedAt: null
+                    paymentCompletedAt: null
+                    shippedAt: null
+                    deliveredAt: null
+                    cancelledAt: null
+                    sourceChannel: "MOBILE"
+                    totalItemCount: 2
+                    orderItems:
+                      - orderItemId: "660e8400-e29b-41d4-a716-446655440003"
+                        productId: 200
+                        productName: "Basic Cotton T-Shirt"
+                        productSku: "BW-001-BASIC"
+                        productVariantId: 2001
+                        variantName: "White / L"
+                        quantity: 2
+                        unitPrice: 29900
+                        totalPrice: 59800
+                    createdAt: "2025-10-25T09:15:00"
+                    updatedAt: "2025-10-25T09:15:00"
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2025-10-25T10:30:00"
+                status: 404
+                error: "Not Found"
+                message: "주문을 찾을 수 없습니다. orderId: 550e8400-e29b-41d4-a716-446655440000"
+                path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/orders:
+    get:
+      tags: [Order Query]
+      summary: Get Orders with Filtering
+      description: |
+        Retrieves a paginated list of orders with optional filtering.
+
+        ### Query Strategy
+        The endpoint dynamically selects the optimal query method based on provided parameters:
+        1. **customerId + status**: Optimized composite query
+        2. **customerId only**: Customer-specific orders
+        3. **status only**: Status-based filtering
+        4. **startDate + endDate**: Date range query
+        5. **No filters**: All orders
+
+        ### Business Rules
+        - Default pagination: page=0, size=10
+        - Default sorting: orderDate descending
+        - Maximum page size: 100
+        - Date range: Both startDate and endDate required
+
+        ### Performance
+        - Indexed queries: customerId, status, orderDate
+        - Average response time: 50-150ms
+        - Pagination with offset-based strategy
+
+        ### Architecture
+        - CQRS Read side: Optimized for query patterns
+        - Repository: JPA with QueryDSL for dynamic queries
+        - Response: Lightweight OrderSummaryResponse for list view
+      operationId: getOrders
+      parameters:
+        - name: customerId
+          in: query
+          description: Filter by customer ID
+          schema:
+            type: integer
+            format: int64
+          example: 1001
+        - name: status
+          in: query
+          description: Filter by order status
+          schema:
+            $ref: '#/components/schemas/OrderStatus'
+          example: "DELIVERED"
+        - name: startDate
+          in: query
+          description: Filter by order date start (ISO 8601 format, requires endDate)
+          schema:
+            type: string
+            format: date-time
+          example: "2025-10-01T00:00:00"
+        - name: endDate
+          in: query
+          description: Filter by order date end (ISO 8601 format, requires startDate)
+          schema:
+            type: string
+            format: date-time
+          example: "2025-10-31T23:59:59"
+        - name: page
+          in: query
+          description: Page number (0-based)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+        - name: size
+          in: query
+          description: Page size (max 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          example: 10
+        - name: sort
+          in: query
+          description: |
+            Sort criteria in format: property,direction
+
+            Available properties:
+            - orderDate (default)
+            - totalAmount
+            - status
+
+            Direction: asc, desc (default: desc)
+          schema:
+            type: string
+            default: "orderDate,desc"
+          example: "orderDate,desc"
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderSummaryPageResponse'
+              examples:
+                customerOrders:
+                  summary: Customer's Orders
+                  description: Retrieve all orders for a specific customer
+                  value:
+                    content:
+                      - orderId: "550e8400-e29b-41d4-a716-446655440000"
+                        orderNumber: "ORD-20251025-0001"
+                        customerId: 1001
+                        status: "DELIVERED"
+                        totalAmount: 3774890
+                        currency: "KRW"
+                        totalItemCount: 2
+                        orderDate: "2025-10-20T10:30:00"
+                        sourceChannel: "WEB"
+                      - orderId: "550e8400-e29b-41d4-a716-446655440003"
+                        orderNumber: "ORD-20251015-0042"
+                        customerId: 1001
+                        status: "CANCELLED"
+                        totalAmount: 150000
+                        currency: "KRW"
+                        totalItemCount: 1
+                        orderDate: "2025-10-15T14:20:00"
+                        sourceChannel: "MOBILE"
+                    page: 0
+                    size: 10
+                    totalElements: 2
+                    totalPages: 1
+                    first: true
+                    last: true
+                deliveredOrders:
+                  summary: Delivered Orders
+                  description: Filter orders by DELIVERED status
+                  value:
+                    content:
+                      - orderId: "550e8400-e29b-41d4-a716-446655440000"
+                        orderNumber: "ORD-20251025-0001"
+                        customerId: 1001
+                        status: "DELIVERED"
+                        totalAmount: 3774890
+                        currency: "KRW"
+                        totalItemCount: 2
+                        orderDate: "2025-10-20T10:30:00"
+                        sourceChannel: "WEB"
+                      - orderId: "550e8400-e29b-41d4-a716-446655440004"
+                        orderNumber: "ORD-20251024-0015"
+                        customerId: 1005
+                        status: "DELIVERED"
+                        totalAmount: 89000
+                        currency: "KRW"
+                        totalItemCount: 3
+                        orderDate: "2025-10-19T16:45:00"
+                        sourceChannel: "WEB"
+                    page: 0
+                    size: 10
+                    totalElements: 45
+                    totalPages: 5
+                    first: true
+                    last: false
+                dateRangeOrders:
+                  summary: Date Range Orders
+                  description: Orders within specific date range
+                  value:
+                    content:
+                      - orderId: "550e8400-e29b-41d4-a716-446655440000"
+                        orderNumber: "ORD-20251025-0001"
+                        customerId: 1001
+                        status: "DELIVERED"
+                        totalAmount: 3774890
+                        currency: "KRW"
+                        totalItemCount: 2
+                        orderDate: "2025-10-20T10:30:00"
+                        sourceChannel: "WEB"
+                    page: 0
+                    size: 10
+                    totalElements: 1
+                    totalPages: 1
+                    first: true
+                    last: true
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidDateRange:
+                  summary: Invalid Date Range
+                  value:
+                    timestamp: "2025-10-25T10:30:00"
+                    status: 400
+                    error: "Bad Request"
+                    message: "시작 일시는 종료 일시보다 이전이어야 합니다."
+                    path: "/api/v1/orders"
+                missingEndDate:
+                  summary: Missing End Date
+                  value:
+                    timestamp: "2025-10-25T10:30:00"
+                    status: 400
+                    error: "Bad Request"
+                    message: "시작 일시와 종료 일시는 필수입니다."
+                    path: "/api/v1/orders"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    OrderStatus:
+      type: string
+      enum:
+        - PENDING
+        - CONFIRMED
+        - PAYMENT_PENDING
+        - PAID
+        - PROCESSING
+        - SHIPPED
+        - DELIVERED
+        - CANCELLED
+        - REFUNDED
+        - FAILED
+      description: |
+        Order status lifecycle:
+
+        **Normal Flow:**
+        PENDING → CONFIRMED → PAYMENT_PENDING → PAID → PROCESSING → SHIPPED → DELIVERED
+
+        **Cancellation Flow:**
+        PENDING/CONFIRMED/PAYMENT_PENDING → CANCELLED
+
+        **Refund Flow:**
+        DELIVERED → REFUNDED
+
+        **Failure Flow:**
+        Any status → FAILED (on system error)
+
+        **Status Details:**
+        - PENDING: Order created, awaiting confirmation
+        - CONFIRMED: Order confirmed by customer
+        - PAYMENT_PENDING: Payment initiated, awaiting completion
+        - PAID: Payment completed successfully
+        - PROCESSING: Order being prepared for shipment
+        - SHIPPED: Order shipped to customer
+        - DELIVERED: Order delivered successfully
+        - CANCELLED: Order cancelled by customer or system
+        - REFUNDED: Order refunded after delivery
+        - FAILED: Order failed due to system error
+
+    OrderResponse:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - customerId
+        - status
+        - subtotalAmount
+        - taxAmount
+        - shippingAmount
+        - discountAmount
+        - totalAmount
+        - currency
+        - orderDate
+        - sourceChannel
+        - totalItemCount
+        - orderItems
+        - createdAt
+        - updatedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Order unique identifier (UUID)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        orderNumber:
+          type: string
+          description: Human-readable order number (ORD-YYYYMMDD-XXXX)
+          example: "ORD-20251025-0001"
+        customerId:
+          type: integer
+          format: int64
+          description: Customer ID (foreign key to customer service)
+          example: 1001
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        subtotalAmount:
+          type: number
+          format: decimal
+          description: Sum of all item prices before tax and shipping
+          example: 3519900
+        taxAmount:
+          type: number
+          format: decimal
+          description: Tax amount (10% of subtotal)
+          example: 351990
+        shippingAmount:
+          type: number
+          format: decimal
+          description: Shipping fee
+          example: 3000
+        discountAmount:
+          type: number
+          format: decimal
+          description: Total discount amount applied
+          example: 100000
+        totalAmount:
+          type: number
+          format: decimal
+          description: Final amount (subtotal + tax + shipping - discount)
+          example: 3774890
+        currency:
+          type: string
+          description: Currency code (ISO 4217)
+          example: "KRW"
+        shippingAddress:
+          type: object
+          description: Shipping address information (JSONB)
+          additionalProperties: true
+          example:
+            recipientName: "김철수"
+            phone: "010-1234-5678"
+            zipCode: "06234"
+            address: "서울특별시 강남구 테헤란로 123"
+            addressDetail: "456호"
+        orderDate:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+          example: "2025-10-20T10:30:00"
+        confirmedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Order confirmation timestamp
+          example: "2025-10-20T10:35:00"
+        paymentCompletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Payment completion timestamp
+          example: "2025-10-20T10:40:00"
+        shippedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Shipment timestamp
+          example: "2025-10-21T14:00:00"
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Delivery completion timestamp
+          example: "2025-10-23T16:30:00"
+        cancelledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Cancellation timestamp
+          example: null
+        sourceChannel:
+          type: string
+          description: Order source channel (WEB, MOBILE, API)
+          example: "WEB"
+        totalItemCount:
+          type: integer
+          description: Total number of items in order
+          example: 2
+        orderItems:
+          type: array
+          description: List of order items
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
+        createdAt:
+          type: string
+          format: date-time
+          description: Record creation timestamp
+          example: "2025-10-20T10:30:00"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Record last update timestamp
+          example: "2025-10-23T16:30:00"
+
+    OrderSummaryResponse:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - customerId
+        - status
+        - totalAmount
+        - currency
+        - totalItemCount
+        - orderDate
+        - sourceChannel
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Order unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        orderNumber:
+          type: string
+          description: Human-readable order number
+          example: "ORD-20251025-0001"
+        customerId:
+          type: integer
+          format: int64
+          description: Customer ID
+          example: 1001
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        totalAmount:
+          type: number
+          format: decimal
+          description: Final order amount
+          example: 3774890
+        currency:
+          type: string
+          description: Currency code
+          example: "KRW"
+        totalItemCount:
+          type: integer
+          description: Total number of items
+          example: 2
+        orderDate:
+          type: string
+          format: date-time
+          description: Order creation date
+          example: "2025-10-20T10:30:00"
+        sourceChannel:
+          type: string
+          description: Order source channel
+          example: "WEB"
+
+    OrderItemResponse:
+      type: object
+      required:
+        - orderItemId
+        - productId
+        - productName
+        - productSku
+        - quantity
+        - unitPrice
+        - totalPrice
+      properties:
+        orderItemId:
+          type: string
+          format: uuid
+          description: Order item unique identifier
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        productId:
+          type: integer
+          format: int64
+          description: Product ID (foreign key)
+          example: 100
+        productName:
+          type: string
+          description: Product name (snapshot at order time)
+          example: "MacBook Pro 16"
+        productSku:
+          type: string
+          description: Product SKU (snapshot)
+          example: "MACB-16-M3MAX"
+        productVariantId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Product variant ID (if applicable)
+          example: 1001
+        variantName:
+          type: string
+          nullable: true
+          description: Variant name (e.g., "Space Gray / 36GB / 1TB")
+          example: "Space Gray / 36GB / 1TB"
+        quantity:
+          type: integer
+          description: Order quantity
+          example: 1
+        unitPrice:
+          type: number
+          format: decimal
+          description: Unit price at order time
+          example: 3490000
+        totalPrice:
+          type: number
+          format: decimal
+          description: Total price (quantity × unitPrice)
+          example: 3490000
+
+    OrderSummaryPageResponse:
+      type: object
+      required:
+        - content
+        - page
+        - size
+        - totalElements
+        - totalPages
+        - first
+        - last
+      properties:
+        content:
+          type: array
+          description: List of order summaries
+          items:
+            $ref: '#/components/schemas/OrderSummaryResponse'
+        page:
+          type: integer
+          description: Current page number (0-based)
+          example: 0
+        size:
+          type: integer
+          description: Page size
+          example: 10
+        totalElements:
+          type: integer
+          format: int64
+          description: Total number of elements across all pages
+          example: 45
+        totalPages:
+          type: integer
+          description: Total number of pages
+          example: 5
+        first:
+          type: boolean
+          description: Is this the first page?
+          example: true
+        last:
+          type: boolean
+          description: Is this the last page?
+          example: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Error occurrence timestamp
+          example: "2025-10-25T10:30:00"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 404
+        error:
+          type: string
+          description: HTTP status text
+          example: "Not Found"
+        message:
+          type: string
+          description: Error message
+          example: "주문을 찾을 수 없습니다. orderId: 550e8400-e29b-41d4-a716-446655440000"
+        path:
+          type: string
+          description: Request path that caused the error
+          example: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
