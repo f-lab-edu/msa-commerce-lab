@@ -1,0 +1,354 @@
+openapi: 3.0.3
+info:
+  title: MSA Commerce Lab - Order Orchestrator API
+  version: 1.0.0
+  description: |
+    API specification for MSA Commerce Lab Order Orchestrator service.
+    Manages order creation and orchestration across microservices.
+    Implemented based on hexagonal architecture.
+  contact:
+    name: MSA Commerce Lab Team
+    email: dev@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8081
+    description: Local development server
+  - url: https://order-api-dev.msa-commerce-lab.com
+    description: Development environment
+  - url: https://order-api.msa-commerce-lab.com
+    description: Production environment
+
+tags:
+  - name: Order
+    description: Order management API
+    externalDocs:
+      description: Order API Guide
+      url: https://docs.example.com/order-api
+
+paths:
+  /api/v1/orders:
+    post:
+      tags: [Order]
+      summary: Create Order
+      description: |
+        Creates a new order with order items.
+
+        ### Business Rules
+        - Order ID is automatically generated as UUID
+        - Initial status is set to PENDING
+        - Order number is auto-generated with format: ORD-{timestamp}-{sequence}
+        - Total amount is calculated automatically from order items
+        - Order date is set to current timestamp
+
+        ### Validation Rules
+        - Customer ID is required
+        - At least one order item is required
+        - Product ID is required for each item
+        - Quantity must be at least 1
+        - Unit price must be greater than 0.01
+
+        ### Architecture
+        This API is implemented through inbound adapters of hexagonal architecture.
+        Uses CQRS pattern for order creation.
+      operationId: createOrder
+      requestBody:
+        description: Order information to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              singleItem:
+                summary: Single Item Order
+                description: Order with one product
+                value:
+                  customerId: 1
+                  orderItems:
+                    - productId: 101
+                      quantity: 2
+                      unitPrice: 10000
+              multipleItems:
+                summary: Multiple Items Order
+                description: Order with multiple products
+                value:
+                  customerId: 1
+                  orderItems:
+                    - productId: 101
+                      quantity: 2
+                      unitPrice: 10000
+                    - productId: 102
+                      quantity: 1
+                      unitPrice: 25000
+                    - productId: 103
+                      quantity: 3
+                      unitPrice: 5000
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                success:
+                  summary: Successful order creation
+                  value:
+                    orderId: "550e8400-e29b-41d4-a716-446655440000"
+                    orderNumber: "ORD-20250125120000-0001"
+                    customerId: 1
+                    status: "PENDING"
+                    totalAmount: 45000
+                    currency: "KRW"
+                    orderDate: "2025-01-25T12:00:00"
+                    orderItems:
+                      - orderItemId: "660e8400-e29b-41d4-a716-446655440001"
+                        productId: 101
+                        productName: "Product-101"
+                        productSku: "SKU-101"
+                        productVariantId: null
+                        variantName: null
+                        quantity: 2
+                        unitPrice: 10000
+                        totalPrice: 20000
+                      - orderItemId: "660e8400-e29b-41d4-a716-446655440002"
+                        productId: 102
+                        productName: "Product-102"
+                        productSku: "SKU-102"
+                        productVariantId: null
+                        variantName: null
+                        quantity: 1
+                        unitPrice: 25000
+                        totalPrice: 25000
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingCustomerId:
+                  summary: Customer ID is missing
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2025-01-25T12:00:00"
+                    path: "/api/v1/orders"
+                    status: 400
+                    validationErrors:
+                      - field: "customerId"
+                        rejectedValue: null
+                        message: "Customer ID is required"
+                emptyOrderItems:
+                  summary: Order items are empty
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2025-01-25T12:00:00"
+                    path: "/api/v1/orders"
+                    status: 400
+                    validationErrors:
+                      - field: "orderItems"
+                        rejectedValue: "[]"
+                        message: "Order items cannot be empty"
+                invalidUnitPrice:
+                  summary: Unit price is invalid
+                  value:
+                    message: "Validation failed for 1 field(s)"
+                    timestamp: "2025-01-25T12:00:00"
+                    path: "/api/v1/orders"
+                    status: 400
+                    validationErrors:
+                      - field: "orderItems[0].unitPrice"
+                        rejectedValue: "0"
+                        message: "Unit price must be greater than 0"
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required:
+        - customerId
+        - orderItems
+      properties:
+        customerId:
+          type: integer
+          format: int64
+          description: Customer ID
+          example: 1
+        orderItems:
+          type: array
+          description: List of order items
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/OrderItemRequest'
+
+    OrderItemRequest:
+      type: object
+      required:
+        - productId
+        - quantity
+        - unitPrice
+      properties:
+        productId:
+          type: integer
+          format: int64
+          description: Product ID
+          example: 101
+        quantity:
+          type: integer
+          format: int32
+          description: Quantity (must be at least 1)
+          minimum: 1
+          example: 2
+        unitPrice:
+          type: number
+          format: decimal
+          description: Unit price (must be greater than 0.01)
+          minimum: 0.01
+          example: 10000.00
+
+    OrderResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Order ID (UUID)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        orderNumber:
+          type: string
+          description: Order number
+          example: "ORD-20250125120000-0001"
+        customerId:
+          type: integer
+          format: int64
+          description: Customer ID
+          example: 1
+        status:
+          type: string
+          enum: [PENDING, CONFIRMED, PAYMENT_PENDING, PAYMENT_COMPLETED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED]
+          description: Order status
+          example: "PENDING"
+        totalAmount:
+          type: number
+          format: decimal
+          description: Total amount
+          example: 45000.00
+        currency:
+          type: string
+          description: Currency code
+          example: "KRW"
+        orderDate:
+          type: string
+          format: date-time
+          description: Order date and time
+          example: "2025-01-25T12:00:00"
+        orderItems:
+          type: array
+          description: List of order items
+          items:
+            $ref: '#/components/schemas/OrderItemResponse'
+
+    OrderItemResponse:
+      type: object
+      properties:
+        orderItemId:
+          type: string
+          format: uuid
+          description: Order item ID (UUID)
+          example: "660e8400-e29b-41d4-a716-446655440000"
+        productId:
+          type: integer
+          format: int64
+          description: Product ID
+          example: 101
+        productName:
+          type: string
+          description: Product name
+          example: "Product-101"
+        productSku:
+          type: string
+          description: Product SKU
+          example: "SKU-101"
+        productVariantId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Product variant ID
+          example: null
+        variantName:
+          type: string
+          nullable: true
+          description: Variant name
+          example: null
+        quantity:
+          type: integer
+          format: int32
+          description: Quantity
+          example: 2
+        unitPrice:
+          type: number
+          format: decimal
+          description: Unit price
+          example: 10000.00
+        totalPrice:
+          type: number
+          format: decimal
+          description: Total price (quantity * unitPrice)
+          example: 20000.00
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Validation failed for 1 field(s)"
+        code:
+          type: string
+          nullable: true
+          description: Error code
+          example: null
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2025-01-25T12:00:00"
+        path:
+          type: string
+          description: Request path
+          example: "/api/v1/orders"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        validationErrors:
+          type: array
+          nullable: true
+          description: Validation errors (only for validation failures)
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        debugInfo:
+          type: string
+          nullable: true
+          description: Debug information (only in dev/test environment)
+          example: null
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field name with validation error
+          example: "customerId"
+        rejectedValue:
+          type: string
+          nullable: true
+          description: Rejected value
+          example: null
+        message:
+          type: string
+          description: Validation error message
+          example: "Customer ID is required"
