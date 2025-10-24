@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,6 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
@@ -189,126 +194,95 @@ class OrderRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("고객 ID로 주문 목록 조회")
+    @DisplayName("고객 ID로 주문 목록 조회 (페이징)")
     void findByCustomerId_Success() {
         // given
         Long customerId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
         Order order1 = createValidOrder();
         Order order2 = createValidOrder();
         OrderJpaEntity entity1 = OrderJpaEntity.from(order1);
         OrderJpaEntity entity2 = OrderJpaEntity.from(order2);
 
-        when(orderJpaRepository.findByCustomerId(customerId)).thenReturn(java.util.List.of(entity1, entity2));
+        Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity1, entity2), pageable, 2);
+        when(orderJpaRepository.findByCustomerId(customerId, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity1)).thenReturn(order1);
         when(orderMapper.toDomain(entity2)).thenReturn(order2);
 
         // when
-        java.util.List<Order> orders = orderRepository.findByCustomerId(customerId);
+        Page<Order> orderPage = orderRepository.findByCustomerId(customerId, pageable);
 
         // then
-        assertThat(orders).hasSize(2);
-        assertThat(orders).containsExactly(order1, order2);
-        verify(orderJpaRepository).findByCustomerId(customerId);
+        assertThat(orderPage.getContent()).hasSize(2);
+        assertThat(orderPage.getContent()).containsExactly(order1, order2);
+        assertThat(orderPage.getTotalElements()).isEqualTo(2);
+        verify(orderJpaRepository).findByCustomerId(customerId, pageable);
     }
 
     @Test
-    @DisplayName("고객 ID와 상태로 주문 목록 조회")
+    @DisplayName("고객 ID와 상태로 주문 목록 조회 (페이징)")
     void findByCustomerIdAndStatus_Success() {
         // given
         Long customerId = 1L;
         OrderStatus status = OrderStatus.PENDING;
+        Pageable pageable = PageRequest.of(0, 10);
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findByCustomerIdAndStatus(customerId, status)).thenReturn(java.util.List.of(entity));
+        Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
+        when(orderJpaRepository.findByCustomerIdAndStatus(customerId, status, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
-        java.util.List<Order> orders = orderRepository.findByCustomerIdAndStatus(customerId, status);
+        Page<Order> orderPage = orderRepository.findByCustomerIdAndStatus(customerId, status, pageable);
 
         // then
-        assertThat(orders).hasSize(1);
-        assertThat(orders.getFirst()).isEqualTo(order);
-        verify(orderJpaRepository).findByCustomerIdAndStatus(customerId, status);
+        assertThat(orderPage.getContent()).hasSize(1);
+        assertThat(orderPage.getContent().get(0)).isEqualTo(order);
+        verify(orderJpaRepository).findByCustomerIdAndStatus(customerId, status, pageable);
     }
 
     @Test
-    @DisplayName("상태로 주문 목록 조회")
+    @DisplayName("상태로 주문 목록 조회 (페이징)")
     void findByStatus_Success() {
         // given
         OrderStatus status = OrderStatus.CONFIRMED;
+        Pageable pageable = PageRequest.of(0, 10);
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findByStatus(status)).thenReturn(java.util.List.of(entity));
+        Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
+        when(orderJpaRepository.findByStatus(status, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
-        java.util.List<Order> orders = orderRepository.findByStatus(status);
+        Page<Order> orderPage = orderRepository.findByStatus(status, pageable);
 
         // then
-        assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findByStatus(status);
+        assertThat(orderPage.getContent()).hasSize(1);
+        verify(orderJpaRepository).findByStatus(status, pageable);
     }
 
     @Test
-    @DisplayName("상태로 주문 목록 조회 (생성일 역순)")
-    void findByStatusOrderByCreatedAtDesc_Success() {
-        // given
-        OrderStatus status = OrderStatus.PAID;
-        Order order = createValidOrder();
-        OrderJpaEntity entity = OrderJpaEntity.from(order);
-
-        when(orderJpaRepository.findByStatusOrderByCreatedAtDesc(status)).thenReturn(java.util.List.of(entity));
-        when(orderMapper.toDomain(entity)).thenReturn(order);
-
-        // when
-        java.util.List<Order> orders = orderRepository.findByStatusOrderByCreatedAtDesc(status);
-
-        // then
-        assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findByStatusOrderByCreatedAtDesc(status);
-    }
-
-    @Test
-    @DisplayName("기간으로 주문 목록 조회")
+    @DisplayName("기간으로 주문 목록 조회 (페이징)")
     void findOrdersByDateRange_Success() {
         // given
         java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(7);
         java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Pageable pageable = PageRequest.of(0, 10);
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findOrdersByDateRange(startDate, endDate)).thenReturn(java.util.List.of(entity));
+        Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
+        when(orderJpaRepository.findOrdersByDateRange(startDate, endDate, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
-        java.util.List<Order> orders = orderRepository.findOrdersByDateRange(startDate, endDate);
+        Page<Order> orderPage = orderRepository.findOrdersByDateRange(startDate, endDate, pageable);
 
         // then
-        assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findOrdersByDateRange(startDate, endDate);
-    }
-
-    @Test
-    @DisplayName("고객별 기간 주문 목록 조회")
-    void findCustomerOrdersByDateRange_Success() {
-        // given
-        Long customerId = 1L;
-        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(30);
-        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
-        Order order = createValidOrder();
-        OrderJpaEntity entity = OrderJpaEntity.from(order);
-
-        when(orderJpaRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
-        when(orderMapper.toDomain(entity)).thenReturn(order);
-
-        // when
-        java.util.List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
-
-        // then
-        assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findCustomerOrdersByDateRange(customerId, startDate, endDate);
+        assertThat(orderPage.getContent()).hasSize(1);
+        verify(orderJpaRepository).findOrdersByDateRange(startDate, endDate, pageable);
     }
 
     @Test

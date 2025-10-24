@@ -1,10 +1,11 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -20,28 +21,24 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
 
     boolean existsByOrderNumber(String orderNumber);
 
-    List<OrderJpaEntity> findByCustomerId(Long customerId);
-
-    List<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status);
-
-    List<OrderJpaEntity> findByStatus(OrderStatus status);
-
-    List<OrderJpaEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status);
-
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.customerId = :customerId AND o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findCustomerOrdersByDateRange(@Param("customerId") Long customerId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
-
-    long countByStatus(OrderStatus status);
-
-    long countByCustomerId(Long customerId);
-
     @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.id = :id")
     Optional<OrderJpaEntity> findByIdWithItems(@Param("id") Long id);
 
     @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderId = :orderId")
     Optional<OrderJpaEntity> findByOrderIdWithItems(@Param("orderId") UUID orderId);
+
+    long countByStatus(OrderStatus status);
+
+    long countByCustomerId(Long customerId);
+
+    // 페이징 조회 메서드
+    Page<OrderJpaEntity> findByCustomerId(Long customerId, Pageable pageable);
+
+    Page<OrderJpaEntity> findByStatus(OrderStatus status, Pageable pageable);
+
+    Page<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
+
+    @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
+    Page<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, Pageable pageable);
 
 }

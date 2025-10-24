@@ -1,9 +1,11 @@
 package com.msa.commerce.orchestrator.application.port.out;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
@@ -20,26 +22,27 @@ public interface OrderRepository {
 
     boolean existsByOrderNumber(String orderNumber);
 
-    List<Order> findByCustomerId(Long customerId);
-
-    List<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status);
-
-    List<Order> findByStatus(OrderStatus status);
-
-    List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status);
-
-    List<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate);
-
-    List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
-
-    long countByStatus(OrderStatus status);
-
-    long countByCustomerId(Long customerId);
-
+    // 단건 조회 (항목 포함)
     Optional<Order> findByIdWithItems(Long id);
 
     Optional<Order> findByOrderIdWithItems(UUID orderId);
 
     void deleteById(Long id);
+
+    // 집계 메서드
+    long countByStatus(OrderStatus status);
+
+    long countByCustomerId(Long customerId);
+
+    // 페이징 조회 메서드
+    Page<Order> findAll(Pageable pageable);
+
+    Page<Order> findByCustomerId(Long customerId, Pageable pageable);
+
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
+    Page<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
+
+    Page<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
 }
