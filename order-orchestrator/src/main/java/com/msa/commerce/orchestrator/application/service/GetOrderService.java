@@ -47,6 +47,13 @@ public class GetOrderService implements GetOrderUseCase {
 
     private Pageable createPageable(OrderSearchCriteria criteria) {
         String sortString = criteria.getSort();
+
+        // Null safety check to prevent NullPointerException
+        if (sortString == null || sortString.trim().isEmpty()) {
+            return PageRequest.of(criteria.getPage(), criteria.getSize(),
+                Sort.by(Sort.Direction.DESC, "orderDate"));
+        }
+
         String[] sortParts = sortString.split(",");
 
         Sort sort;

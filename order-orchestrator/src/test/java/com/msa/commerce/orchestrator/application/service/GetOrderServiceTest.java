@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.msa.commerce.orchestrator.application.port.in.OrderSearchCriteria;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
@@ -341,6 +342,99 @@ class GetOrderServiceTest {
             .hasMessage("시작 일시는 종료 일시보다 이전이어야 합니다.");
 
         verifyNoInteractions(orderRepository, orderResponseMapper);
+    }
+
+    @Test
+    @DisplayName("검색 조건에 정렬 문자열이 null인 경우 기본 정렬 적용")
+    void searchOrders_WithNullSort_AppliesDefaultSort() {
+        // Given
+        OrderSearchCriteria criteria = OrderSearchCriteria.builder()
+            .page(0)
+            .size(10)
+            .sort(null)
+            .build();
+
+        List<Order> orders = List.of(
+            createTestOrder(UUID.randomUUID(), 1001L, OrderStatus.PENDING)
+        );
+        Page<Order> orderPage = new PageImpl<>(orders, PageRequest.of(0, 10), orders.size());
+
+        when(orderRepository.findAll(any(Pageable.class))).thenReturn(orderPage);
+        when(orderResponseMapper.toOrderSummaryResponse(any(Order.class)))
+            .thenAnswer(invocation -> {
+                Order order = invocation.getArgument(0);
+                return createTestOrderSummary(order.getOrderId(), order.getCustomerId(), order.getStatus());
+            });
+
+        // When
+        Page<OrderSummaryResponse> result = getOrderService.searchOrders(criteria);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("검색 조건에 정렬 문자열이 빈 문자열인 경우 기본 정렬 적용")
+    void searchOrders_WithEmptySort_AppliesDefaultSort() {
+        // Given
+        OrderSearchCriteria criteria = OrderSearchCriteria.builder()
+            .page(0)
+            .size(10)
+            .sort("")
+            .build();
+
+        List<Order> orders = List.of(
+            createTestOrder(UUID.randomUUID(), 1001L, OrderStatus.PENDING)
+        );
+        Page<Order> orderPage = new PageImpl<>(orders, PageRequest.of(0, 10), orders.size());
+
+        when(orderRepository.findAll(any(Pageable.class))).thenReturn(orderPage);
+        when(orderResponseMapper.toOrderSummaryResponse(any(Order.class)))
+            .thenAnswer(invocation -> {
+                Order order = invocation.getArgument(0);
+                return createTestOrderSummary(order.getOrderId(), order.getCustomerId(), order.getStatus());
+            });
+
+        // When
+        Page<OrderSummaryResponse> result = getOrderService.searchOrders(criteria);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findAll(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("검색 조건에 정렬 문자열이 공백인 경우 기본 정렬 적용")
+    void searchOrders_WithWhitespaceSort_AppliesDefaultSort() {
+        // Given
+        OrderSearchCriteria criteria = OrderSearchCriteria.builder()
+            .page(0)
+            .size(10)
+            .sort("   ")
+            .build();
+
+        List<Order> orders = List.of(
+            createTestOrder(UUID.randomUUID(), 1001L, OrderStatus.PENDING)
+        );
+        Page<Order> orderPage = new PageImpl<>(orders, PageRequest.of(0, 10), orders.size());
+
+        when(orderRepository.findAll(any(Pageable.class))).thenReturn(orderPage);
+        when(orderResponseMapper.toOrderSummaryResponse(any(Order.class)))
+            .thenAnswer(invocation -> {
+                Order order = invocation.getArgument(0);
+                return createTestOrderSummary(order.getOrderId(), order.getCustomerId(), order.getStatus());
+            });
+
+        // When
+        Page<OrderSummaryResponse> result = getOrderService.searchOrders(criteria);
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        verify(orderRepository).findAll(any(Pageable.class));
     }
 
     // Helper method to create test Order
