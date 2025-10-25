@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.msa.commerce.orchestrator.application.port.in.CreateOrderCommand;
+import com.msa.commerce.orchestrator.application.port.in.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
@@ -26,6 +27,9 @@ class OrderServiceTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private OrderResponseMapper orderResponseMapper;
 
     @InjectMocks
     private OrderService orderService;
@@ -48,12 +52,25 @@ class OrderServiceTest {
 
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderResponseMapper.toResponse(any(Order.class))).thenAnswer(invocation -> {
+            Order order = invocation.getArgument(0);
+            return OrderResponse.builder()
+                .orderId(order.getOrderId())
+                .orderNumber(order.getOrderNumber())
+                .customerId(order.getCustomerId())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .currency(order.getCurrency())
+                .orderDate(order.getOrderDate())
+                .build();
+        });
 
         // when
-        Order result = orderService.createOrder(command);
+        OrderResponse result = orderService.createOrder(command);
 
         // then
         verify(orderRepository, times(1)).save(orderCaptor.capture());
+        verify(orderResponseMapper, times(1)).toResponse(any(Order.class));
 
         Order capturedOrder = orderCaptor.getValue();
         assertThat(capturedOrder).isNotNull();
@@ -64,6 +81,8 @@ class OrderServiceTest {
         assertThat(capturedOrder.getOrderNumber()).startsWith("ORD-");
 
         assertThat(result).isNotNull();
-        assertThat(result.getOrderId()).isNotNull();
+        assertThat(result.orderId()).isNotNull();
+        assertThat(result.customerId()).isEqualTo(customerId);
+        assertThat(result.status()).isEqualTo(OrderStatus.PENDING);
     }
 }

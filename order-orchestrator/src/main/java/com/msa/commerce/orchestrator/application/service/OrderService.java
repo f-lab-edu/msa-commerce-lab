@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.msa.commerce.orchestrator.application.port.in.CreateOrderCommand;
 import com.msa.commerce.orchestrator.application.port.in.CreateOrderUseCase;
+import com.msa.commerce.orchestrator.application.port.in.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
@@ -25,14 +26,15 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderService implements CreateOrderUseCase {
 
     private static final AtomicLong ORDER_SEQUENCE = new AtomicLong(0);
+
     private static final DateTimeFormatter ORDER_NUMBER_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     private final OrderRepository orderRepository;
 
-    @Override
-    public Order createOrder(CreateOrderCommand command) {
-        log.info("Creating order for customer: {}", command.customerId());
+    private final OrderResponseMapper orderResponseMapper;
 
+    @Override
+    public OrderResponse createOrder(CreateOrderCommand command) {
         String orderNumber = generateOrderNumber();
 
         Map<String, Object> defaultShippingAddress = new HashMap<>();
@@ -60,10 +62,7 @@ public class OrderService implements CreateOrderUseCase {
 
         Order savedOrder = orderRepository.save(order);
 
-        log.info("Order created successfully: orderId={}, orderNumber={}",
-            savedOrder.getOrderId(), savedOrder.getOrderNumber());
-
-        return savedOrder;
+        return orderResponseMapper.toResponse(savedOrder);
     }
 
     private String generateOrderNumber() {
@@ -71,4 +70,5 @@ public class OrderService implements CreateOrderUseCase {
         long sequence = ORDER_SEQUENCE.incrementAndGet() % 10000;
         return String.format("ORD-%s-%04d", timestamp, sequence);
     }
+
 }

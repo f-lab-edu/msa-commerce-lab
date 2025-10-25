@@ -23,11 +23,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msa.commerce.common.exception.GlobalExceptionHandler;
 import com.msa.commerce.orchestrator.adapter.in.web.dto.CreateOrderRequest;
 import com.msa.commerce.orchestrator.adapter.in.web.dto.OrderItemRequest;
-import com.msa.commerce.orchestrator.adapter.in.web.dto.OrderItemResponse;
-import com.msa.commerce.orchestrator.adapter.in.web.dto.OrderResponse;
-import com.msa.commerce.orchestrator.adapter.in.web.mapper.OrderDtoMapper;
+import com.msa.commerce.orchestrator.adapter.in.web.mapper.OrderMapper;
 import com.msa.commerce.orchestrator.application.port.in.CreateOrderUseCase;
-import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.application.port.in.OrderItemResponse;
+import com.msa.commerce.orchestrator.application.port.in.OrderResponse;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 @WebMvcTest(OrderController.class)
@@ -45,7 +44,7 @@ class OrderControllerTest {
     private CreateOrderUseCase createOrderUseCase;
 
     @MockitoBean
-    private OrderDtoMapper orderDtoMapper;
+    private OrderMapper orderMapper;
 
     @Test
     @DisplayName("POST /api/v1/orders - 정상적으로 주문 생성")
@@ -69,8 +68,6 @@ class OrderControllerTest {
             .build();
 
         UUID orderId = UUID.randomUUID();
-        Order mockOrder = mock(Order.class);
-        when(mockOrder.getOrderId()).thenReturn(orderId);
 
         OrderResponse expectedResponse = OrderResponse.builder()
             .orderId(orderId)
@@ -98,8 +95,7 @@ class OrderControllerTest {
             ))
             .build();
 
-        when(createOrderUseCase.createOrder(any())).thenReturn(mockOrder);
-        when(orderDtoMapper.toOrderResponse(any())).thenReturn(expectedResponse);
+        when(createOrderUseCase.createOrder(any())).thenReturn(expectedResponse);
 
         // when & then
         mockMvc.perform(post("/api/v1/orders")
@@ -116,7 +112,6 @@ class OrderControllerTest {
             .andExpect(jsonPath("$.orderItems.length()").value(2));
 
         verify(createOrderUseCase, times(1)).createOrder(any());
-        verify(orderDtoMapper, times(1)).toOrderResponse(any());
     }
 
     @Test
@@ -240,4 +235,5 @@ class OrderControllerTest {
 
         verify(createOrderUseCase, never()).createOrder(any());
     }
+
 }
