@@ -6,21 +6,24 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
+import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 public interface GetOrderUseCase {
 
-    Order getOrderById(UUID orderId);
+    OrderResponse getOrderById(UUID orderId);
 
-    Page<Order> getOrders(Pageable pageable);
+    Page<OrderSummaryResponse> searchOrders(OrderSearchCriteria criteria);
 
-    Page<Order> getOrdersByCustomerId(Long customerId, Pageable pageable);
+    Page<OrderSummaryResponse> getOrders(Pageable pageable);
 
-    Page<Order> getOrdersByStatus(OrderStatus status, Pageable pageable);
+    Page<OrderSummaryResponse> getOrdersByCustomerId(Long customerId, Pageable pageable);
 
-    Page<Order> getOrdersByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
+    Page<OrderSummaryResponse> getOrdersByStatus(OrderStatus status, Pageable pageable);
 
-    Page<Order> getOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+    Page<OrderSummaryResponse> getOrdersByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
+
+    Page<OrderSummaryResponse> getOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
 }

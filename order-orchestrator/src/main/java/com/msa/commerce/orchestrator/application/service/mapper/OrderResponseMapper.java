@@ -1,4 +1,4 @@
-package com.msa.commerce.orchestrator.adapter.in.web.mapper;
+package com.msa.commerce.orchestrator.application.service.mapper;
 
 import java.util.List;
 
@@ -6,10 +6,10 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 
-import com.msa.commerce.orchestrator.adapter.in.web.dto.response.OrderItemResponse;
-import com.msa.commerce.orchestrator.adapter.in.web.dto.response.OrderResponse;
-import com.msa.commerce.orchestrator.adapter.in.web.dto.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.adapter.in.web.dto.response.PageResponse;
+import com.msa.commerce.orchestrator.application.port.in.response.OrderItemResponse;
+import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
+import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
 

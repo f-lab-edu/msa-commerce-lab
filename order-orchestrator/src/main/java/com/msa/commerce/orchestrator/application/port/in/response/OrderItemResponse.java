@@ -1,4 +1,4 @@
-package com.msa.commerce.orchestrator.adapter.in.web.dto.response;
+package com.msa.commerce.orchestrator.application.port.in.response;
 
 import java.math.BigDecimal;
 import java.util.UUID;
