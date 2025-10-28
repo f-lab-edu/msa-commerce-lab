@@ -279,7 +279,7 @@ class OrderRepositoryImplTest {
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findOrdersByDateRange(startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderJpaRepository.findByOrderDateBetween(startDate, endDate)).thenReturn(java.util.List.of(entity));
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
@@ -287,7 +287,7 @@ class OrderRepositoryImplTest {
 
         // then
         assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findOrdersByDateRange(startDate, endDate);
+        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate);
     }
 
     @Test
@@ -300,7 +300,7 @@ class OrderRepositoryImplTest {
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
@@ -308,7 +308,7 @@ class OrderRepositoryImplTest {
 
         // then
         assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findCustomerOrdersByDateRange(customerId, startDate, endDate);
+        verify(orderJpaRepository).findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate);
     }
 
     @Test
@@ -319,7 +319,7 @@ class OrderRepositoryImplTest {
         Order order = createValidOrder();
         OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(orderEntity));
+        when(orderJpaRepository.findWithItemsById(orderId)).thenReturn(Optional.of(orderEntity));
         when(orderMapper.toDomain(orderEntity)).thenReturn(order);
 
         // when
@@ -328,7 +328,7 @@ class OrderRepositoryImplTest {
         // then
         assertThat(foundOrder).isPresent();
         assertThat(foundOrder.get()).isEqualTo(order);
-        verify(orderJpaRepository).findByIdWithItems(orderId);
+        verify(orderJpaRepository).findWithItemsById(orderId);
         verify(orderMapper).toDomain(orderEntity);
     }
 
@@ -337,14 +337,14 @@ class OrderRepositoryImplTest {
     void findByIdWithItems_NotFound() {
         // given
         Long orderId = 999L;
-        when(orderJpaRepository.findByIdWithItems(orderId)).thenReturn(Optional.empty());
+        when(orderJpaRepository.findWithItemsById(orderId)).thenReturn(Optional.empty());
 
         // when
         Optional<Order> foundOrder = orderRepository.findByIdWithItems(orderId);
 
         // then
         assertThat(foundOrder).isEmpty();
-        verify(orderJpaRepository).findByIdWithItems(orderId);
+        verify(orderJpaRepository).findWithItemsById(orderId);
     }
 
     @Test
@@ -355,7 +355,7 @@ class OrderRepositoryImplTest {
         UUID orderId = order.getOrderId();
         OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findByOrderIdWithItems(orderId)).thenReturn(Optional.of(orderEntity));
+        when(orderJpaRepository.findWithItemsByOrderId(orderId)).thenReturn(Optional.of(orderEntity));
         when(orderMapper.toDomain(orderEntity)).thenReturn(order);
 
         // when
@@ -364,7 +364,7 @@ class OrderRepositoryImplTest {
         // then
         assertThat(foundOrder).isPresent();
         assertThat(foundOrder.get()).isEqualTo(order);
-        verify(orderJpaRepository).findByOrderIdWithItems(orderId);
+        verify(orderJpaRepository).findWithItemsByOrderId(orderId);
         verify(orderMapper).toDomain(orderEntity);
     }
 
@@ -373,14 +373,14 @@ class OrderRepositoryImplTest {
     void findByOrderIdWithItems_NotFound() {
         // given
         UUID orderId = UUID.randomUUID();
-        when(orderJpaRepository.findByOrderIdWithItems(orderId)).thenReturn(Optional.empty());
+        when(orderJpaRepository.findWithItemsByOrderId(orderId)).thenReturn(Optional.empty());
 
         // when
         Optional<Order> foundOrder = orderRepository.findByOrderIdWithItems(orderId);
 
         // then
         assertThat(foundOrder).isEmpty();
-        verify(orderJpaRepository).findByOrderIdWithItems(orderId);
+        verify(orderJpaRepository).findWithItemsByOrderId(orderId);
     }
 
     private Order createValidOrder() {

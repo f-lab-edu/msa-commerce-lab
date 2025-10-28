@@ -36,6 +36,10 @@ public class OrderRepositoryImpl implements OrderRepository {
             orderEntity = OrderJpaEntity.from(order);
         }
 
+        // JPA 영속성 컨텍스트의 변경 감지(dirty checking)를 활용한 OrderItems 동기화
+        // 1. 기존 컬렉션 clear(): 삭제된 항목을 orphanRemoval로 자동 처리
+        // 2. 도메인 모델의 orderItems를 순회하며 새로운 엔티티 생성 후 추가
+        // 3. JPA가 컬렉션 변경사항을 추적하여 INSERT/UPDATE/DELETE 자동 수행
         orderEntity.getOrderItems().clear();
         order.getOrderItems().forEach(orderItem -> {
             OrderItemJpaEntity itemEntity = OrderItemJpaEntity.from(orderItem, orderEntity);
@@ -99,14 +103,14 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public List<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        return orderJpaRepository.findOrdersByDateRange(startDate, endDate).stream()
+        return orderJpaRepository.findByOrderDateBetween(startDate, endDate).stream()
             .map(orderMapper::toDomain)
             .toList();
     }
 
     @Override
     public List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate) {
-        return orderJpaRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate).stream()
+        return orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate).stream()
             .map(orderMapper::toDomain)
             .toList();
     }
@@ -123,13 +127,13 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Optional<Order> findByIdWithItems(Long id) {
-        return orderJpaRepository.findByIdWithItems(id)
+        return orderJpaRepository.findWithItemsById(id)
             .map(orderMapper::toDomain);
     }
 
     @Override
     public Optional<Order> findByOrderIdWithItems(UUID orderId) {
-        return orderJpaRepository.findByOrderIdWithItems(orderId)
+        return orderJpaRepository.findWithItemsByOrderId(orderId)
             .map(orderMapper::toDomain);
     }
 

@@ -35,10 +35,8 @@ ALTER TABLE orders
     DROP INDEX idx_orders_date,
     ADD INDEX idx_order_id (order_id),
     ADD INDEX idx_order_number (order_number),
-    ADD INDEX idx_customer_id (customer_id),
-    ADD INDEX idx_status (status),
-    ADD INDEX idx_order_date (order_date),
     ADD INDEX idx_customer_status (customer_id, status),
+    ADD INDEX idx_order_date (order_date),
     ADD INDEX idx_created_at (created_at);
 
 -- order_items 테이블에 order_item_id 컬럼 추가
