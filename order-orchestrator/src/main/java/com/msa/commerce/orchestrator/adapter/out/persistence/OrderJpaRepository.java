@@ -5,10 +5,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 
@@ -28,20 +27,18 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
 
     List<OrderJpaEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status);
 
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<OrderJpaEntity> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.customerId = :customerId AND o.orderDate BETWEEN :startDate AND :endDate")
-    List<OrderJpaEntity> findCustomerOrdersByDateRange(@Param("customerId") Long customerId, @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+    List<OrderJpaEntity> findByCustomerIdAndOrderDateBetween(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
 
     long countByStatus(OrderStatus status);
 
     long countByCustomerId(Long customerId);
 
-    @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.id = :id")
-    Optional<OrderJpaEntity> findByIdWithItems(@Param("id") Long id);
+    @EntityGraph(attributePaths = {"orderItems"})
+    Optional<OrderJpaEntity> findWithItemsById(Long id);
 
-    @Query("SELECT DISTINCT o FROM OrderJpaEntity o LEFT JOIN FETCH o.orderItems WHERE o.orderId = :orderId")
-    Optional<OrderJpaEntity> findByOrderIdWithItems(@Param("orderId") UUID orderId);
+    @EntityGraph(attributePaths = {"orderItems"})
+    Optional<OrderJpaEntity> findWithItemsByOrderId(UUID orderId);
 
 }
