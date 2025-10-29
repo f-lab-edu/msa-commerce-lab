@@ -12,8 +12,6 @@ public interface OrderRepository {
 
     Order save(Order order);
 
-    Optional<Order> findById(Long id);
-
     Optional<Order> findByOrderId(UUID orderId);
 
     Optional<Order> findByOrderNumber(String orderNumber);
@@ -36,10 +34,8 @@ public interface OrderRepository {
 
     long countByCustomerId(Long customerId);
 
-    Optional<Order> findByIdWithItems(Long id);
-
     Optional<Order> findByOrderIdWithItems(UUID orderId);
 
-    void deleteById(Long id);
+    void deleteByOrderId(UUID orderId);
 
 }

@@ -77,13 +77,13 @@ class OrderRepositoryImplTest {
     }
 
     @Test
-    @DisplayName("주문 ID로 삭제")
-    void deleteById_Success() {
+    @DisplayName("주문 UUID로 삭제")
+    void deleteByOrderId_Success() {
         // given
-        Long orderId = 1L;
+        UUID orderId = UUID.randomUUID();
 
         // when
-        orderRepository.deleteById(orderId);
+        orderRepository.deleteByOrderId(orderId);
 
         // then
         verify(orderJpaRepository).deleteById(orderId);
@@ -108,42 +108,6 @@ class OrderRepositoryImplTest {
         verify(orderJpaRepository).findByOrderId(order.getOrderId());
         verify(orderJpaRepository).save(any(OrderJpaEntity.class));
         verify(orderMapper).toDomain(any(OrderJpaEntity.class));
-    }
-
-    @Test
-    @DisplayName("ID로 주문 조회 성공")
-    void findById_Success() {
-        // given
-        Long orderId = 1L;
-        Order order = createValidOrder();
-        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
-
-        when(orderJpaRepository.findById(orderId)).thenReturn(java.util.Optional.of(orderEntity));
-        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
-
-        // when
-        Optional<Order> foundOrder = orderRepository.findById(orderId);
-
-        // then
-        assertThat(foundOrder).isPresent();
-        assertThat(foundOrder.get()).isEqualTo(order);
-        verify(orderJpaRepository).findById(orderId);
-        verify(orderMapper).toDomain(orderEntity);
-    }
-
-    @Test
-    @DisplayName("ID로 주문 조회 실패 - 존재하지 않음")
-    void findById_NotFound() {
-        // given
-        Long orderId = 999L;
-        when(orderJpaRepository.findById(orderId)).thenReturn(java.util.Optional.empty());
-
-        // when
-        Optional<Order> foundOrder = orderRepository.findById(orderId);
-
-        // then
-        assertThat(foundOrder).isEmpty();
-        verify(orderJpaRepository).findById(orderId);
     }
 
     @Test
@@ -309,42 +273,6 @@ class OrderRepositoryImplTest {
         // then
         assertThat(orders).hasSize(1);
         verify(orderJpaRepository).findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate);
-    }
-
-    @Test
-    @DisplayName("ID로 주문과 항목 함께 조회")
-    void findByIdWithItems_Success() {
-        // given
-        Long orderId = 1L;
-        Order order = createValidOrder();
-        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
-
-        when(orderJpaRepository.findWithItemsById(orderId)).thenReturn(Optional.of(orderEntity));
-        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
-
-        // when
-        Optional<Order> foundOrder = orderRepository.findByIdWithItems(orderId);
-
-        // then
-        assertThat(foundOrder).isPresent();
-        assertThat(foundOrder.get()).isEqualTo(order);
-        verify(orderJpaRepository).findWithItemsById(orderId);
-        verify(orderMapper).toDomain(orderEntity);
-    }
-
-    @Test
-    @DisplayName("ID로 주문과 항목 함께 조회 실패 - 존재하지 않음")
-    void findByIdWithItems_NotFound() {
-        // given
-        Long orderId = 999L;
-        when(orderJpaRepository.findWithItemsById(orderId)).thenReturn(Optional.empty());
-
-        // when
-        Optional<Order> foundOrder = orderRepository.findByIdWithItems(orderId);
-
-        // then
-        assertThat(foundOrder).isEmpty();
-        verify(orderJpaRepository).findWithItemsById(orderId);
     }
 
     @Test

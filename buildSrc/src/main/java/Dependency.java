@@ -42,6 +42,9 @@ public enum Dependency {
     MAPSTRUCT("org.mapstruct", "mapstruct", "1.5.5.Final"),
     MAPSTRUCT_PROCESSOR("org.mapstruct", "mapstruct-processor", "1.5.5.Final"),
 
+    // UUID Generator
+    UUID_GENERATOR("com.fasterxml.uuid", "java-uuid-generator", "5.1.0"),
+
     // Testing
     SPRING_SECURITY_TEST("org.springframework.security", "spring-security-test"),
     TESTCONTAINERS_JUNIT("org.testcontainers", "junit-jupiter"),  // Version managed by Spring Boot
