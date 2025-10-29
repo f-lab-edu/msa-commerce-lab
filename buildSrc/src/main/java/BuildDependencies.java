@@ -66,4 +66,9 @@ public final class BuildDependencies {
         return Dependency.MAPSTRUCT_PROCESSOR.getCoordinate();
     }
 
+    // UUID Generator
+    public static String getUuidGenerator() {
+        return Dependency.UUID_GENERATOR.getCoordinate();
+    }
+
 }

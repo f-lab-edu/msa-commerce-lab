@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 
-public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>, JpaSpecificationExecutor<OrderJpaEntity> {
+public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID>, JpaSpecificationExecutor<OrderJpaEntity> {
 
     Optional<OrderJpaEntity> findByOrderId(UUID orderId);
 
@@ -34,9 +34,6 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, Long>,
     long countByStatus(OrderStatus status);
 
     long countByCustomerId(Long customerId);
-
-    @EntityGraph(attributePaths = {"orderItems"})
-    Optional<OrderJpaEntity> findWithItemsById(Long id);
 
     @EntityGraph(attributePaths = {"orderItems"})
     Optional<OrderJpaEntity> findWithItemsByOrderId(UUID orderId);

@@ -51,12 +51,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Optional<Order> findById(Long id) {
-        return orderJpaRepository.findById(id)
-            .map(orderMapper::toDomain);
-    }
-
-    @Override
     public Optional<Order> findByOrderId(UUID orderId) {
         return orderJpaRepository.findByOrderId(orderId)
             .map(orderMapper::toDomain);
@@ -126,20 +120,14 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Optional<Order> findByIdWithItems(Long id) {
-        return orderJpaRepository.findWithItemsById(id)
-            .map(orderMapper::toDomain);
-    }
-
-    @Override
     public Optional<Order> findByOrderIdWithItems(UUID orderId) {
         return orderJpaRepository.findWithItemsByOrderId(orderId)
             .map(orderMapper::toDomain);
     }
 
     @Override
-    public void deleteById(Long id) {
-        orderJpaRepository.deleteById(id);
+    public void deleteByOrderId(UUID orderId) {
+        orderJpaRepository.deleteById(orderId);
     }
 
 }

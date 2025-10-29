@@ -3,6 +3,8 @@ package com.msa.commerce.orchestrator.domain;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import com.msa.commerce.common.util.UuidGenerator;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -68,7 +70,7 @@ public class OrderItem {
         validateCreationParameters(productId, productName, productSku, quantity, unitPrice);
 
         return new OrderItem(
-            UUID.randomUUID(),
+            UuidGenerator.generate(),
             productId,
             productName,
             productSku,
