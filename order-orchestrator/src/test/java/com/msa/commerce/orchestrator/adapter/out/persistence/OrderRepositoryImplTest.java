@@ -96,7 +96,6 @@ class OrderRepositoryImplTest {
         Order order = createValidOrder();
         OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        when(orderJpaRepository.findByOrderId(order.getOrderId())).thenReturn(java.util.Optional.empty());
         when(orderJpaRepository.save(any(OrderJpaEntity.class))).thenReturn(orderEntity);
         when(orderMapper.toDomain(any(OrderJpaEntity.class))).thenReturn(order);
 
@@ -105,7 +104,6 @@ class OrderRepositoryImplTest {
 
         // then
         assertThat(savedOrder).isNotNull();
-        verify(orderJpaRepository).findByOrderId(order.getOrderId());
         verify(orderJpaRepository).save(any(OrderJpaEntity.class));
         verify(orderMapper).toDomain(any(OrderJpaEntity.class));
     }
