@@ -42,70 +42,36 @@ ALTER TABLE orders DROP INDEX order_number;
 -- PK 제거
 ALTER TABLE orders DROP PRIMARY KEY;
 
--- 인덱스 제거 (조건부 처리)
--- idx_orders_uuid 제거
-SET @index_exists = (
-    SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'orders'
-      AND INDEX_NAME = 'idx_orders_uuid'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE orders DROP INDEX idx_orders_uuid',
-    'SELECT "Index idx_orders_uuid does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- 인덱스 제거 (조건부 처리 - 프로시저 방식)
+DELIMITER //
+CREATE PROCEDURE drop_index_if_exists(
+    IN p_table_name VARCHAR(64),
+    IN p_index_name VARCHAR(64)
+)
+BEGIN
+    DECLARE v_count INT;
 
--- idx_orders_user_id 제거
-SET @index_exists = (
     SELECT COUNT(*)
+    INTO v_count
     FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'orders'
-      AND INDEX_NAME = 'idx_orders_user_id'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE orders DROP INDEX idx_orders_user_id',
-    'SELECT "Index idx_orders_user_id does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = p_table_name
+      AND INDEX_NAME = p_index_name;
 
--- idx_orders_status 제거
-SET @index_exists = (
-    SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'orders'
-      AND INDEX_NAME = 'idx_orders_status'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE orders DROP INDEX idx_orders_status',
-    'SELECT "Index idx_orders_status does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+    IF v_count > 0 THEN
+        SET @drop_sql = CONCAT('ALTER TABLE ', p_table_name, ' DROP INDEX ', p_index_name);
+        PREPARE stmt FROM @drop_sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END//
+DELIMITER ;
 
--- idx_orders_date 제거
-SET @index_exists = (
-    SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'orders'
-      AND INDEX_NAME = 'idx_orders_date'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE orders DROP INDEX idx_orders_date',
-    'SELECT "Index idx_orders_date does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- 인덱스 제거 실행
+CALL drop_index_if_exists('orders', 'idx_orders_uuid');
+CALL drop_index_if_exists('orders', 'idx_orders_user_id');
+CALL drop_index_if_exists('orders', 'idx_orders_status');
+CALL drop_index_if_exists('orders', 'idx_orders_date');
 
 -- 2-2. 컬럼 변경
 ALTER TABLE orders
@@ -164,38 +130,9 @@ ALTER TABLE order_items MODIFY COLUMN id BIGINT NOT NULL;
 -- PK 제거
 ALTER TABLE order_items DROP PRIMARY KEY;
 
--- 인덱스 제거 (조건부 처리)
--- idx_order_items_order_id 제거
-SET @index_exists = (
-    SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'order_items'
-      AND INDEX_NAME = 'idx_order_items_order_id'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE order_items DROP INDEX idx_order_items_order_id',
-    'SELECT "Index idx_order_items_order_id does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
-
--- idx_order_items_product_id 제거
-SET @index_exists = (
-    SELECT COUNT(*)
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'order_items'
-      AND INDEX_NAME = 'idx_order_items_product_id'
-);
-SET @drop_index_sql = IF(@index_exists > 0,
-    'ALTER TABLE order_items DROP INDEX idx_order_items_product_id',
-    'SELECT "Index idx_order_items_product_id does not exist" AS info'
-);
-PREPARE stmt FROM @drop_index_sql;
-EXECUTE stmt;
-DEALLOCATE PREPARE stmt;
+-- 인덱스 제거 (프로시저 재사용)
+CALL drop_index_if_exists('order_items', 'idx_order_items_order_id');
+CALL drop_index_if_exists('order_items', 'idx_order_items_product_id');
 
 -- 3-4. 컬럼 변경
 ALTER TABLE order_items
@@ -227,3 +164,8 @@ ALTER TABLE order_items
         FOREIGN KEY (order_id) REFERENCES orders(order_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE;
+
+-- ===================================================
+-- CLEANUP: 임시 프로시저 제거
+-- ===================================================
+DROP PROCEDURE IF EXISTS drop_index_if_exists;
