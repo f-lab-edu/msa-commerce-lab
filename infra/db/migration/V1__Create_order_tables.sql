@@ -6,6 +6,10 @@
 
 USE db_order;
 
+-- 테이블명 상수 정의 (SonarQube 문자열 중복 이슈 해결)
+SET @table_orders = 'orders';
+SET @table_order_items = 'order_items';
+
 -- ===================================================
 -- STEP 1: order_items 테이블 FK 제약조건 제거 (존재하는 경우)
 -- ===================================================
@@ -13,13 +17,13 @@ SET @fk_exists = (
     SELECT COUNT(*)
     FROM information_schema.TABLE_CONSTRAINTS
     WHERE CONSTRAINT_SCHEMA = 'db_order'
-      AND TABLE_NAME = 'order_items'
+      AND TABLE_NAME = @table_order_items
       AND CONSTRAINT_NAME = 'order_items_ibfk_1'
       AND CONSTRAINT_TYPE = 'FOREIGN KEY'
 );
 
 SET @drop_fk_sql = IF(@fk_exists > 0,
-    'ALTER TABLE order_items DROP FOREIGN KEY order_items_ibfk_1',
+    CONCAT('ALTER TABLE ', @table_order_items, ' DROP FOREIGN KEY order_items_ibfk_1'),
     'SELECT "FK constraint does not exist, skipping..." AS info'
 );
 
@@ -68,10 +72,10 @@ END//
 DELIMITER ;
 
 -- 인덱스 제거 실행
-CALL drop_index_if_exists('orders', 'idx_orders_uuid');
-CALL drop_index_if_exists('orders', 'idx_orders_user_id');
-CALL drop_index_if_exists('orders', 'idx_orders_status');
-CALL drop_index_if_exists('orders', 'idx_orders_date');
+CALL drop_index_if_exists(@table_orders, 'idx_orders_uuid');
+CALL drop_index_if_exists(@table_orders, 'idx_orders_user_id');
+CALL drop_index_if_exists(@table_orders, 'idx_orders_status');
+CALL drop_index_if_exists(@table_orders, 'idx_orders_date');
 
 -- 2-2. 컬럼 변경
 ALTER TABLE orders
@@ -121,7 +125,7 @@ ALTER TABLE order_items
     ADD COLUMN order_item_id VARCHAR(36) NULL COMMENT '주문 항목 UUID' AFTER id;
 
 -- 3-2. 기존 데이터에 대한 order_item_id UUID 생성
-UPDATE order_items SET order_item_id = UUID();
+UPDATE order_items SET order_item_id = UUID() WHERE order_item_id IS NULL;
 
 -- 3-3. 기존 PK 및 인덱스 제거
 -- AUTO_INCREMENT 속성 제거 (PK 제거 전 필수)
@@ -131,8 +135,8 @@ ALTER TABLE order_items MODIFY COLUMN id BIGINT NOT NULL;
 ALTER TABLE order_items DROP PRIMARY KEY;
 
 -- 인덱스 제거 (프로시저 재사용)
-CALL drop_index_if_exists('order_items', 'idx_order_items_order_id');
-CALL drop_index_if_exists('order_items', 'idx_order_items_product_id');
+CALL drop_index_if_exists(@table_order_items, 'idx_order_items_order_id');
+CALL drop_index_if_exists(@table_order_items, 'idx_order_items_product_id');
 
 -- 3-4. 컬럼 변경
 ALTER TABLE order_items
