@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,11 +19,13 @@ import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.application.service.mapper.OrderResponseMapper;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
+@Validated
 public class OrderQueryController {
 
     private final GetOrderUseCase getOrderUseCase;
@@ -38,9 +41,7 @@ public class OrderQueryController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResponse<OrderSummaryResponse>> getOrders(OrderSearchParams searchParams) {
-        searchParams.validateAndSetDefaults();
-
+    public ResponseEntity<PageResponse<OrderSummaryResponse>> getOrders(@Valid OrderSearchParams searchParams) {
         OrderSearchCriteria criteria = orderSearchParamsMapper.toCriteria(searchParams);
         Page<OrderSummaryResponse> responsePage = getOrderUseCase.searchOrders(criteria);
 

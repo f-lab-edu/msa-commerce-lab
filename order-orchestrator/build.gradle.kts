@@ -4,6 +4,9 @@ dependencies {
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringKafka())
 
+    // Validation
+    implementation(BuildDependencies.getSpringBootStarterValidation())
+
     // Cache
     implementation(BuildDependencies.getSpringBootStarterDataRedis())
 
