@@ -14,20 +14,15 @@ public interface OrderRepository {
 
     Order save(Order order);
 
-    Optional<Order> findById(Long id);
-
     Optional<Order> findByOrderId(UUID orderId);
 
     Optional<Order> findByOrderNumber(String orderNumber);
 
     boolean existsByOrderNumber(String orderNumber);
 
-    // 단건 조회 (항목 포함)
-    Optional<Order> findByIdWithItems(Long id);
-
     Optional<Order> findByOrderIdWithItems(UUID orderId);
 
-    void deleteById(Long id);
+    void deleteByOrderId(UUID orderId);
 
     // 집계 메서드
     long countByStatus(OrderStatus status);

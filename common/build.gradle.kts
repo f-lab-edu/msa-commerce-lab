@@ -5,4 +5,7 @@ plugins {
 
 dependencies {
     // Dependencies are now handled by JavaLibraryPlugin and QueryDslPlugin
+
+    // UUID Generator
+    api(BuildDependencies.getUuidGenerator())
 }

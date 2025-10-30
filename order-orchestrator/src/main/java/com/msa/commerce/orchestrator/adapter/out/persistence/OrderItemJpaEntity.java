@@ -13,8 +13,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -32,10 +30,7 @@ import lombok.NoArgsConstructor;
 public class OrderItemJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "order_item_id", nullable = false, unique = true, length = 36)
+    @Column(name = "order_item_id", nullable = false, length = 36)
     private UUID orderItemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -71,9 +66,9 @@ public class OrderItemJpaEntity {
     private LocalDateTime createdAt;
 
     @Builder
-    public OrderItemJpaEntity(Long id, UUID orderItemId, OrderJpaEntity order, Long productId, Long productVariantId, String productName, String productSku, String variantName, Integer quantity, BigDecimal unitPrice,
+    public OrderItemJpaEntity(UUID orderItemId, OrderJpaEntity order, Long productId, Long productVariantId, String productName, String productSku, String variantName, Integer quantity,
+        BigDecimal unitPrice,
         BigDecimal totalPrice, LocalDateTime createdAt) {
-        this.id = id;
         this.orderItemId = orderItemId;
         this.order = order;
         this.productId = productId;

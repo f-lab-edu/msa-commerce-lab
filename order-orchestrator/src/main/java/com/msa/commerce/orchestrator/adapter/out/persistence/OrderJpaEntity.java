@@ -23,8 +23,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -41,10 +39,7 @@ import lombok.NoArgsConstructor;
 public class OrderJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "order_id", nullable = false, unique = true, length = 36)
+    @Column(name = "order_id", nullable = false, length = 36)
     private UUID orderId;
 
     @Column(name = "order_number", nullable = false, unique = true, length = 100)

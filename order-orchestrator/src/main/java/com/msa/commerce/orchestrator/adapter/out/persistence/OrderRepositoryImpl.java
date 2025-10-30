@@ -24,20 +24,8 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Order save(Order order) {
-        OrderJpaEntity orderEntity;
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        if (order.getOrderId() != null) {
-            orderEntity = orderJpaRepository.findByOrderId(order.getOrderId())
-                .map(existingEntity -> {
-                    existingEntity.updateFrom(order);
-                    return existingEntity;
-                })
-                .orElseGet(() -> OrderJpaEntity.from(order));
-        } else {
-            orderEntity = OrderJpaEntity.from(order);
-        }
-
-        orderEntity.getOrderItems().clear();
         order.getOrderItems().forEach(orderItem -> {
             OrderItemJpaEntity itemEntity = OrderItemJpaEntity.from(orderItem, orderEntity);
             orderEntity.getOrderItems().add(itemEntity);
@@ -45,12 +33,6 @@ public class OrderRepositoryImpl implements OrderRepository {
 
         OrderJpaEntity savedEntity = orderJpaRepository.save(orderEntity);
         return orderMapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public Optional<Order> findById(Long id) {
-        return orderJpaRepository.findById(id)
-            .map(orderMapper::toDomain);
     }
 
     @Override
@@ -71,20 +53,14 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Optional<Order> findByIdWithItems(Long id) {
-        return orderJpaRepository.findByIdWithItems(id)
-            .map(orderMapper::toDomain);
-    }
-
-    @Override
     public Optional<Order> findByOrderIdWithItems(UUID orderId) {
-        return orderJpaRepository.findByOrderIdWithItems(orderId)
+        return orderJpaRepository.findWithItemsByOrderId(orderId)
             .map(orderMapper::toDomain);
     }
 
     @Override
-    public void deleteById(Long id) {
-        orderJpaRepository.deleteById(id);
+    public void deleteByOrderId(UUID orderId) {
+        orderJpaRepository.deleteById(orderId);
     }
 
     @Override

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.msa.commerce.common.util.UuidGenerator;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -120,7 +122,7 @@ public class Order {
         validateCreationParameters(orderNumber, customerId, shippingAddress);
 
         return new Order(
-            UUID.randomUUID(),
+            UuidGenerator.generate(),
             orderNumber,
             customerId,
             shippingAddress,
