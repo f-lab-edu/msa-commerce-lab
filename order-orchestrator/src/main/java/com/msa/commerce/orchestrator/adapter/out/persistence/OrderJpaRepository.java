@@ -9,8 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import com.msa.commerce.orchestrator.domain.OrderStatus;
 
@@ -36,7 +34,6 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID>,
 
     Page<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
 
-    @Query("SELECT o FROM OrderJpaEntity o WHERE o.orderDate BETWEEN :startDate AND :endDate")
-    Page<OrderJpaEntity> findOrdersByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate, Pageable pageable);
+    Page<OrderJpaEntity> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
 }

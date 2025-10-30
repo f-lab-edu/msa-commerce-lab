@@ -236,7 +236,7 @@ class OrderRepositoryImplTest {
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
         Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
-        when(orderJpaRepository.findOrdersByDateRange(startDate, endDate, pageable)).thenReturn(entityPage);
+        when(orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
@@ -244,7 +244,7 @@ class OrderRepositoryImplTest {
 
         // then
         assertThat(orderPage.getContent()).hasSize(1);
-        verify(orderJpaRepository).findOrdersByDateRange(startDate, endDate, pageable);
+        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate, pageable);
     }
 
     @Test

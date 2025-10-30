@@ -99,7 +99,7 @@ public class OrderRepositoryImpl implements OrderRepository {
 
     @Override
     public Page<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
-        return orderJpaRepository.findOrdersByDateRange(startDate, endDate, pageable)
+        return orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)
             .map(orderMapper::toDomain);
     }
 
