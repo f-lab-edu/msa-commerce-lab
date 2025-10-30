@@ -78,11 +78,12 @@ class OrderServiceTest {
         assertThat(capturedOrder.getStatus()).isEqualTo(OrderStatus.PENDING);
         assertThat(capturedOrder.getOrderItems()).hasSize(1);
         assertThat(capturedOrder.getOrderNumber()).isNotNull();
-        assertThat(capturedOrder.getOrderNumber()).startsWith("ORD-");
+        assertThat(capturedOrder.getOrderNumber()).matches("^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
 
         assertThat(result).isNotNull();
         assertThat(result.orderId()).isNotNull();
         assertThat(result.customerId()).isEqualTo(customerId);
         assertThat(result.status()).isEqualTo(OrderStatus.PENDING);
     }
+
 }
