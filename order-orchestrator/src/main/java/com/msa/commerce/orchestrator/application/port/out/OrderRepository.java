@@ -27,6 +27,8 @@ public interface OrderRepository {
 
     boolean existsByOrderNumber(String orderNumber);
 
+    List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
+
     // 페이징 조회 메서드
     Page<Order> findAll(Pageable pageable);
 

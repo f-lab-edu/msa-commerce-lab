@@ -28,6 +28,8 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID>,
 
     long countByCustomerId(Long customerId);
 
+    List<OrderJpaEntity> findByCustomerIdAndOrderDateBetween(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
+
     // 페이징 조회 메서드
     Page<OrderJpaEntity> findByCustomerId(Long customerId, Pageable pageable);
 

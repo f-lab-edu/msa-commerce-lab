@@ -1,6 +1,7 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -101,6 +102,13 @@ public class OrderRepositoryImpl implements OrderRepository {
     public Page<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
         return orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)
             .map(orderMapper::toDomain);
+    }
+
+    @Override
+    public List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate) {
+        return orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
 }

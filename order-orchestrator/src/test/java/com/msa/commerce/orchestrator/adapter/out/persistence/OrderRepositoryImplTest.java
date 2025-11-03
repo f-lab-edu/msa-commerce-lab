@@ -234,8 +234,6 @@ class OrderRepositoryImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
-
-        when(orderJpaRepository.findByOrderDateBetween(startDate, endDate)).thenReturn(java.util.List.of(entity));
         Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
         when(orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
@@ -244,8 +242,8 @@ class OrderRepositoryImplTest {
         Page<Order> orderPage = orderRepository.findOrdersByDateRange(startDate, endDate, pageable);
 
         // then
-        assertThat(orders).hasSize(1);
-        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate);
+        assertThat(orderPage).hasSize(1);
+        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate, pageable);
     }
 
     @Test
@@ -262,13 +260,11 @@ class OrderRepositoryImplTest {
         when(orderMapper.toDomain(entity)).thenReturn(order);
 
         // when
-        java.util.List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
+        List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
 
         // then
         assertThat(orders).hasSize(1);
         verify(orderJpaRepository).findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate);
-        assertThat(orderPage.getContent()).hasSize(1);
-        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate, pageable);
     }
 
     @Test
