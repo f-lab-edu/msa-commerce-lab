@@ -1,6 +1,7 @@
 package com.msa.commerce.orchestrator.application.port.out;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,16 +19,13 @@ public interface OrderRepository {
 
     Optional<Order> findByOrderNumber(String orderNumber);
 
-    boolean existsByOrderNumber(String orderNumber);
-
     Optional<Order> findByOrderIdWithItems(UUID orderId);
 
-    void deleteByOrderId(UUID orderId);
-
-    // 집계 메서드
     long countByStatus(OrderStatus status);
 
     long countByCustomerId(Long customerId);
+
+    boolean existsByOrderNumber(String orderNumber);
 
     // 페이징 조회 메서드
     Page<Order> findAll(Pageable pageable);
@@ -39,5 +37,7 @@ public interface OrderRepository {
     Page<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
 
     Page<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
+
+    void deleteByOrderId(UUID orderId);
 
 }

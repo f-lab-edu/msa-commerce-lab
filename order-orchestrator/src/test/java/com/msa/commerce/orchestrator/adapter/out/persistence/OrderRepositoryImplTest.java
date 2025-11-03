@@ -235,6 +235,7 @@ class OrderRepositoryImplTest {
         Order order = createValidOrder();
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
+        when(orderJpaRepository.findByOrderDateBetween(startDate, endDate)).thenReturn(java.util.List.of(entity));
         Page<OrderJpaEntity> entityPage = new PageImpl<>(List.of(entity), pageable, 1);
         when(orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)).thenReturn(entityPage);
         when(orderMapper.toDomain(entity)).thenReturn(order);
@@ -243,6 +244,29 @@ class OrderRepositoryImplTest {
         Page<Order> orderPage = orderRepository.findOrdersByDateRange(startDate, endDate, pageable);
 
         // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate);
+    }
+
+    @Test
+    @DisplayName("고객별 기간 주문 목록 조회")
+    void findCustomerOrdersByDateRange_Success() {
+        // given
+        Long customerId = 1L;
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(30);
+        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate);
         assertThat(orderPage.getContent()).hasSize(1);
         verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate, pageable);
     }

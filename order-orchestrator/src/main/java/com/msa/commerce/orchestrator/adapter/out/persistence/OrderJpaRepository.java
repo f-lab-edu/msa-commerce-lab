@@ -1,6 +1,7 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,10 +19,10 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID>,
 
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 
-    boolean existsByOrderNumber(String orderNumber);
-
     @EntityGraph(attributePaths = {"orderItems"})
     Optional<OrderJpaEntity> findWithItemsByOrderId(UUID orderId);
+
+    boolean existsByOrderNumber(String orderNumber);
 
     long countByStatus(OrderStatus status);
 
