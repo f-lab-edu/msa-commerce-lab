@@ -25,9 +25,9 @@ class OrderJpaEntityTest {
         OrderJpaEntity entity = OrderJpaEntity.from(order);
 
         // then
-        assertThat(entity.getOrderUuid()).isEqualTo(order.getOrderId());
+        assertThat(entity.getOrderId()).isEqualTo(order.getOrderId());
         assertThat(entity.getOrderNumber()).isEqualTo(order.getOrderNumber());
-        assertThat(entity.getUserId()).isEqualTo(order.getCustomerId());
+        assertThat(entity.getCustomerId()).isEqualTo(order.getCustomerId());
         assertThat(entity.getStatus()).isEqualTo(order.getStatus());
         assertThat(entity.getSubtotalAmount()).isEqualTo(order.getSubtotalAmount());
         assertThat(entity.getTaxAmount()).isEqualTo(order.getTaxAmount());
@@ -63,19 +63,6 @@ class OrderJpaEntityTest {
         assertThat(entity.getTaxAmount()).isEqualTo(new BigDecimal("1000.00"));
         assertThat(entity.getConfirmedAt()).isEqualTo(order.getConfirmedAt());
         assertThat(entity.getUpdatedAt()).isEqualTo(order.getUpdatedAt());
-    }
-
-    @Test
-    @DisplayName("도메인 변환 미구현 예외")
-    void toDomain_ThrowsUnsupportedOperationException() {
-        // given
-        Order order = createValidOrder();
-        OrderJpaEntity entity = OrderJpaEntity.from(order);
-
-        // when & then
-        assertThatThrownBy(entity::toDomain)
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Domain conversion not yet implemented - requires proper hydration strategy");
     }
 
     private Order createValidOrder() {

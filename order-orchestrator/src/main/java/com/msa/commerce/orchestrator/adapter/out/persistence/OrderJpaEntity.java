@@ -23,8 +23,6 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -41,17 +39,14 @@ import lombok.NoArgsConstructor;
 public class OrderJpaEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(name = "order_uuid", nullable = false, unique = true, length = 36)
-    private UUID orderUuid;
+    @Column(name = "order_id", nullable = false, length = 36)
+    private UUID orderId;
 
     @Column(name = "order_number", nullable = false, unique = true, length = 100)
     private String orderNumber;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -116,9 +111,9 @@ public class OrderJpaEntity {
 
     public static OrderJpaEntity from(Order order) {
         OrderJpaEntity entity = new OrderJpaEntity();
-        entity.orderUuid = order.getOrderId();
+        entity.orderId = order.getOrderId();
         entity.orderNumber = order.getOrderNumber();
-        entity.userId = order.getCustomerId();
+        entity.customerId = order.getCustomerId();
         entity.status = order.getStatus();
         entity.subtotalAmount = order.getSubtotalAmount();
         entity.taxAmount = order.getTaxAmount();
@@ -138,14 +133,6 @@ public class OrderJpaEntity {
         entity.createdAt = order.getCreatedAt();
         entity.updatedAt = order.getUpdatedAt();
         return entity;
-    }
-
-    public Order toDomain() {
-        // Note: This creates a new Order but we need to use reflection or builder pattern
-        // to properly hydrate the domain object with existing data
-        // For now, this is a placeholder - proper implementation would require
-        // either making domain constructors more flexible or using a mapper
-        throw new UnsupportedOperationException("Domain conversion not yet implemented - requires proper hydration strategy");
     }
 
     public void updateFrom(Order order) {

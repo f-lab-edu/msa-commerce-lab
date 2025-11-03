@@ -1,7 +1,13 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderStatus;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,12 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrderRepositoryImpl 테스트")
@@ -22,6 +24,9 @@ class OrderRepositoryImplTest {
 
     @Mock
     private OrderJpaRepository orderJpaRepository;
+
+    @Mock
+    private OrderDomainMapper orderMapper;
 
     @InjectMocks
     private OrderRepositoryImpl orderRepository;
@@ -61,57 +66,247 @@ class OrderRepositoryImplTest {
     void countByCustomerId_Success() {
         // given
         Long customerId = 1L;
-        when(orderJpaRepository.countByUserId(customerId)).thenReturn(3L);
+        when(orderJpaRepository.countByCustomerId(customerId)).thenReturn(3L);
 
         // when
         long count = orderRepository.countByCustomerId(customerId);
 
         // then
         assertThat(count).isEqualTo(3L);
-        verify(orderJpaRepository).countByUserId(customerId);
+        verify(orderJpaRepository).countByCustomerId(customerId);
     }
 
     @Test
-    @DisplayName("주문 ID로 삭제")
-    void deleteById_Success() {
+    @DisplayName("주문 UUID로 삭제")
+    void deleteByOrderId_Success() {
         // given
-        Long orderId = 1L;
+        UUID orderId = UUID.randomUUID();
 
         // when
-        orderRepository.deleteById(orderId);
+        orderRepository.deleteByOrderId(orderId);
 
         // then
         verify(orderJpaRepository).deleteById(orderId);
     }
 
     @Test
-    @DisplayName("주문 저장 시 미구현 예외")
-    void save_ThrowsUnsupportedOperationException() {
+    @DisplayName("주문 저장 성공")
+    void save_Success() {
         // given
         Order order = createValidOrder();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
 
-        // when & then
-        assertThatThrownBy(() -> orderRepository.save(order))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order save not yet implemented - requires domain reconstitution");
+        when(orderJpaRepository.save(any(OrderJpaEntity.class))).thenReturn(orderEntity);
+        when(orderMapper.toDomain(any(OrderJpaEntity.class))).thenReturn(order);
+
+        // when
+        Order savedOrder = orderRepository.save(order);
+
+        // then
+        assertThat(savedOrder).isNotNull();
+        verify(orderJpaRepository).save(any(OrderJpaEntity.class));
+        verify(orderMapper).toDomain(any(OrderJpaEntity.class));
     }
 
     @Test
-    @DisplayName("주문 조회 시 미구현 예외")
-    void findById_ThrowsUnsupportedOperationException() {
-        // when & then
-        assertThatThrownBy(() -> orderRepository.findById(1L))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order findById not yet implemented - requires domain reconstitution");
+    @DisplayName("UUID로 주문 조회 성공")
+    void findByOrderId_Success() {
+        // given
+        Order order = createValidOrder();
+        UUID orderId = order.getOrderId();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderId(orderId)).thenReturn(java.util.Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderId(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByOrderId(orderId);
+        verify(orderMapper).toDomain(orderEntity);
     }
 
     @Test
-    @DisplayName("주문 UUID로 조회 시 미구현 예외")
-    void findByOrderId_ThrowsUnsupportedOperationException() {
-        // when & then
-        assertThatThrownBy(() -> orderRepository.findByOrderId(UUID.randomUUID()))
-            .isInstanceOf(UnsupportedOperationException.class)
-            .hasMessage("Order findByOrderId not yet implemented - requires domain reconstitution");
+    @DisplayName("주문 번호로 조회 성공")
+    void findByOrderNumber_Success() {
+        // given
+        Order order = createValidOrder();
+        String orderNumber = order.getOrderNumber();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderNumber(orderNumber)).thenReturn(java.util.Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderNumber(orderNumber);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findByOrderNumber(orderNumber);
+        verify(orderMapper).toDomain(orderEntity);
+    }
+
+    @Test
+    @DisplayName("고객 ID로 주문 목록 조회")
+    void findByCustomerId_Success() {
+        // given
+        Long customerId = 1L;
+        Order order1 = createValidOrder();
+        Order order2 = createValidOrder();
+        OrderJpaEntity entity1 = OrderJpaEntity.from(order1);
+        OrderJpaEntity entity2 = OrderJpaEntity.from(order2);
+
+        when(orderJpaRepository.findByCustomerId(customerId)).thenReturn(java.util.List.of(entity1, entity2));
+        when(orderMapper.toDomain(entity1)).thenReturn(order1);
+        when(orderMapper.toDomain(entity2)).thenReturn(order2);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByCustomerId(customerId);
+
+        // then
+        assertThat(orders).hasSize(2);
+        assertThat(orders).containsExactly(order1, order2);
+        verify(orderJpaRepository).findByCustomerId(customerId);
+    }
+
+    @Test
+    @DisplayName("고객 ID와 상태로 주문 목록 조회")
+    void findByCustomerIdAndStatus_Success() {
+        // given
+        Long customerId = 1L;
+        OrderStatus status = OrderStatus.PENDING;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByCustomerIdAndStatus(customerId, status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByCustomerIdAndStatus(customerId, status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        assertThat(orders.getFirst()).isEqualTo(order);
+        verify(orderJpaRepository).findByCustomerIdAndStatus(customerId, status);
+    }
+
+    @Test
+    @DisplayName("상태로 주문 목록 조회")
+    void findByStatus_Success() {
+        // given
+        OrderStatus status = OrderStatus.CONFIRMED;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByStatus(status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByStatus(status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByStatus(status);
+    }
+
+    @Test
+    @DisplayName("상태로 주문 목록 조회 (생성일 역순)")
+    void findByStatusOrderByCreatedAtDesc_Success() {
+        // given
+        OrderStatus status = OrderStatus.PAID;
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByStatusOrderByCreatedAtDesc(status)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findByStatusOrderByCreatedAtDesc(status);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByStatusOrderByCreatedAtDesc(status);
+    }
+
+    @Test
+    @DisplayName("기간으로 주문 목록 조회")
+    void findOrdersByDateRange_Success() {
+        // given
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(7);
+        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByOrderDateBetween(startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findOrdersByDateRange(startDate, endDate);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByOrderDateBetween(startDate, endDate);
+    }
+
+    @Test
+    @DisplayName("고객별 기간 주문 목록 조회")
+    void findCustomerOrdersByDateRange_Success() {
+        // given
+        Long customerId = 1L;
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now().minusDays(30);
+        java.time.LocalDateTime endDate = java.time.LocalDateTime.now();
+        Order order = createValidOrder();
+        OrderJpaEntity entity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate)).thenReturn(java.util.List.of(entity));
+        when(orderMapper.toDomain(entity)).thenReturn(order);
+
+        // when
+        java.util.List<Order> orders = orderRepository.findCustomerOrdersByDateRange(customerId, startDate, endDate);
+
+        // then
+        assertThat(orders).hasSize(1);
+        verify(orderJpaRepository).findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate);
+    }
+
+    @Test
+    @DisplayName("UUID로 주문과 항목 함께 조회")
+    void findByOrderIdWithItems_Success() {
+        // given
+        Order order = createValidOrder();
+        UUID orderId = order.getOrderId();
+        OrderJpaEntity orderEntity = OrderJpaEntity.from(order);
+
+        when(orderJpaRepository.findWithItemsByOrderId(orderId)).thenReturn(Optional.of(orderEntity));
+        when(orderMapper.toDomain(orderEntity)).thenReturn(order);
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isPresent();
+        assertThat(foundOrder.get()).isEqualTo(order);
+        verify(orderJpaRepository).findWithItemsByOrderId(orderId);
+        verify(orderMapper).toDomain(orderEntity);
+    }
+
+    @Test
+    @DisplayName("UUID로 주문과 항목 함께 조회 실패 - 존재하지 않음")
+    void findByOrderIdWithItems_NotFound() {
+        // given
+        UUID orderId = UUID.randomUUID();
+        when(orderJpaRepository.findWithItemsByOrderId(orderId)).thenReturn(Optional.empty());
+
+        // when
+        Optional<Order> foundOrder = orderRepository.findByOrderIdWithItems(orderId);
+
+        // then
+        assertThat(foundOrder).isEmpty();
+        verify(orderJpaRepository).findWithItemsByOrderId(orderId);
     }
 
     private Order createValidOrder() {
@@ -128,4 +323,5 @@ class OrderRepositoryImplTest {
             "WEB"
         );
     }
+
 }
