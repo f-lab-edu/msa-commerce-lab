@@ -1,20 +1,21 @@
 package com.msa.commerce.common.exception;
 
-public class ValidationException extends RuntimeException {
+public class ValidationException extends InternalException {
 
-	private final String errorCode;
+    public ValidationException(String message) {
+        super(message);
+    }
 
-	public ValidationException(String message, String errorCode) {
-		super(message);
-		this.errorCode = errorCode;
-	}
+    public ValidationException(String message, String errorCode) {
+        super(message, errorCode);
+    }
 
-	public ValidationException(String message, String errorCode, Throwable cause) {
-		super(message, cause);
-		this.errorCode = errorCode;
-	}
+    public ValidationException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
-	public String getErrorCode() {
-		return errorCode;
-	}
+    public ValidationException(String message, String errorCode, Throwable cause) {
+        super(message, errorCode, cause);
+    }
+
 }

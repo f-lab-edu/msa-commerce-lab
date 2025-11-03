@@ -1,6 +1,6 @@
 package com.msa.commerce.common.exception;
 
-public class ProductUpdateNotAllowedException extends BusinessException {
+public class ProductUpdateNotAllowedException extends InternalException {
 
     public ProductUpdateNotAllowedException(String message, String errorCode) {
         super(message, errorCode);

@@ -28,112 +28,25 @@ public class GlobalExceptionHandler {
     @Value("${spring.profiles.active:unknown}")
     private String activeProfile;
 
-    @ExceptionHandler(BusinessException.class)
+    @ExceptionHandler(InternalException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(
-        BusinessException ex, HttpServletRequest request) {
+        InternalException ex, HttpServletRequest request) {
 
-        log.warn("Business exception occurred: {}", ex.getMessage());
+        log.warn("Business exception occurred: {} - {}", ex.getClass().getSimpleName(), ex.getMessage());
 
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .message(ex.getMessage())
-            .code(ex.getErrorCode())
-            .timestamp(LocalDateTime.now())
-            .path(request.getRequestURI())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
-            .build();
-
-        return ResponseEntity.badRequest().body(errorResponse);
-    }
-
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
-        DuplicateResourceException ex, HttpServletRequest request) {
-
-        log.warn("Duplicate resource exception: {}", ex.getMessage());
+        // 예외 타입에 따른 HTTP 상태 결정
+        HttpStatus status = determineHttpStatus(ex);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
             .message(ex.getMessage())
             .code(ex.getErrorCode())
             .timestamp(LocalDateTime.now())
             .path(request.getRequestURI())
-            .status(HttpStatus.CONFLICT.value())
+            .status(status.value())
             .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
             .build();
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
-        ResourceNotFoundException ex, HttpServletRequest request) {
-
-        log.warn("Resource not found exception: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .message(ex.getMessage())
-            .code(ex.getErrorCode())
-            .timestamp(LocalDateTime.now())
-            .path(request.getRequestURI())
-            .status(HttpStatus.NOT_FOUND.value())
-            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
-            .build();
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
-    }
-
-    @ExceptionHandler(ProductUpdateNotAllowedException.class)
-    public ResponseEntity<ErrorResponse> handleProductUpdateNotAllowedException(
-        ProductUpdateNotAllowedException ex, HttpServletRequest request) {
-
-        log.warn("Product update not allowed exception: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .message(ex.getMessage())
-            .code(ex.getErrorCode())
-            .timestamp(LocalDateTime.now())
-            .path(request.getRequestURI())
-            .status(HttpStatus.FORBIDDEN.value())
-            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
-            .build();
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
-    }
-
-    @ExceptionHandler(NoChangesProvidedException.class)
-    public ResponseEntity<ErrorResponse> handleNoChangesProvidedException(
-        NoChangesProvidedException ex, HttpServletRequest request) {
-
-        log.warn("No changes provided exception: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .message(ex.getMessage())
-            .code(ex.getErrorCode())
-            .timestamp(LocalDateTime.now())
-            .path(request.getRequestURI())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
-            .build();
-
-        return ResponseEntity.badRequest().body(errorResponse);
-    }
-
-    @ExceptionHandler(ValidationException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-        ValidationException ex, HttpServletRequest request) {
-
-        log.warn("Validation exception: {}", ex.getMessage());
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-            .message(ex.getMessage())
-            .code(ex.getErrorCode())
-            .timestamp(LocalDateTime.now())
-            .path(request.getRequestURI())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
-            .build();
-
-        return ResponseEntity.badRequest().body(errorResponse);
+        return ResponseEntity.status(status).body(errorResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -298,6 +211,22 @@ public class GlobalExceptionHandler {
             .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+    }
+
+    private HttpStatus determineHttpStatus(InternalException ex) {
+        if (ex instanceof ResourceNotFoundException) {
+            return HttpStatus.NOT_FOUND;
+        } else if (ex instanceof DuplicateResourceException) {
+            return HttpStatus.CONFLICT;
+        } else if (ex instanceof ProductUpdateNotAllowedException) {
+            return HttpStatus.FORBIDDEN;
+        } else if (ex instanceof ValidationException) {
+            return HttpStatus.BAD_REQUEST;
+        } else if (ex instanceof NoChangesProvidedException) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        // 기본값
+        return HttpStatus.BAD_REQUEST;
     }
 
     private ErrorResponse.ValidationError createValidationError(FieldError fieldError) {

@@ -1,6 +1,6 @@
 package com.msa.commerce.common.exception;
 
-public class NoChangesProvidedException extends BusinessException {
+public class NoChangesProvidedException extends InternalException {
 
     public NoChangesProvidedException(String message, String errorCode) {
         super(message, errorCode);
