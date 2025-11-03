@@ -4,12 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import com.msa.commerce.common.util.UuidGenerator;
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -44,7 +43,7 @@ public class Order {
 
     private String currency;
 
-    private Map<String, Object> shippingAddress;
+    private ShippingAddress shippingAddress;
 
     private LocalDateTime orderDate;
 
@@ -70,7 +69,7 @@ public class Order {
 
     @Builder
     public Order(UUID orderId, String orderNumber, Long customerId, OrderStatus status, BigDecimal subtotalAmount, BigDecimal taxAmount, BigDecimal shippingAmount, BigDecimal discountAmount,
-        BigDecimal totalAmount, String currency, Map<String, Object> shippingAddress, LocalDateTime orderDate, LocalDateTime confirmedAt, LocalDateTime paymentCompletedAt, LocalDateTime shippedAt,
+        BigDecimal totalAmount, String currency, ShippingAddress shippingAddress, LocalDateTime orderDate, LocalDateTime confirmedAt, LocalDateTime paymentCompletedAt, LocalDateTime shippedAt,
         LocalDateTime deliveredAt, LocalDateTime cancelledAt, String sourceChannel, Long version, LocalDateTime createdAt, LocalDateTime updatedAt, List<OrderItem> orderItems) {
         this.orderId = orderId;
         this.orderNumber = orderNumber;
@@ -97,7 +96,7 @@ public class Order {
     }
 
     private Order(UUID orderId, String orderNumber, Long customerId,
-        Map<String, Object> shippingAddress, String sourceChannel) {
+        ShippingAddress shippingAddress, String sourceChannel) {
         this.orderId = orderId;
         this.orderNumber = orderNumber;
         this.customerId = customerId;
@@ -108,7 +107,7 @@ public class Order {
         this.discountAmount = BigDecimal.ZERO;
         this.totalAmount = BigDecimal.ZERO;
         this.currency = "KRW";
-        this.shippingAddress = new HashMap<>(shippingAddress);
+        this.shippingAddress = shippingAddress;
         this.orderDate = LocalDateTime.now();
         this.sourceChannel = sourceChannel != null ? sourceChannel : "WEB";
         this.version = 1L;
@@ -118,7 +117,7 @@ public class Order {
     }
 
     public static Order create(String orderNumber, Long customerId,
-        Map<String, Object> shippingAddress, String sourceChannel) {
+        ShippingAddress shippingAddress, String sourceChannel) {
         validateCreationParameters(orderNumber, customerId, shippingAddress);
 
         return new Order(
@@ -277,20 +276,16 @@ public class Order {
     }
 
     private static void validateCreationParameters(String orderNumber, Long customerId,
-        Map<String, Object> shippingAddress) {
+        ShippingAddress shippingAddress) {
         if (orderNumber == null || orderNumber.trim().isEmpty()) {
             throw new IllegalArgumentException("Order number cannot be null or empty");
         }
         if (customerId == null) {
             throw new IllegalArgumentException("Customer ID cannot be null");
         }
-        if (shippingAddress == null || shippingAddress.isEmpty()) {
-            throw new IllegalArgumentException("Shipping address cannot be null or empty");
+        if (shippingAddress == null) {
+            throw new IllegalArgumentException("Shipping address cannot be null");
         }
-    }
-
-    public Map<String, Object> getShippingAddress() {
-        return Collections.unmodifiableMap(shippingAddress);
     }
 
     public List<OrderItem> getOrderItems() {
