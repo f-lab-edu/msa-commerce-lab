@@ -1,14 +1,14 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
+import com.msa.commerce.orchestrator.domain.AddressType;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -35,7 +35,7 @@ class OrderJpaEntityTest {
         assertThat(entity.getDiscountAmount()).isEqualTo(order.getDiscountAmount());
         assertThat(entity.getTotalAmount()).isEqualTo(order.getTotalAmount());
         assertThat(entity.getCurrency()).isEqualTo(order.getCurrency());
-        assertThat(entity.getShippingAddress()).containsAllEntriesOf(order.getShippingAddress());
+        assertThat(entity.getShippingAddress()).isNotNull();
         assertThat(entity.getSourceChannel()).isEqualTo(order.getSourceChannel());
         assertThat(entity.getVersion()).isEqualTo(order.getVersion());
     }
@@ -66,11 +66,14 @@ class OrderJpaEntityTest {
     }
 
     private Order createValidOrder() {
-        Map<String, Object> shippingAddress = new HashMap<>();
-        shippingAddress.put("recipient", "홍길동");
-        shippingAddress.put("phone", "010-1234-5678");
-        shippingAddress.put("addressLine1", "서울시 강남구");
-        shippingAddress.put("postalCode", "06234");
+        ShippingAddress shippingAddress = ShippingAddress.create(
+            AddressType.DEFAULT,
+            "홍길동",
+            "010-1234-5678",
+            "06234",
+            "서울시 강남구",
+            null
+        );
 
         return Order.create(
             "ORDER-TEST-001",

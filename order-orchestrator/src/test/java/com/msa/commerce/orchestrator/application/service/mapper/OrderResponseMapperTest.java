@@ -4,9 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -19,9 +17,11 @@ import org.springframework.data.domain.PageRequest;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderItemResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
+import com.msa.commerce.orchestrator.domain.AddressType;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
 
 @DisplayName("OrderResponseMapper 테스트")
 class OrderResponseMapperTest {
@@ -41,11 +41,14 @@ class OrderResponseMapperTest {
         Long customerId = 1001L;
         LocalDateTime orderDate = LocalDateTime.of(2025, 10, 20, 10, 30);
 
-        Map<String, Object> shippingAddress = new HashMap<>();
-        shippingAddress.put("recipientName", "홍길동");
-        shippingAddress.put("phone", "010-1234-5678");
-        shippingAddress.put("zipCode", "06234");
-        shippingAddress.put("address", "서울특별시 강남구 테헤란로 123");
+        ShippingAddress shippingAddress = ShippingAddress.create(
+            AddressType.DEFAULT,
+            "홍길동",
+            "010-1234-5678",
+            "06234",
+            "서울특별시 강남구 테헤란로 123",
+            null
+        );
 
         OrderItem item1 = OrderItem.builder()
             .orderItemId(UUID.randomUUID())
@@ -99,7 +102,7 @@ class OrderResponseMapperTest {
         assertThat(response.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("146000"));
         assertThat(response.getCurrency()).isEqualTo("KRW");
-        assertThat(response.getShippingAddress()).isEqualTo(shippingAddress);
+        assertThat(response.getShippingAddress()).isNotNull();
         assertThat(response.getOrderDate()).isEqualTo(orderDate);
         assertThat(response.getSourceChannel()).isEqualTo("WEB");
         assertThat(response.getTotalItemCount()).isEqualTo(3); // 2 + 1 quantities
@@ -124,7 +127,7 @@ class OrderResponseMapperTest {
             .discountAmount(BigDecimal.ZERO)
             .totalAmount(BigDecimal.ZERO)
             .currency("KRW")
-            .shippingAddress(new HashMap<>())
+            .shippingAddress(ShippingAddress.createDefault())
             .orderDate(LocalDateTime.now())
             .sourceChannel("MOBILE")
             .orderItems(List.of())

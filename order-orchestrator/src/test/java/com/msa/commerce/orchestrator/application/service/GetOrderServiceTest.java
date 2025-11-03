@@ -27,8 +27,10 @@ import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
 import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
 import com.msa.commerce.orchestrator.application.service.mapper.OrderResponseMapper;
+import com.msa.commerce.orchestrator.domain.AddressType;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GetOrderService 단위 테스트")
@@ -439,11 +441,14 @@ class GetOrderServiceTest {
 
     // Helper method to create test Order
     private Order createTestOrder(UUID orderId, Long customerId, OrderStatus status) {
-        Map<String, Object> shippingAddress = new HashMap<>();
-        shippingAddress.put("recipientName", "김철수");
-        shippingAddress.put("phone", "010-1234-5678");
-        shippingAddress.put("zipCode", "06234");
-        shippingAddress.put("address", "서울특별시 강남구 테헤란로 123");
+        ShippingAddress shippingAddress = ShippingAddress.create(
+            AddressType.DEFAULT,
+            "김철수",
+            "010-1234-5678",
+            "06234",
+            "서울특별시 강남구 테헤란로 123",
+            null
+        );
 
         return Order.builder()
             .orderId(orderId)

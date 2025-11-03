@@ -3,6 +3,7 @@ package com.msa.commerce.orchestrator.adapter.out.persistence;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -15,6 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -121,7 +123,7 @@ public class OrderJpaEntity {
         entity.discountAmount = order.getDiscountAmount();
         entity.totalAmount = order.getTotalAmount();
         entity.currency = order.getCurrency();
-        entity.shippingAddress = order.getShippingAddress();
+        entity.shippingAddress = convertShippingAddressToMap(order.getShippingAddress());
         entity.orderDate = order.getOrderDate();
         entity.confirmedAt = order.getConfirmedAt();
         entity.paymentCompletedAt = order.getPaymentCompletedAt();
@@ -148,6 +150,39 @@ public class OrderJpaEntity {
         this.deliveredAt = order.getDeliveredAt();
         this.cancelledAt = order.getCancelledAt();
         this.updatedAt = order.getUpdatedAt();
+    }
+
+    /**
+     * ShippingAddress VO를 Map<String, Object>로 변환
+     * JPA Entity의 JSON 컬럼에 저장하기 위함
+     */
+    private static Map<String, Object> convertShippingAddressToMap(ShippingAddress address) {
+        if (address == null) {
+            Map<String, Object> defaultMap = new HashMap<>();
+            defaultMap.put("addressType", "DEFAULT");
+            return defaultMap;
+        }
+
+        Map<String, Object> map = new HashMap<>();
+        if (address.addressType() != null) {
+            map.put("addressType", address.addressType().name());
+        }
+        if (address.recipientName() != null) {
+            map.put("recipientName", address.recipientName());
+        }
+        if (address.phoneNumber() != null) {
+            map.put("phoneNumber", address.phoneNumber());
+        }
+        if (address.zipCode() != null) {
+            map.put("zipCode", address.zipCode());
+        }
+        if (address.addressLine1() != null) {
+            map.put("addressLine1", address.addressLine1());
+        }
+        if (address.addressLine2() != null) {
+            map.put("addressLine2", address.addressLine2());
+        }
+        return map;
     }
 
 }

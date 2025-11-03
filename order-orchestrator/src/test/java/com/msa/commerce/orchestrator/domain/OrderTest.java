@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import com.msa.commerce.orchestrator.domain.vo.ShippingAddress;
+
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -20,7 +20,7 @@ class OrderTest {
         // given
         String orderNumber = "ORDER-001";
         Long customerId = 1L;
-        Map<String, Object> shippingAddress = createValidShippingAddress();
+        ShippingAddress shippingAddress = createValidShippingAddress();
         String sourceChannel = "WEB";
 
         // when
@@ -37,7 +37,7 @@ class OrderTest {
         assertThat(order.getDiscountAmount()).isEqualTo(BigDecimal.ZERO);
         assertThat(order.getTotalAmount()).isEqualTo(BigDecimal.ZERO);
         assertThat(order.getCurrency()).isEqualTo("KRW");
-        assertThat(order.getShippingAddress()).containsAllEntriesOf(shippingAddress);
+        assertThat(order.getShippingAddress()).isEqualTo(shippingAddress);
         assertThat(order.getSourceChannel()).isEqualTo(sourceChannel);
         assertThat(order.getOrderDate()).isNotNull();
         assertThat(order.getCreatedAt()).isNotNull();
@@ -52,7 +52,7 @@ class OrderTest {
         // given
         String orderNumber = "ORDER-002";
         Long customerId = 1L;
-        Map<String, Object> shippingAddress = createValidShippingAddress();
+        ShippingAddress shippingAddress = createValidShippingAddress();
 
         // when
         Order order = Order.create(orderNumber, customerId, shippingAddress, null);
@@ -346,17 +346,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create("ORDER-001", 1L, null, "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Shipping address cannot be null or empty");
-    }
-
-    @Test
-    @DisplayName("빈 배송주소로 생성 시 예외")
-    void createOrderWithEmptyShippingAddress_ThrowsException() {
-        // when & then
-        assertThatThrownBy(() ->
-            Order.create("ORDER-001", 1L, new HashMap<>(), "WEB")
-        ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Shipping address cannot be null or empty");
+         .hasMessage("Shipping address cannot be null");
     }
 
     @Test
@@ -498,13 +488,14 @@ class OrderTest {
         );
     }
 
-    private Map<String, Object> createValidShippingAddress() {
-        Map<String, Object> address = new HashMap<>();
-        address.put("recipient", "홍길동");
-        address.put("phone", "010-1234-5678");
-        address.put("addressLine1", "서울시 강남구 테헤란로 123");
-        address.put("city", "서울시");
-        address.put("postalCode", "06234");
-        return address;
+    private ShippingAddress createValidShippingAddress() {
+        return ShippingAddress.create(
+            AddressType.DEFAULT,
+            "홍길동",
+            "010-1234-5678",
+            "06234",
+            "서울시 강남구 테헤란로 123",
+            null
+        );
     }
 }
