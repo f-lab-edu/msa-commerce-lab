@@ -3,26 +3,26 @@ package com.msa.commerce.common.exception;
 import lombok.Getter;
 
 @Getter
-public class BusinessException extends RuntimeException {
+public abstract class InternalException extends RuntimeException {
 
     private final String errorCode;
 
-    public BusinessException(String message) {
+    protected InternalException(String message) {
         super(message);
         this.errorCode = null;
     }
 
-    public BusinessException(String message, String errorCode) {
+    protected InternalException(String message, String errorCode) {
         super(message);
         this.errorCode = errorCode;
     }
 
-    public BusinessException(String message, Throwable cause) {
+    protected InternalException(String message, Throwable cause) {
         super(message, cause);
         this.errorCode = null;
     }
 
-    public BusinessException(String message, String errorCode, Throwable cause) {
+    protected InternalException(String message, String errorCode, Throwable cause) {
         super(message, cause);
         this.errorCode = errorCode;
     }

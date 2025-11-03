@@ -32,8 +32,8 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("BusinessException 처리 테스트")
     void handleBusinessException() {
-        // given
-        BusinessException exception = new BusinessException("Test business error", "B001");
+        // given - ValidationException은 BusinessException을 상속함
+        ValidationException exception = new ValidationException("Test business error", "B001");
 
         // when
         ResponseEntity<ErrorResponse> response = exceptionHandler.handleBusinessException(exception, request);
@@ -57,8 +57,8 @@ class GlobalExceptionHandlerTest {
             ErrorCode.PRODUCT_NAME_DUPLICATE.getCode()
         );
 
-        // when
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleDuplicateResourceException(exception, request);
+        // when - handleBusinessException이 모든 BusinessException을 처리
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBusinessException(exception, request);
 
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
@@ -74,8 +74,8 @@ class GlobalExceptionHandlerTest {
         // given
         ResourceNotFoundException exception = new ResourceNotFoundException("Resource not found", "R001");
 
-        // when
-        ResponseEntity<ErrorResponse> response = exceptionHandler.handleResourceNotFoundException(exception, request);
+        // when - handleBusinessException이 모든 BusinessException을 처리
+        ResponseEntity<ErrorResponse> response = exceptionHandler.handleBusinessException(exception, request);
 
         // then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);

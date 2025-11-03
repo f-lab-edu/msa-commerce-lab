@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,25 +19,24 @@ public interface OrderJpaRepository extends JpaRepository<OrderJpaEntity, UUID>,
 
     Optional<OrderJpaEntity> findByOrderNumber(String orderNumber);
 
+    @EntityGraph(attributePaths = {"orderItems"})
+    Optional<OrderJpaEntity> findWithItemsByOrderId(UUID orderId);
+
     boolean existsByOrderNumber(String orderNumber);
-
-    List<OrderJpaEntity> findByCustomerId(Long customerId);
-
-    List<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status);
-
-    List<OrderJpaEntity> findByStatus(OrderStatus status);
-
-    List<OrderJpaEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status);
-
-    List<OrderJpaEntity> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-
-    List<OrderJpaEntity> findByCustomerIdAndOrderDateBetween(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
 
     long countByStatus(OrderStatus status);
 
     long countByCustomerId(Long customerId);
 
-    @EntityGraph(attributePaths = {"orderItems"})
-    Optional<OrderJpaEntity> findWithItemsByOrderId(UUID orderId);
+    List<OrderJpaEntity> findByCustomerIdAndOrderDateBetween(Long customerId, LocalDateTime startDate, LocalDateTime endDate);
+
+    // 페이징 조회 메서드
+    Page<OrderJpaEntity> findByCustomerId(Long customerId, Pageable pageable);
+
+    Page<OrderJpaEntity> findByStatus(OrderStatus status, Pageable pageable);
+
+    Page<OrderJpaEntity> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable);
+
+    Page<OrderJpaEntity> findByOrderDateBetween(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
 }

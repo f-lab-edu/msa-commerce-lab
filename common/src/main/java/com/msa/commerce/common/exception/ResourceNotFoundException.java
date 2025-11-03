@@ -1,6 +1,6 @@
 package com.msa.commerce.common.exception;
 
-public class ResourceNotFoundException extends BusinessException {
+public class ResourceNotFoundException extends InternalException {
 
     public ResourceNotFoundException(String message) {
         this(message, null);

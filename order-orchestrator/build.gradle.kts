@@ -4,6 +4,12 @@ dependencies {
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringKafka())
 
+    // Validation
+    implementation(BuildDependencies.getSpringBootStarterValidation())
+
+    // Cache
+    implementation(BuildDependencies.getSpringBootStarterDataRedis())
+
     // MapStruct
     implementation(BuildDependencies.getMapstruct())
     annotationProcessor(BuildDependencies.getMapstructProcessor())

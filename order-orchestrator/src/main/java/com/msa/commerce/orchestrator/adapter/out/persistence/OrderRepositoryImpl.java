@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.msa.commerce.orchestrator.application.port.out.OrderRepository;
@@ -52,45 +54,14 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public List<Order> findByCustomerId(Long customerId) {
-        return orderJpaRepository.findByCustomerId(customerId).stream()
-            .map(orderMapper::toDomain)
-            .toList();
+    public Optional<Order> findByOrderIdWithItems(UUID orderId) {
+        return orderJpaRepository.findWithItemsByOrderId(orderId)
+            .map(orderMapper::toDomain);
     }
 
     @Override
-    public List<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status) {
-        return orderJpaRepository.findByCustomerIdAndStatus(customerId, status).stream()
-            .map(orderMapper::toDomain)
-            .toList();
-    }
-
-    @Override
-    public List<Order> findByStatus(OrderStatus status) {
-        return orderJpaRepository.findByStatus(status).stream()
-            .map(orderMapper::toDomain)
-            .toList();
-    }
-
-    @Override
-    public List<Order> findByStatusOrderByCreatedAtDesc(OrderStatus status) {
-        return orderJpaRepository.findByStatusOrderByCreatedAtDesc(status).stream()
-            .map(orderMapper::toDomain)
-            .toList();
-    }
-
-    @Override
-    public List<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
-        return orderJpaRepository.findByOrderDateBetween(startDate, endDate).stream()
-            .map(orderMapper::toDomain)
-            .toList();
-    }
-
-    @Override
-    public List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate) {
-        return orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate).stream()
-            .map(orderMapper::toDomain)
-            .toList();
+    public void deleteByOrderId(UUID orderId) {
+        orderJpaRepository.deleteById(orderId);
     }
 
     @Override
@@ -104,14 +75,40 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Optional<Order> findByOrderIdWithItems(UUID orderId) {
-        return orderJpaRepository.findWithItemsByOrderId(orderId)
+    public Page<Order> findAll(Pageable pageable) {
+        return orderJpaRepository.findAll(pageable)
             .map(orderMapper::toDomain);
     }
 
     @Override
-    public void deleteByOrderId(UUID orderId) {
-        orderJpaRepository.deleteById(orderId);
+    public Page<Order> findByCustomerId(Long customerId, Pageable pageable) {
+        return orderJpaRepository.findByCustomerId(customerId, pageable)
+            .map(orderMapper::toDomain);
+    }
+
+    @Override
+    public Page<Order> findByStatus(OrderStatus status, Pageable pageable) {
+        return orderJpaRepository.findByStatus(status, pageable)
+            .map(orderMapper::toDomain);
+    }
+
+    @Override
+    public Page<Order> findByCustomerIdAndStatus(Long customerId, OrderStatus status, Pageable pageable) {
+        return orderJpaRepository.findByCustomerIdAndStatus(customerId, status, pageable)
+            .map(orderMapper::toDomain);
+    }
+
+    @Override
+    public Page<Order> findOrdersByDateRange(LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+        return orderJpaRepository.findByOrderDateBetween(startDate, endDate, pageable)
+            .map(orderMapper::toDomain);
+    }
+
+    @Override
+    public List<Order> findCustomerOrdersByDateRange(Long customerId, LocalDateTime startDate, LocalDateTime endDate) {
+        return orderJpaRepository.findByCustomerIdAndOrderDateBetween(customerId, startDate, endDate).stream()
+            .map(orderMapper::toDomain)
+            .toList();
     }
 
 }

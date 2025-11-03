@@ -31,6 +31,10 @@ public final class BuildDependencies {
         return Dependency.SPRING_BOOT_STARTER_DATA_REDIS.getCoordinateWithSpringBootVersion();
     }
 
+    public static String getSpringBootStarterValidation() {
+        return Dependency.SPRING_BOOT_STARTER_VALIDATION.getCoordinateWithSpringBootVersion();
+    }
+
     // JWT dependencies
     public static String getJjwtApi() {
         return Dependency.JJWT_API.getCoordinate();
