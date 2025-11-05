@@ -1,5 +1,11 @@
-package com.msa.commerce.common.exception;
+package com.msa.commerce.monolith.product.domain.exception;
 
+import com.msa.commerce.common.exception.ErrorCode;
+import com.msa.commerce.common.exception.InternalException;
+
+/**
+ * Product 업데이트가 허용되지 않을 때 발생하는 예외
+ */
 public class ProductUpdateNotAllowedException extends InternalException {
 
     public ProductUpdateNotAllowedException(String message, String errorCode) {
@@ -15,5 +21,4 @@ public class ProductUpdateNotAllowedException extends InternalException {
             currentStatus);
         return new ProductUpdateNotAllowedException(message);
     }
-
 }

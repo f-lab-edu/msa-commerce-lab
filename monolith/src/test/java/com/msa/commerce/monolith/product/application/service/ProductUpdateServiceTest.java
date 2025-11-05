@@ -20,8 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.msa.commerce.common.exception.DuplicateResourceException;
-import com.msa.commerce.common.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.common.exception.ResourceNotFoundException;
+import com.msa.commerce.monolith.product.domain.exception.ProductUpdateNotAllowedException;
 import com.msa.commerce.monolith.product.application.port.in.ProductResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateCommand;
 import com.msa.commerce.monolith.product.application.port.out.ProductRepository;

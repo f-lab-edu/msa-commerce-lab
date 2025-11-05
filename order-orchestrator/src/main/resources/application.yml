@@ -34,3 +34,8 @@ spring:
 logging:
   level:
     com.msa.commerce: DEBUG
+
+external:
+  product-service:
+    url: ${PRODUCT_SERVICE_URL:http://product-service.default.svc.cluster.local:8080}
+    timeout: ${PRODUCT_SERVICE_TIMEOUT:10000}

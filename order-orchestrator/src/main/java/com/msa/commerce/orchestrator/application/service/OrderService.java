@@ -25,7 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderService implements CreateOrderUseCase {
 
     private final OrderRepository orderRepository;
+
     private final ProductPort productPort;
+
     private final OrderResponseMapper orderResponseMapper;
 
     @Override

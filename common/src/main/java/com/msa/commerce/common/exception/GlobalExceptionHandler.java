@@ -29,12 +29,7 @@ public class GlobalExceptionHandler {
     private String activeProfile;
 
     @ExceptionHandler(InternalException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessException(
-        InternalException ex, HttpServletRequest request) {
-
-        log.warn("Business exception occurred: {} - {}", ex.getClass().getSimpleName(), ex.getMessage());
-
-        // 예외 타입에 따른 HTTP 상태 결정
+    public ResponseEntity<ErrorResponse> handleBusinessException(InternalException ex, HttpServletRequest request) {
         HttpStatus status = determineHttpStatus(ex);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -50,11 +45,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-        MethodArgumentNotValidException ex, HttpServletRequest request) {
-
-        log.warn("Validation exception occurred: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
         List<ErrorResponse.ValidationError> validationErrors = ex.getBindingResult()
             .getFieldErrors()
             .stream()
@@ -76,11 +67,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
-        ConstraintViolationException ex, HttpServletRequest request) {
-
-        log.warn("Constraint violation exception: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex, HttpServletRequest request) {
         List<ErrorResponse.ValidationError> validationErrors = ex.getConstraintViolations()
             .stream()
             .map(this::createValidationError)
@@ -101,11 +88,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
-        IllegalArgumentException ex, HttpServletRequest request) {
-
-        log.warn("Illegal argument exception: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
             .message(ex.getMessage())
             .timestamp(LocalDateTime.now())
@@ -118,11 +101,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
-        HttpMessageNotReadableException ex, HttpServletRequest request) {
-
-        log.warn("HTTP message not readable: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
             .message("Invalid request body format")
             .timestamp(LocalDateTime.now())
@@ -135,11 +114,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(
-        MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-
-        log.warn("Method argument type mismatch: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
         String message = String.format("Invalid value for parameter '%s'. Expected %s but received '%s'",
             ex.getName(),
             ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown",
@@ -157,11 +132,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(
-        HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-
-        log.warn("HTTP method not supported: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
         String message = String.format("HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
             ex.getMethod(),
             String.join(", ", ex.getSupportedMethods() != null ? ex.getSupportedMethods() : new String[] {}));
@@ -178,11 +149,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoHandlerFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(
-        NoHandlerFoundException ex, HttpServletRequest request) {
-
-        log.warn("No handler found: {}", ex.getMessage());
-
+    public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
             .message("Requested resource not found")
             .timestamp(LocalDateTime.now())
@@ -195,11 +162,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-        Exception ex, HttpServletRequest request) {
-
-        log.error("Unexpected exception occurred", ex);
-
+    public ResponseEntity<ErrorResponse> handleGenericException(Exception ex, HttpServletRequest request) {
         String message = isDebugMode() ? ex.getMessage() : "An unexpected error occurred";
 
         ErrorResponse errorResponse = ErrorResponse.builder()
@@ -218,11 +181,7 @@ public class GlobalExceptionHandler {
             return HttpStatus.NOT_FOUND;
         } else if (ex instanceof DuplicateResourceException) {
             return HttpStatus.CONFLICT;
-        } else if (ex instanceof ProductUpdateNotAllowedException) {
-            return HttpStatus.FORBIDDEN;
         } else if (ex instanceof ValidationException) {
-            return HttpStatus.BAD_REQUEST;
-        } else if (ex instanceof NoChangesProvidedException) {
             return HttpStatus.BAD_REQUEST;
         }
         // 기본값

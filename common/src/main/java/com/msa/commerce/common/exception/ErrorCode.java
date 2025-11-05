@@ -27,7 +27,9 @@ public enum ErrorCode {
     ORDER_ALREADY_CANCELLED("O1002", "Order already cancelled"),
 
     INTERNAL_SERVER_ERROR("S1001", "Internal server error"),
-    EXTERNAL_SERVICE_ERROR("S1002", "External service error");
+    EXTERNAL_SERVICE_ERROR("S1002", "External service error"),
+    EXTERNAL_PRODUCT_SERVICE_ERROR("S1003", "Product service error"),
+    EXTERNAL_PAYMENT_SERVICE_ERROR("S1004", "Payment service error");
 
     private final String code;
 
