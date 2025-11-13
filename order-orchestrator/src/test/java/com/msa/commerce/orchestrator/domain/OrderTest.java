@@ -476,6 +476,261 @@ class OrderTest {
             .contains("currency=KRW");
     }
 
+    @Test
+    @DisplayName("상태 변경: PENDING -> CONFIRMED")
+    void changeStatus_PendingToConfirmed_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when
+        order.changeStatus(OrderStatus.CONFIRMED, "Customer confirmed order");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+        assertThat(order.getConfirmedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PENDING -> CANCELLED")
+    void changeStatus_PendingToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when
+        order.changeStatus(OrderStatus.CANCELLED, "Customer cancelled order");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: CONFIRMED -> PAYMENT_PENDING")
+    void changeStatus_ConfirmedToPaymentPending_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+
+        // when
+        order.changeStatus(OrderStatus.PAYMENT_PENDING, "Payment requested");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAYMENT_PENDING);
+    }
+
+    @Test
+    @DisplayName("상태 변경: CONFIRMED -> CANCELLED")
+    void changeStatus_ConfirmedToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+
+        // when
+        order.changeStatus(OrderStatus.CANCELLED, "Order cancelled after confirmation");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAYMENT_PENDING -> PAID")
+    void changeStatus_PaymentPendingToPaid_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+
+        // when
+        order.changeStatus(OrderStatus.PAID, "Payment completed");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.getPaymentCompletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAYMENT_PENDING -> CANCELLED")
+    void changeStatus_PaymentPendingToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+
+        // when
+        order.changeStatus(OrderStatus.CANCELLED, "Payment failed");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAID -> PROCESSING")
+    void changeStatus_PaidToProcessing_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+
+        // when
+        order.changeStatus(OrderStatus.PROCESSING, "Order processing started");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PROCESSING);
+    }
+
+    @Test
+    @DisplayName("상태 변경: PROCESSING -> SHIPPED")
+    void changeStatus_ProcessingToShipped_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+
+        // when
+        order.changeStatus(OrderStatus.SHIPPED, "Order shipped");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+        assertThat(order.getShippedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PROCESSING -> CANCELLED")
+    void changeStatus_ProcessingToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+
+        // when
+        order.changeStatus(OrderStatus.CANCELLED, "Processing cancelled");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: SHIPPED -> DELIVERED")
+    void changeStatus_ShippedToDelivered_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+        order.markShipped();
+
+        // when
+        order.changeStatus(OrderStatus.DELIVERED, "Order delivered");
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+        assertThat(order.getDeliveredAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: PENDING -> PROCESSING (잘못된 전이)")
+    void changeStatus_PendingToProcessing_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(OrderStatus.PROCESSING, "Invalid transition"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Cannot change order status from PENDING to PROCESSING");
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: DELIVERED 상태에서 변경 시도")
+    void changeStatus_FromDelivered_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+        order.markShipped();
+        order.markDelivered();
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(OrderStatus.CANCELLED, "Cannot change"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Cannot change order status from DELIVERED to CANCELLED");
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: CANCELLED 상태에서 변경 시도")
+    void changeStatus_FromCancelled_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.cancel();
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(OrderStatus.CONFIRMED, "Cannot change"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("Cannot change order status from CANCELLED to CONFIRMED");
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: null 상태")
+    void changeStatus_WithNullStatus_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(null, "Reason"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("New status cannot be null");
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: 빈 이유")
+    void changeStatus_WithEmptyReason_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(OrderStatus.CONFIRMED, ""))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Reason cannot be null or empty");
+    }
+
+    @Test
+    @DisplayName("상태 변경 실패: null 이유")
+    void changeStatus_WithNullReason_ThrowsException() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when & then
+        assertThatThrownBy(() -> order.changeStatus(OrderStatus.CONFIRMED, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Reason cannot be null or empty");
+    }
+
     // Helper methods
     private Order createValidOrder() {
         return Order.create(

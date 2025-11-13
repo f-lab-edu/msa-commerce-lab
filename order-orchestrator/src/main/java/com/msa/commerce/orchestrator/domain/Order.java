@@ -230,6 +230,53 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void changeStatus(OrderStatus newStatus, String reason) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("New status cannot be null");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new IllegalArgumentException("Reason cannot be null or empty");
+        }
+
+        if (!isValidTransition(status, newStatus)) {
+            throw new IllegalStateException(
+                String.format("Cannot change order status from %s to %s", status, newStatus)
+            );
+        }
+
+        OrderStatus previousStatus = this.status;
+        this.status = newStatus;
+        updateTimestampsForStatus(newStatus);
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    private boolean isValidTransition(OrderStatus from, OrderStatus to) {
+        if (from == to) {
+            return false;
+        }
+
+        return switch (from) {
+            case PENDING -> to == OrderStatus.CONFIRMED || to == OrderStatus.CANCELLED;
+            case CONFIRMED -> to == OrderStatus.PAYMENT_PENDING || to == OrderStatus.CANCELLED;
+            case PAYMENT_PENDING -> to == OrderStatus.PAID || to == OrderStatus.CANCELLED;
+            case PAID -> to == OrderStatus.PROCESSING || to == OrderStatus.CANCELLED;
+            case PROCESSING -> to == OrderStatus.SHIPPED || to == OrderStatus.CANCELLED;
+            case SHIPPED -> to == OrderStatus.DELIVERED;
+            case DELIVERED, CANCELLED, REFUNDED, FAILED -> false;
+        };
+    }
+
+    private void updateTimestampsForStatus(OrderStatus newStatus) {
+        LocalDateTime now = LocalDateTime.now();
+        switch (newStatus) {
+            case CONFIRMED -> this.confirmedAt = now;
+            case PAID -> this.paymentCompletedAt = now;
+            case SHIPPED -> this.shippedAt = now;
+            case DELIVERED -> this.deliveredAt = now;
+            case CANCELLED -> this.cancelledAt = now;
+        }
+    }
+
     public void updateShippingAmount(BigDecimal shippingAmount) {
         if (shippingAmount == null || shippingAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Shipping amount cannot be null or negative");
