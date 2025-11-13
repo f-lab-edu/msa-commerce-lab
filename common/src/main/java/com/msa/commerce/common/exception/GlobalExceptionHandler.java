@@ -117,6 +117,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errorResponse);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(
+        IllegalStateException ex, HttpServletRequest request) {
+
+        log.warn("Illegal state exception: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+            .message(ex.getMessage())
+            .timestamp(LocalDateTime.now())
+            .path(request.getRequestURI())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .debugInfo(isDebugMode() ? ex.getClass().getSimpleName() : null)
+            .build();
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadableException(
         HttpMessageNotReadableException ex, HttpServletRequest request) {
