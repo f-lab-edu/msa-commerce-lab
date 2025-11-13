@@ -3,6 +3,7 @@ dependencies {
 
     // Service-specific dependencies
     implementation(BuildDependencies.getSpringKafka())
+    implementation(BuildDependencies.getSpringRetry())
 
     // Validation
     implementation(BuildDependencies.getSpringBootStarterValidation())

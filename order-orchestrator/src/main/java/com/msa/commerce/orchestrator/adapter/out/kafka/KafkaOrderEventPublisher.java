@@ -1,6 +1,8 @@
 package com.msa.commerce.orchestrator.adapter.out.kafka;
 
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderEvent;
@@ -19,9 +21,15 @@ public class KafkaOrderEventPublisher implements PublishOrderEventPort {
     private static final String TOPIC_NAME = "order-events";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+
     private final OrderEventMapper orderEventMapper;
 
     @Override
+    @Retryable(
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 1000),
+        retryFor = {RuntimeException.class}
+    )
     public void publishOrderCreatedEvent(Order order) {
         OrderEvent event = orderEventMapper.toOrderCreatedEvent(order);
         String key = order.getOrderId().toString();
@@ -41,6 +49,11 @@ public class KafkaOrderEventPublisher implements PublishOrderEventPort {
     }
 
     @Override
+    @Retryable(
+        maxAttempts = 3,
+        backoff = @Backoff(delay = 1000),
+        retryFor = {RuntimeException.class}
+    )
     public void publishOrderStatusChangedEvent(Order order) {
         OrderEvent event = orderEventMapper.toOrderStatusChangedEvent(order);
         String key = order.getOrderId().toString();
@@ -59,4 +72,5 @@ public class KafkaOrderEventPublisher implements PublishOrderEventPort {
                 }
             });
     }
+
 }

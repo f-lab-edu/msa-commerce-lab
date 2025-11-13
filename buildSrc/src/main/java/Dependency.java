@@ -32,6 +32,9 @@ public enum Dependency {
     SPRING_KAFKA("org.springframework.kafka", "spring-kafka"),  // Version managed by Spring Boot
     SPRING_KAFKA_TEST("org.springframework.kafka", "spring-kafka-test"),  // Version managed by Spring Boot
 
+    // Retry
+    SPRING_RETRY("org.springframework.retry", "spring-retry"),  // Version managed by Spring Boot
+
     // Documentation
     SPRINGDOC_OPENAPI("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.8.9"),
 

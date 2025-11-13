@@ -18,6 +18,10 @@ public final class BuildDependencies {
         return Dependency.SPRING_KAFKA.getCoordinate();
     }
 
+    public static String getSpringRetry() {
+        return Dependency.SPRING_RETRY.getCoordinate();
+    }
+
     public static String getMysqlConnectorRuntime() {
         return Dependency.MYSQL_CONNECTOR.getCoordinate();
     }
