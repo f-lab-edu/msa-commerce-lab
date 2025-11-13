@@ -35,7 +35,16 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: order-orchestrator-group
+    producer:
+      compression-type: snappy
+      batch-size: 16384
+      linger-ms: 10
+      buffer-memory: 33554432
 
 logging:
   level:
     com.msa.commerce: DEBUG
+    com.msa.commerce.orchestrator.adapter.out.kafka: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
