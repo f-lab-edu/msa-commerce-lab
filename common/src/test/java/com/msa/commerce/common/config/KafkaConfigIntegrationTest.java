@@ -145,4 +145,16 @@ class KafkaConfigIntegrationTest {
         assertThat(producerFactory).isNotNull();
     }
 
+    @Test
+    void shouldVerifyProducerReliabilitySettings() {
+        var producerFactory = kafkaTemplate.getProducerFactory();
+        var configProps = producerFactory.getConfigurationProperties();
+
+        assertThat(configProps)
+            .containsEntry(org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, "all")
+            .containsEntry(org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG, 3)
+            .containsEntry(org.apache.kafka.clients.producer.ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true)
+            .containsEntry(org.apache.kafka.clients.producer.ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+    }
+
 }

@@ -31,6 +31,11 @@ spring:
       time-to-live: 3600000
       cache-null-values: false
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: order-orchestrator-group
+
 logging:
   level:
     com.msa.commerce: DEBUG
