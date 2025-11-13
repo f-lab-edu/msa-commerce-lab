@@ -230,6 +230,23 @@ public class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public void updateStatus(OrderStatus newStatus) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException("New status cannot be null");
+        }
+
+        switch (newStatus) {
+            case CONFIRMED -> confirm();
+            case PAYMENT_PENDING -> markPaymentPending();
+            case PAID -> markPaymentCompleted();
+            case PROCESSING -> startProcessing();
+            case SHIPPED -> markShipped();
+            case DELIVERED -> markDelivered();
+            case CANCELLED -> cancel();
+            default -> throw new IllegalStateException("Cannot update to status: " + newStatus);
+        }
+    }
+
     public void updateShippingAmount(BigDecimal shippingAmount) {
         if (shippingAmount == null || shippingAmount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Shipping amount cannot be null or negative");
