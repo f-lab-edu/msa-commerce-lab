@@ -167,9 +167,7 @@ public class Order {
             throw new IllegalStateException("Cannot confirm order with no items");
         }
 
-        this.status = OrderStatus.CONFIRMED;
-        this.confirmedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.CONFIRMED);
     }
 
     public void markPaymentPending() {
@@ -177,8 +175,7 @@ public class Order {
             throw new IllegalStateException("Order must be confirmed before payment can be pending");
         }
 
-        this.status = OrderStatus.PAYMENT_PENDING;
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.PAYMENT_PENDING);
     }
 
     public void markPaymentCompleted() {
@@ -186,9 +183,7 @@ public class Order {
             throw new IllegalStateException("Payment must be pending before it can be completed");
         }
 
-        this.status = OrderStatus.PAID;
-        this.paymentCompletedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.PAID);
     }
 
     public void startProcessing() {
@@ -196,8 +191,7 @@ public class Order {
             throw new IllegalStateException("Order must be paid before processing can start");
         }
 
-        this.status = OrderStatus.PROCESSING;
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.PROCESSING);
     }
 
     public void markShipped() {
@@ -205,9 +199,7 @@ public class Order {
             throw new IllegalStateException("Order must be processing before it can be shipped");
         }
 
-        this.status = OrderStatus.SHIPPED;
-        this.shippedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.SHIPPED);
     }
 
     public void markDelivered() {
@@ -215,9 +207,7 @@ public class Order {
             throw new IllegalStateException("Order must be shipped before it can be delivered");
         }
 
-        this.status = OrderStatus.DELIVERED;
-        this.deliveredAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.DELIVERED);
     }
 
     public void cancel() {
@@ -225,45 +215,13 @@ public class Order {
             throw new IllegalStateException("Order cannot be cancelled in status: " + status);
         }
 
-        this.status = OrderStatus.CANCELLED;
-        this.cancelledAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        transitionTo(OrderStatus.CANCELLED);
     }
 
-    public void changeStatus(OrderStatus newStatus, String reason) {
-        if (newStatus == null) {
-            throw new IllegalArgumentException("New status cannot be null");
-        }
-        if (reason == null || reason.trim().isEmpty()) {
-            throw new IllegalArgumentException("Reason cannot be null or empty");
-        }
-
-        if (!isValidTransition(status, newStatus)) {
-            throw new IllegalStateException(
-                String.format("Cannot change order status from %s to %s", status, newStatus)
-            );
-        }
-
-        OrderStatus previousStatus = this.status;
+    private void transitionTo(OrderStatus newStatus) {
         this.status = newStatus;
         updateTimestampsForStatus(newStatus);
         this.updatedAt = LocalDateTime.now();
-    }
-
-    private boolean isValidTransition(OrderStatus from, OrderStatus to) {
-        if (from == to) {
-            return false;
-        }
-
-        return switch (from) {
-            case PENDING -> to == OrderStatus.CONFIRMED || to == OrderStatus.CANCELLED;
-            case CONFIRMED -> to == OrderStatus.PAYMENT_PENDING || to == OrderStatus.CANCELLED;
-            case PAYMENT_PENDING -> to == OrderStatus.PAID || to == OrderStatus.CANCELLED;
-            case PAID -> to == OrderStatus.PROCESSING || to == OrderStatus.CANCELLED;
-            case PROCESSING -> to == OrderStatus.SHIPPED || to == OrderStatus.CANCELLED;
-            case SHIPPED -> to == OrderStatus.DELIVERED;
-            case DELIVERED, CANCELLED, REFUNDED, FAILED -> false;
-        };
     }
 
     private void updateTimestampsForStatus(OrderStatus newStatus) {
