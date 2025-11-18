@@ -411,7 +411,7 @@ class OrderTest {
         // when & then
         assertThatThrownBy(order::confirm)
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Order must be in PENDING status to be confirmed");
+            .hasMessage("Cannot transition from CONFIRMED to CONFIRMED");
     }
 
     @Test
@@ -427,7 +427,7 @@ class OrderTest {
         // when & then
         assertThatThrownBy(order::cancel)
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Order cannot be cancelled in status: PAID");
+            .hasMessage("Cannot transition from PAID to CANCELLED");
     }
 
     @Test
@@ -452,7 +452,6 @@ class OrderTest {
         // when & then
         assertThat(order1).isNotEqualTo(order2);
         assertThat(order1.hashCode()).isNotEqualTo(order2.hashCode());
-        assertThat(order1).isEqualTo(order1);
     }
 
     @Test

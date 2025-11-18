@@ -15,9 +15,6 @@ import com.msa.commerce.orchestrator.adapter.in.web.mapper.OrderCommandMapper;
 import com.msa.commerce.orchestrator.application.port.in.CancelOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.ConfirmOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.PayOrderUseCase;
-import com.msa.commerce.orchestrator.application.port.in.command.CancelOrderCommand;
-import com.msa.commerce.orchestrator.application.port.in.command.ConfirmOrderCommand;
-import com.msa.commerce.orchestrator.application.port.in.command.PayOrderCommand;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 
 import jakarta.validation.Valid;
@@ -39,26 +36,17 @@ public class OrderCommandController {
 
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<OrderResponse> confirmOrder(@PathVariable UUID orderId) {
-        ConfirmOrderCommand command = orderCommandMapper.toConfirmCommand(orderId);
-        OrderResponse response = confirmOrderUseCase.confirm(command);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(confirmOrderUseCase.confirm(orderCommandMapper.toConfirmCommand(orderId)));
     }
 
     @PostMapping("/{orderId}/paid")
     public ResponseEntity<OrderResponse> markOrderPaid(@PathVariable UUID orderId) {
-        PayOrderCommand command = orderCommandMapper.toPayCommand(orderId);
-        OrderResponse response = payOrderUseCase.pay(command);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(payOrderUseCase.paid(orderCommandMapper.toPayCommand(orderId)));
     }
 
     @PostMapping("/{orderId}/cancel")
     public ResponseEntity<OrderResponse> cancelOrder(@PathVariable UUID orderId, @Valid @RequestBody CancelOrderRequest request) {
-        CancelOrderCommand command = orderCommandMapper.toCancelCommand(orderId, request);
-        OrderResponse response = cancelOrderUseCase.cancel(command);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(cancelOrderUseCase.cancel(orderCommandMapper.toCancelCommand(orderId, request)));
     }
 
 }

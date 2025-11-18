@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import com.msa.commerce.common.util.UuidGenerator;
+import com.msa.commerce.orchestrator.domain.state.OrderState;
+import com.msa.commerce.orchestrator.domain.state.OrderStateFactory;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -135,9 +137,8 @@ public class Order {
             throw new IllegalArgumentException("Order item cannot be null");
         }
 
-        if (!status.canBeCancelled()) {
-            throw new IllegalStateException("Cannot add items to order in status: " + status);
-        }
+        OrderState currentState = OrderStateFactory.getState(status);
+        currentState.validateAddItem(this);
 
         this.orderItems.add(orderItem);
         recalculateAmounts();
@@ -148,9 +149,8 @@ public class Order {
             throw new IllegalArgumentException("Order item ID cannot be null");
         }
 
-        if (!status.canBeCancelled()) {
-            throw new IllegalStateException("Cannot remove items from order in status: " + status);
-        }
+        OrderState currentState = OrderStateFactory.getState(status);
+        currentState.validateRemoveItem(this);
 
         boolean removed = orderItems.removeIf(item -> item.getOrderItemId().equals(orderItemId));
         if (removed) {
@@ -159,80 +159,43 @@ public class Order {
     }
 
     public void confirm() {
-        if (status != OrderStatus.PENDING) {
-            throw new IllegalStateException("Order must be in PENDING status to be confirmed");
-        }
-
-        if (orderItems.isEmpty()) {
-            throw new IllegalStateException("Cannot confirm order with no items");
-        }
-
         transitionTo(OrderStatus.CONFIRMED);
     }
 
     public void markPaymentPending() {
-        if (status != OrderStatus.CONFIRMED) {
-            throw new IllegalStateException("Order must be confirmed before payment can be pending");
-        }
-
         transitionTo(OrderStatus.PAYMENT_PENDING);
     }
 
     public void markPaymentCompleted() {
-        if (status != OrderStatus.PAYMENT_PENDING) {
-            throw new IllegalStateException("Payment must be pending before it can be completed");
-        }
-
         transitionTo(OrderStatus.PAID);
     }
 
     public void startProcessing() {
-        if (status != OrderStatus.PAID) {
-            throw new IllegalStateException("Order must be paid before processing can start");
-        }
-
         transitionTo(OrderStatus.PROCESSING);
     }
 
     public void markShipped() {
-        if (status != OrderStatus.PROCESSING) {
-            throw new IllegalStateException("Order must be processing before it can be shipped");
-        }
-
         transitionTo(OrderStatus.SHIPPED);
     }
 
     public void markDelivered() {
-        if (status != OrderStatus.SHIPPED) {
-            throw new IllegalStateException("Order must be shipped before it can be delivered");
-        }
-
         transitionTo(OrderStatus.DELIVERED);
     }
 
     public void cancel() {
-        if (!status.canBeCancelled()) {
-            throw new IllegalStateException("Order cannot be cancelled in status: " + status);
-        }
-
         transitionTo(OrderStatus.CANCELLED);
     }
 
     private void transitionTo(OrderStatus newStatus) {
-        this.status = newStatus;
-        updateTimestampsForStatus(newStatus);
-        this.updatedAt = LocalDateTime.now();
-    }
+        OrderState currentState = OrderStateFactory.getState(status);
+        currentState.validateTransition(this, newStatus);
 
-    private void updateTimestampsForStatus(OrderStatus newStatus) {
-        LocalDateTime now = LocalDateTime.now();
-        switch (newStatus) {
-            case CONFIRMED -> this.confirmedAt = now;
-            case PAID -> this.paymentCompletedAt = now;
-            case SHIPPED -> this.shippedAt = now;
-            case DELIVERED -> this.deliveredAt = now;
-            case CANCELLED -> this.cancelledAt = now;
-        }
+        this.status = newStatus;
+
+        OrderState newState = OrderStateFactory.getState(newStatus);
+        newState.updateTimestamp(this);
+
+        this.updatedAt = LocalDateTime.now();
     }
 
     public void updateShippingAmount(BigDecimal shippingAmount) {
@@ -300,6 +263,26 @@ public class Order {
 
     public List<OrderItem> getOrderItems() {
         return Collections.unmodifiableList(orderItems);
+    }
+
+    public void recordConfirmationTimestamp(LocalDateTime timestamp) {
+        this.confirmedAt = timestamp;
+    }
+
+    public void recordPaymentCompletionTimestamp(LocalDateTime timestamp) {
+        this.paymentCompletedAt = timestamp;
+    }
+
+    public void recordShipmentTimestamp(LocalDateTime timestamp) {
+        this.shippedAt = timestamp;
+    }
+
+    public void recordDeliveryTimestamp(LocalDateTime timestamp) {
+        this.deliveredAt = timestamp;
+    }
+
+    public void recordCancellationTimestamp(LocalDateTime timestamp) {
+        this.cancelledAt = timestamp;
     }
 
 }

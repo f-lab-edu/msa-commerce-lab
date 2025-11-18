@@ -22,7 +22,7 @@ public class PayOrderService implements PayOrderUseCase {
     private final OrderResponseMapper orderResponseMapper;
 
     @Override
-    public OrderResponse pay(PayOrderCommand command) {
+    public OrderResponse paid(PayOrderCommand command) {
         Order order = orderRepository.findByOrderId(command.orderId())
             .orElseThrow(() -> new OrderNotFoundException(String.format("Order not found with ID: %s", command.orderId())));
 

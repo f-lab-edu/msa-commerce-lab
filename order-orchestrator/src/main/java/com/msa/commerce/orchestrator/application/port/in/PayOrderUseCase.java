@@ -5,6 +5,6 @@ import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 
 public interface PayOrderUseCase {
 
-    OrderResponse pay(PayOrderCommand command);
+    OrderResponse paid(PayOrderCommand command);
 
 }
