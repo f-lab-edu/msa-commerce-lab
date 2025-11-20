@@ -1,12 +1,8 @@
 package com.msa.commerce.orchestrator.adapter.out.kafka;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,7 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderEvent;
 import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderEventType;
@@ -165,4 +160,5 @@ class KafkaOrderEventPublisherTest {
 
         assertThat(keyCaptor.getValue()).isEqualTo(testOrder.getOrderId().toString());
     }
+
 }

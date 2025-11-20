@@ -7,4 +7,5 @@ public interface PublishOrderEventPort {
     void publishOrderCreatedEvent(Order order);
 
     void publishOrderStatusChangedEvent(Order order);
+
 }

@@ -1,6 +1,6 @@
 package com.msa.commerce.orchestrator.adapter.out.kafka.mapper;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -59,7 +59,7 @@ class OrderEventMapperTest {
         assertThat(event.timestamp()).isNotNull();
         assertThat(event.orderItems()).hasSize(1);
 
-        OrderItemEvent itemEvent = event.orderItems().get(0);
+        OrderItemEvent itemEvent = event.orderItems().getFirst();
         assertThat(itemEvent.productId()).isEqualTo(1001L);
         assertThat(itemEvent.productName()).isEqualTo("테스트 상품");
         assertThat(itemEvent.quantity()).isEqualTo(2);
@@ -135,4 +135,5 @@ class OrderEventMapperTest {
 
         assertThat(event.orderItems()).isEmpty();
     }
+
 }

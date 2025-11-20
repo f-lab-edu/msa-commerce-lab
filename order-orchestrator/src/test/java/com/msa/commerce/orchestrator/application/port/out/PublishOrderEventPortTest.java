@@ -1,11 +1,8 @@
 package com.msa.commerce.orchestrator.application.port.out;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -77,4 +74,5 @@ class PublishOrderEventPortTest {
     void shouldHaveTwoMethods() {
         assertThat(PublishOrderEventPort.class.getDeclaredMethods()).hasSize(2);
     }
+
 }
