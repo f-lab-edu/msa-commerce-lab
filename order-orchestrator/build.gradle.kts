@@ -21,4 +21,5 @@ dependencies {
     testImplementation(BuildDependencies.getTestcontainersJunit())
     testImplementation(BuildDependencies.getTestcontainersMysql())
     testImplementation(BuildDependencies.getTestcontainersKafka())
+    testImplementation(BuildDependencies.getSpringKafkaTest())
 }

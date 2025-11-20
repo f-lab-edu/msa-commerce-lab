@@ -65,6 +65,10 @@ public final class BuildDependencies {
         return Dependency.TESTCONTAINERS_KAFKA.getCoordinate();
     }
 
+    public static String getSpringKafkaTest() {
+        return Dependency.SPRING_KAFKA_TEST.getCoordinate();
+    }
+
     // MapStruct dependencies
     public static String getMapstruct() {
         return Dependency.MAPSTRUCT.getCoordinate();
