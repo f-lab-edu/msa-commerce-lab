@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.msa.commerce.common.dto.response.PageResponse;
 import com.msa.commerce.orchestrator.adapter.in.web.dto.request.OrderSearchParams;
-import com.msa.commerce.orchestrator.adapter.in.web.dto.response.PageResponse;
 import com.msa.commerce.orchestrator.adapter.in.web.mapper.OrderSearchParamsMapper;
 import com.msa.commerce.orchestrator.application.port.in.GetOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.OrderSearchCriteria;

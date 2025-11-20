@@ -1,4 +1,4 @@
-package com.msa.commerce.orchestrator.adapter.in.web.dto.response;
+package com.msa.commerce.common.dto.response;
 
 import java.util.List;
 

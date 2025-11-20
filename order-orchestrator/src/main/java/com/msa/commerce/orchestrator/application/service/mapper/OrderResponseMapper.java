@@ -6,7 +6,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 
-import com.msa.commerce.orchestrator.adapter.in.web.dto.response.PageResponse;
+import com.msa.commerce.common.dto.response.PageResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderItemResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderSummaryResponse;
