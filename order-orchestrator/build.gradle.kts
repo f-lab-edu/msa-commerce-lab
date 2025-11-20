@@ -20,4 +20,5 @@ dependencies {
     // Test
     testImplementation(BuildDependencies.getTestcontainersJunit())
     testImplementation(BuildDependencies.getTestcontainersMysql())
+    testImplementation(BuildDependencies.getTestcontainersKafka())
 }

@@ -49,6 +49,7 @@ public enum Dependency {
     SPRING_SECURITY_TEST("org.springframework.security", "spring-security-test"),
     TESTCONTAINERS_JUNIT("org.testcontainers", "junit-jupiter"),  // Version managed by Spring Boot
     TESTCONTAINERS_MYSQL("org.testcontainers", "mysql"),  // Version managed by Spring Boot
+    TESTCONTAINERS_KAFKA("org.testcontainers", "kafka"),  // Version managed by Spring Boot
     AWAITILITY("org.awaitility", "awaitility", "4.2.0");
 
     private final String group;

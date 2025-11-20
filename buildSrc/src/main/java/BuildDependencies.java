@@ -61,6 +61,10 @@ public final class BuildDependencies {
         return Dependency.TESTCONTAINERS_MYSQL.getCoordinate();
     }
 
+    public static String getTestcontainersKafka() {
+        return Dependency.TESTCONTAINERS_KAFKA.getCoordinate();
+    }
+
     // MapStruct dependencies
     public static String getMapstruct() {
         return Dependency.MAPSTRUCT.getCoordinate();

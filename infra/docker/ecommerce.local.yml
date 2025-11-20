@@ -92,6 +92,88 @@ services:
     volumes:
       - kafka-data:/tmp/kraft-combined-logs
 
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.4.10
+    hostname: schema-registry
+    container_name: msa-ecommerce-schema-registry
+    restart: no
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:29092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
+      SCHEMA_REGISTRY_AVRO_COMPATIBILITY_LEVEL: backward
+      SCHEMA_REGISTRY_HEAP_OPTS: "-Xmx512M -Xms512M"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8081/subjects" ]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+      start_period: 20s
+
+  kafka-init:
+    image: confluentinc/cp-kafka:7.4.10
+    container_name: msa-ecommerce-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ '/bin/bash', '-c' ]
+    command: |
+      "
+      echo 'Waiting for Kafka to be ready...'
+      sleep 10
+
+      echo 'Creating topics...'
+
+      # Order Topics
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic order.created \
+        --partitions 3 \
+        --replication-factor 1 \
+        --config retention.ms=604800000 \
+        --config min.insync.replicas=1
+
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic order.updated \
+        --partitions 3 \
+        --replication-factor 1 \
+        --config retention.ms=604800000 \
+        --config min.insync.replicas=1
+
+      # Payment Topics
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic payment.result \
+        --partitions 3 \
+        --replication-factor 1 \
+        --config retention.ms=604800000 \
+        --config min.insync.replicas=1
+
+      # Retry Topic
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic retry.events \
+        --partitions 3 \
+        --replication-factor 1 \
+        --config retention.ms=86400000 \
+        --config min.insync.replicas=1
+
+      # Dead Letter Queue
+      kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists \
+        --topic dead.letter.queue \
+        --partitions 1 \
+        --replication-factor 1 \
+        --config retention.ms=2592000000 \
+        --config min.insync.replicas=1
+
+      echo 'Topics created successfully!'
+      kafka-topics --bootstrap-server kafka:29092 --list
+      "
+    restart: "no"
+
 volumes:
   kafka-data:
     driver: local
