@@ -14,4 +14,5 @@ public record OrderItemEvent(
     BigDecimal unitPrice,
     BigDecimal totalPrice
 ) {
+
 }

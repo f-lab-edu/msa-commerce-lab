@@ -1,6 +1,5 @@
 package com.msa.commerce.orchestrator.adapter.out.kafka.mapper;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -8,7 +7,6 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderEvent;
-import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderEventType;
 import com.msa.commerce.orchestrator.adapter.out.kafka.event.OrderItemEvent;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
@@ -35,4 +33,5 @@ public interface OrderEventMapper {
     default String generateEventId() {
         return UUID.randomUUID().toString();
     }
+
 }

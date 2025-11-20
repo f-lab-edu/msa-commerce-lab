@@ -21,4 +21,5 @@ public record OrderEvent(
     LocalDateTime timestamp,
     List<OrderItemEvent> orderItems
 ) {
+
 }
