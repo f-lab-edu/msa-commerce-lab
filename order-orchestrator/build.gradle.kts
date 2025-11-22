@@ -10,6 +10,10 @@ dependencies {
     // Cache
     implementation(BuildDependencies.getSpringBootStarterDataRedis())
 
+    // Monitoring
+    implementation(BuildDependencies.getSpringBootStarterActuator())
+    implementation(BuildDependencies.getMicrometerPrometheus())
+
     // MapStruct
     implementation(BuildDependencies.getMapstruct())
     annotationProcessor(BuildDependencies.getMapstructProcessor())

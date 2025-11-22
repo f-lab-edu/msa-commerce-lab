@@ -15,6 +15,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
+import com.msa.commerce.common.kafka.KafkaLoggingInterceptor;
 import com.msa.commerce.orchestrator.domain.event.PaymentResultEvent;
 import com.msa.commerce.orchestrator.domain.event.RetryableEvent;
 
@@ -55,6 +56,10 @@ public class KafkaConsumerConfig {
         configProps.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 1024);
         configProps.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 500);
 
+        // Interceptor for logging
+        configProps.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+            KafkaLoggingInterceptor.class.getName());
+
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -83,6 +88,10 @@ public class KafkaConsumerConfig {
         configProps.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+        // Interceptor for logging
+        configProps.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+            KafkaLoggingInterceptor.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }

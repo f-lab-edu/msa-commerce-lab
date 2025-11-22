@@ -35,6 +35,14 @@ public final class BuildDependencies {
         return Dependency.SPRING_BOOT_STARTER_VALIDATION.getCoordinateWithSpringBootVersion();
     }
 
+    public static String getSpringBootStarterActuator() {
+        return Dependency.SPRING_BOOT_STARTER_ACTUATOR.getCoordinateWithSpringBootVersion();
+    }
+
+    public static String getMicrometerPrometheus() {
+        return Dependency.MICROMETER_PROMETHEUS.getCoordinate();
+    }
+
     // JWT dependencies
     public static String getJjwtApi() {
         return Dependency.JJWT_API.getCoordinate();

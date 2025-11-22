@@ -8,6 +8,7 @@ public enum Dependency {
     SPRING_BOOT_STARTER_SECURITY("org.springframework.boot", "spring-boot-starter-security", Version.SPRING_BOOT),
     SPRING_BOOT_STARTER_VALIDATION("org.springframework.boot", "spring-boot-starter-validation", Version.SPRING_BOOT),
     SPRING_BOOT_STARTER_TEST("org.springframework.boot", "spring-boot-starter-test", Version.SPRING_BOOT),
+    SPRING_BOOT_STARTER_ACTUATOR("org.springframework.boot", "spring-boot-starter-actuator", Version.SPRING_BOOT),
 
     // Database
     MYSQL_CONNECTOR("mysql", "mysql-connector-java", "8.0.33"),
@@ -34,6 +35,9 @@ public enum Dependency {
 
     // Documentation
     SPRINGDOC_OPENAPI("org.springdoc", "springdoc-openapi-starter-webmvc-ui", "2.8.9"),
+
+    // Monitoring
+    MICROMETER_PROMETHEUS("io.micrometer", "micrometer-registry-prometheus"),  // Version managed by Spring Boot
 
     // Lombok
     LOMBOK("org.projectlombok", "lombok"),  // Version managed by Spring Boot
