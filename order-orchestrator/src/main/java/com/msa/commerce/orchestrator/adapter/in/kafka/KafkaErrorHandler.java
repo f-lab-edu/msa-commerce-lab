@@ -1,8 +1,6 @@
 package com.msa.commerce.orchestrator.adapter.in.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.listener.KafkaListenerErrorHandler;
 import org.springframework.kafka.listener.ListenerExecutionFailedException;
 import org.springframework.messaging.Message;
@@ -12,12 +10,12 @@ import com.msa.commerce.orchestrator.adapter.out.kafka.RetryEventPublisher;
 import com.msa.commerce.orchestrator.domain.event.DomainEvent;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component("kafkaErrorHandler")
 @RequiredArgsConstructor
 public class KafkaErrorHandler implements KafkaListenerErrorHandler {
-
-    private static final Logger log = LoggerFactory.getLogger(KafkaErrorHandler.class);
 
     private final RetryEventPublisher retryEventPublisher;
 
