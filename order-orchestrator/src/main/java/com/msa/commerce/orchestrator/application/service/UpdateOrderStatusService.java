@@ -48,16 +48,7 @@ public class UpdateOrderStatusService implements UpdateOrderStatusUseCase {
         log.info("Order status updated successfully: orderId={}, previousStatus={}, currentStatus={}",
             updatedOrder.getOrderId(), previousStatus, updatedOrder.getStatus());
 
-        try {
-            orderEventPublisher.publishOrderUpdated(updatedOrder, previousStatus, reason);
-            log.info("OrderUpdatedEvent published successfully for orderId: {}", updatedOrder.getOrderId());
-        } catch (Exception e) {
-            log.error("Failed to publish OrderUpdatedEvent for orderId: {}, error: {}",
-                updatedOrder.getOrderId(), e.getMessage(), e);
-            throw new OrderEventPublishFailedException(
-                "Failed to publish order updated event for orderId: " + updatedOrder.getOrderId(), e
-            );
-        }
+        orderEventPublisher.publishOrderUpdated(updatedOrder, previousStatus, reason);
     }
 
     private void updateOrderStatusByType(Order order, OrderStatus newStatus) {

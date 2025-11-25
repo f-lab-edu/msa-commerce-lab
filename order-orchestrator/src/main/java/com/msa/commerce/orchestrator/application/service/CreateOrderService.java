@@ -49,15 +49,7 @@ public class CreateOrderService implements CreateOrderUseCase {
 
         Order savedOrder = orderRepository.save(order);
 
-        try {
-            orderEventPublisher.publishOrderCreated(savedOrder);
-
-            log.info("OrderCreatedEvent published successfully for orderId: {}", savedOrder.getOrderId());
-        } catch (Exception e) {
-            log.error("Failed to publish OrderCreatedEvent for orderId: {}, error: {}", savedOrder.getOrderId(), e.getMessage(), e);
-
-            throw new OrderEventPublishFailedException("Failed to publish order created event for orderId: " + savedOrder.getOrderId(), e);
-        }
+        orderEventPublisher.publishOrderCreated(savedOrder);
 
         return savedOrder.getOrderId();
     }

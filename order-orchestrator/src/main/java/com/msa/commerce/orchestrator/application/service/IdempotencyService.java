@@ -13,13 +13,13 @@ public class IdempotencyService {
 
     private static final String IDEMPOTENCY_KEY_PREFIX = "idempotency:";
 
-    private static final Duration IDEMPOTENCY_TTL = Duration.ofHours(24);
+    private static final Duration IDEMPOTENCY_TTL = Duration.ofDays(7);
 
     private final RedisTemplate<String, String> redisTemplate;
 
     public boolean isProcessed(String eventId) {
         String key = IDEMPOTENCY_KEY_PREFIX + eventId;
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return redisTemplate.hasKey(key);
     }
 
     public void markAsProcessed(String eventId) {
