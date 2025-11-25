@@ -1,15 +1,15 @@
 package com.msa.commerce.orchestrator.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisplayName("Order 도메인 테스트")
 class OrderTest {
@@ -316,7 +316,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create(orderNumber, 1L, createValidShippingAddress(), "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Order number cannot be null or empty");
+            .hasMessage("Order number cannot be null or empty");
     }
 
     @Test
@@ -326,7 +326,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create(null, 1L, createValidShippingAddress(), "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Order number cannot be null or empty");
+            .hasMessage("Order number cannot be null or empty");
     }
 
     @Test
@@ -336,7 +336,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create("ORDER-001", null, createValidShippingAddress(), "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Customer ID cannot be null");
+            .hasMessage("Customer ID cannot be null");
     }
 
     @Test
@@ -346,7 +346,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create("ORDER-001", 1L, null, "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Shipping address cannot be null or empty");
+            .hasMessage("Shipping address cannot be null or empty");
     }
 
     @Test
@@ -356,7 +356,7 @@ class OrderTest {
         assertThatThrownBy(() ->
             Order.create("ORDER-001", 1L, new HashMap<>(), "WEB")
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Shipping address cannot be null or empty");
+            .hasMessage("Shipping address cannot be null or empty");
     }
 
     @Test
@@ -411,7 +411,7 @@ class OrderTest {
         // when & then
         assertThatThrownBy(order::confirm)
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Order must be in PENDING status to be confirmed");
+            .hasMessage("Cannot transition from CONFIRMED to CONFIRMED");
     }
 
     @Test
@@ -427,7 +427,7 @@ class OrderTest {
         // when & then
         assertThatThrownBy(order::cancel)
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("Order cannot be cancelled in status: PAID");
+            .hasMessage("Cannot transition from PAID to CANCELLED");
     }
 
     @Test
@@ -452,7 +452,6 @@ class OrderTest {
         // when & then
         assertThat(order1).isNotEqualTo(order2);
         assertThat(order1.hashCode()).isNotEqualTo(order2.hashCode());
-        assertThat(order1).isEqualTo(order1);
     }
 
     @Test
@@ -474,6 +473,157 @@ class OrderTest {
             .contains("status=PENDING")
             .contains("totalAmount=20000.00")
             .contains("currency=KRW");
+    }
+
+    @Test
+    @DisplayName("상태 변경: PENDING -> CONFIRMED")
+    void changeStatus_PendingToConfirmed_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when
+        order.confirm();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+        assertThat(order.getConfirmedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PENDING -> CANCELLED")
+    void changeStatus_PendingToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+
+        // when
+        order.cancel();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: CONFIRMED -> PAYMENT_PENDING")
+    void changeStatus_ConfirmedToPaymentPending_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+
+        // when
+        order.markPaymentPending();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAYMENT_PENDING);
+    }
+
+    @Test
+    @DisplayName("상태 변경: CONFIRMED -> CANCELLED")
+    void changeStatus_ConfirmedToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+
+        // when
+        order.cancel();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAYMENT_PENDING -> PAID")
+    void changeStatus_PaymentPendingToPaid_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+
+        // when
+        order.markPaymentCompleted();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PAID);
+        assertThat(order.getPaymentCompletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAYMENT_PENDING -> CANCELLED")
+    void changeStatus_PaymentPendingToCancelled_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+
+        // when
+        order.cancel();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.getCancelledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: PAID -> PROCESSING")
+    void changeStatus_PaidToProcessing_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+
+        // when
+        order.startProcessing();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.PROCESSING);
+    }
+
+    @Test
+    @DisplayName("상태 변경: PROCESSING -> SHIPPED")
+    void changeStatus_ProcessingToShipped_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+
+        // when
+        order.markShipped();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.SHIPPED);
+        assertThat(order.getShippedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("상태 변경: SHIPPED -> DELIVERED")
+    void changeStatus_ShippedToDelivered_Success() {
+        // given
+        Order order = createValidOrder();
+        order.addOrderItem(createValidOrderItem());
+        order.confirm();
+        order.markPaymentPending();
+        order.markPaymentCompleted();
+        order.startProcessing();
+        order.markShipped();
+
+        // when
+        order.markDelivered();
+
+        // then
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+        assertThat(order.getDeliveredAt()).isNotNull();
     }
 
     // Helper methods
@@ -507,4 +657,5 @@ class OrderTest {
         address.put("postalCode", "06234");
         return address;
     }
+
 }

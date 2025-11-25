@@ -7,10 +7,16 @@ info:
     Implemented based on hexagonal architecture and CQRS pattern.
 
     ### Features
-    - Order retrieval with Redis caching
-    - Pagination and sorting support
-    - Dynamic query filtering (customer, status, date range)
-    - Read-optimized with @Cacheable
+    - **Order Query (CQRS Read)**
+      - Order retrieval with Redis caching
+      - Pagination and sorting support
+      - Dynamic query filtering (customer, status, date range)
+      - Read-optimized with @Cacheable
+    - **Order Command (CQRS Write)**
+      - Order status change with state machine validation
+      - Transaction management with @Transactional
+      - Audit trail with automatic timestamp recording
+      - Business rule enforcement for valid state transitions
   contact:
     name: MSA Commerce Lab Team
     email: dev@example.com
@@ -35,8 +41,145 @@ tags:
     externalDocs:
       description: Order Query API Guide
       url: https://docs.example.com/order-query-api
+  - name: Order Command
+    description: Order modification API (CQRS Write side)
+    externalDocs:
+      description: Order Command API Guide
+      url: https://docs.example.com/order-command-api
 
 paths:
+  /api/v1/orders/{orderId}/status:
+    patch:
+      tags: [Order Command]
+      summary: Change Order Status
+      description: |
+        주문 상태를 변경합니다.
+
+        ### Business Rules
+        - 유효한 상태 전이만 허용됩니다
+        - 모든 상태 변경에는 사유(reason)가 필수입니다
+        - DELIVERED, CANCELLED 상태는 최종 상태로 변경 불가합니다
+
+        ### Valid State Transitions
+        ```
+        PENDING → CONFIRMED | CANCELLED
+        CONFIRMED → PAYMENT_PENDING | CANCELLED
+        PAYMENT_PENDING → PAID | CANCELLED
+        PAID → PROCESSING | CANCELLED
+        PROCESSING → SHIPPED | CANCELLED
+        SHIPPED → DELIVERED
+        ```
+
+        ### Architecture
+        - Hexagonal Architecture: Input Port (ChangeOrderStatusUseCase)
+        - CQRS Write side: Command 처리 최적화
+        - Transaction: @Transactional로 일관성 보장
+        - Audit: 상태 변경 이력 타임스탬프 자동 기록
+      operationId: changeOrderStatus
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          description: Order UUID
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusChangeRequest'
+            examples:
+              confirmOrder:
+                summary: 주문 확인
+                description: PENDING 상태의 주문을 CONFIRMED로 변경
+                value:
+                  newStatus: "CONFIRMED"
+                  reason: "고객이 주문을 확인했습니다"
+              cancelOrder:
+                summary: 주문 취소
+                description: 주문을 취소 상태로 변경
+                value:
+                  newStatus: "CANCELLED"
+                  reason: "고객 요청으로 주문이 취소되었습니다"
+              markPaid:
+                summary: 결제 완료
+                description: 결제 대기 상태를 완료로 변경
+                value:
+                  newStatus: "PAID"
+                  reason: "결제가 성공적으로 완료되었습니다"
+      responses:
+        '200':
+          description: Order status changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusChangeResponse'
+              examples:
+                confirmed:
+                  summary: 주문 확인 완료
+                  value:
+                    orderId: "550e8400-e29b-41d4-a716-446655440000"
+                    orderNumber: "ORD-20251025-0001"
+                    previousStatus: "PENDING"
+                    currentStatus: "CONFIRMED"
+                    changedAt: "2025-10-25T10:35:00"
+                cancelled:
+                  summary: 주문 취소 완료
+                  value:
+                    orderId: "550e8400-e29b-41d4-a716-446655440001"
+                    orderNumber: "ORD-20251025-0002"
+                    previousStatus: "PENDING"
+                    currentStatus: "CANCELLED"
+                    changedAt: "2025-10-25T11:20:00"
+        '400':
+          description: Invalid status transition or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidTransition:
+                  summary: 잘못된 상태 전이
+                  value:
+                    timestamp: "2025-10-25T10:30:00"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Cannot change order status from PENDING to PROCESSING"
+                    path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
+                missingReason:
+                  summary: 사유 누락
+                  value:
+                    timestamp: "2025-10-25T10:30:00"
+                    status: 400
+                    error: "Bad Request"
+                    message: "Reason is required"
+                    path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
+                    validationErrors:
+                      - field: "reason"
+                        rejectedValue: null
+                        message: "Reason is required"
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                timestamp: "2025-10-25T10:30:00"
+                status: 404
+                error: "Not Found"
+                message: "Order not found with ID: 550e8400-e29b-41d4-a716-446655440000"
+                path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /api/v1/orders/{orderId}:
     get:
       tags: [Order Query]
@@ -722,6 +865,49 @@ components:
           description: Is this the last page?
           example: false
 
+    OrderStatusChangeRequest:
+      type: object
+      required:
+        - newStatus
+        - reason
+      properties:
+        newStatus:
+          $ref: '#/components/schemas/OrderStatus'
+        reason:
+          type: string
+          description: 상태 변경 사유 (필수)
+          minLength: 1
+          maxLength: 500
+          example: "고객이 주문을 확인했습니다"
+
+    OrderStatusChangeResponse:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - previousStatus
+        - currentStatus
+        - changedAt
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          description: Order unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        orderNumber:
+          type: string
+          description: Human-readable order number
+          example: "ORD-20251025-0001"
+        previousStatus:
+          $ref: '#/components/schemas/OrderStatus'
+        currentStatus:
+          $ref: '#/components/schemas/OrderStatus'
+        changedAt:
+          type: string
+          format: date-time
+          description: 상태 변경 시각
+          example: "2025-10-25T10:35:00"
+
     ErrorResponse:
       type: object
       required:
@@ -752,3 +938,22 @@ components:
           type: string
           description: Request path that caused the error
           example: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
+        validationErrors:
+          type: array
+          description: Validation error details (if applicable)
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that failed validation
+                example: "reason"
+              rejectedValue:
+                type: string
+                nullable: true
+                description: The value that was rejected
+                example: null
+              message:
+                type: string
+                description: Validation error message
+                example: "Reason is required"
