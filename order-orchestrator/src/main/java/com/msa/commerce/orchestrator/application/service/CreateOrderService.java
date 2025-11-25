@@ -27,8 +27,6 @@ public class CreateOrderService implements CreateOrderUseCase {
     @Override
     @Transactional
     public UUID createOrder(CreateOrderCommand command) {
-        log.info("Creating order for customer: {}, orderNumber: {}", command.getCustomerId(), command.getOrderNumber());
-
         Order order = Order.create(
             command.getOrderNumber(),
             command.getCustomerId(),
@@ -50,7 +48,6 @@ public class CreateOrderService implements CreateOrderUseCase {
         });
 
         Order savedOrder = orderRepository.save(order);
-        log.info("Order created successfully: orderId={}, orderNumber={}", savedOrder.getOrderId(), savedOrder.getOrderNumber());
 
         try {
             orderEventPublisher.publishOrderCreated(savedOrder);
