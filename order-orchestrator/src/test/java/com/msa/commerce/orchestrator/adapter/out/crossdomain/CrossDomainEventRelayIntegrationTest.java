@@ -1,4 +1,4 @@
-package com.msa.commerce.orchestrator.adapter.out.outbox;
+package com.msa.commerce.orchestrator.adapter.out.crossdomain;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.awaitility.Awaitility.*;
@@ -24,23 +24,23 @@ import org.springframework.kafka.test.utils.ContainerTestUtils;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.KafkaIntegrationTestBase;
 import com.msa.commerce.orchestrator.adapter.out.kafka.KafkaTopics;
+import com.msa.commerce.orchestrator.application.port.out.CrossDomainEventRepository;
 import com.msa.commerce.orchestrator.application.port.out.OrderEventPublisher;
-import com.msa.commerce.orchestrator.application.port.out.OutboxEventRepository;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderItem;
+import com.msa.commerce.orchestrator.domain.crossdomain.PublishingStatus;
 import com.msa.commerce.orchestrator.domain.event.OrderCreatedEvent;
-import com.msa.commerce.orchestrator.domain.outbox.OutboxStatus;
 
-class OutboxEventRelayIntegrationTest extends KafkaIntegrationTestBase {
+class CrossDomainEventRelayIntegrationTest extends KafkaIntegrationTestBase {
 
     @Autowired
     private OrderEventPublisher orderEventPublisher;
 
     @Autowired
-    private OutboxEventRepository outboxEventRepository;
+    private CrossDomainEventRepository crossDomainEventRepository;
 
     @Autowired
-    private OutboxEventRelay outboxEventRelay;
+    private CrossDomainEventRelay crossDomainEventRelay;
 
     private KafkaMessageListenerContainer<String, OrderCreatedEvent> container;
 
@@ -59,16 +59,16 @@ class OutboxEventRelayIntegrationTest extends KafkaIntegrationTestBase {
     }
 
     @Test
-    @DisplayName("Outbox 이벤트가 Kafka로 성공적으로 발행된다")
-    void shouldPublishOutboxEventToKafka() {
+    @DisplayName("CrossDomain 이벤트가 Kafka로 성공적으로 발행된다")
+    void shouldPublishCrossDomainEventToKafka() {
         Order order = createTestOrder();
 
         orderEventPublisher.publishOrderCreated(order);
 
-        long initialPendingCount = outboxEventRepository.countByStatus(OutboxStatus.PENDING);
+        long initialPendingCount = crossDomainEventRepository.countByStatus(PublishingStatus.PENDING);
         assertThat(initialPendingCount).isEqualTo(1);
 
-        outboxEventRelay.publishPendingEvents();
+        crossDomainEventRelay.publishPendingEvents();
 
         await()
             .atMost(5, TimeUnit.SECONDS)
@@ -81,29 +81,29 @@ class OutboxEventRelayIntegrationTest extends KafkaIntegrationTestBase {
         await()
             .atMost(3, TimeUnit.SECONDS)
             .untilAsserted(() -> {
-                long publishedCount = outboxEventRepository.countByStatus(OutboxStatus.PUBLISHED);
+                long publishedCount = crossDomainEventRepository.countByStatus(PublishingStatus.PUBLISHED);
                 assertThat(publishedCount).isEqualTo(1);
             });
     }
 
     @Test
-    @DisplayName("여러 Outbox 이벤트가 순차적으로 발행된다")
-    void shouldPublishMultipleOutboxEventsSequentially() {
+    @DisplayName("여러 CrossDomain 이벤트가 순차적으로 발행된다")
+    void shouldPublishMultipleCrossDomainEventsSequentially() {
         Order order1 = createTestOrder();
         Order order2 = createTestOrder();
 
         orderEventPublisher.publishOrderCreated(order1);
         orderEventPublisher.publishOrderCreated(order2);
 
-        long pendingCount = outboxEventRepository.countByStatus(OutboxStatus.PENDING);
+        long pendingCount = crossDomainEventRepository.countByStatus(PublishingStatus.PENDING);
         assertThat(pendingCount).isEqualTo(2);
 
-        outboxEventRelay.publishPendingEvents();
+        crossDomainEventRelay.publishPendingEvents();
 
         await()
             .atMost(10, TimeUnit.SECONDS)
             .untilAsserted(() -> {
-                long publishedCount = outboxEventRepository.countByStatus(OutboxStatus.PUBLISHED);
+                long publishedCount = crossDomainEventRepository.countByStatus(PublishingStatus.PUBLISHED);
                 assertThat(publishedCount).isEqualTo(2);
             });
     }

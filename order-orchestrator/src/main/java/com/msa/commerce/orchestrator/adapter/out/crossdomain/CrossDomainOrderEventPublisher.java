@@ -1,13 +1,18 @@
-package com.msa.commerce.orchestrator.adapter.out.outbox;
+package com.msa.commerce.orchestrator.adapter.out.crossdomain;
+
+import java.util.List;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.KafkaTopics;
 import com.msa.commerce.orchestrator.application.port.out.OrderEventPublisher;
-import com.msa.commerce.orchestrator.application.service.OutboxEventService;
+import com.msa.commerce.orchestrator.application.service.CrossDomainEventService;
 import com.msa.commerce.orchestrator.domain.Order;
 import com.msa.commerce.orchestrator.domain.OrderStatus;
+import com.msa.commerce.orchestrator.domain.crossdomain.DomainType;
+import com.msa.commerce.orchestrator.domain.crossdomain.EntityType;
+import com.msa.commerce.orchestrator.domain.crossdomain.EventType;
 import com.msa.commerce.orchestrator.domain.event.OrderCreatedEvent;
 import com.msa.commerce.orchestrator.domain.event.OrderEventMapper;
 import com.msa.commerce.orchestrator.domain.event.OrderUpdatedEvent;
@@ -19,9 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 @Primary
 @Component
 @RequiredArgsConstructor
-public class OutboxOrderEventPublisher implements OrderEventPublisher {
+public class CrossDomainOrderEventPublisher implements OrderEventPublisher {
 
-    private final OutboxEventService outboxEventService;
+    private static final DomainType SOURCE_DOMAIN = DomainType.ORDER_ORCHESTRATOR;
+
+    private static final EntityType ENTITY_TYPE = EntityType.ORDER;
+
+    private final CrossDomainEventService crossDomainEventService;
 
     @Override
     public void publishOrderCreated(Order order) {
@@ -32,13 +41,16 @@ public class OutboxOrderEventPublisher implements OrderEventPublisher {
     public void publishOrderCreated(Order order, String correlationId) {
         OrderCreatedEvent event = OrderEventMapper.toOrderCreatedEvent(order, correlationId);
 
-        outboxEventService.saveEvent(
-            "Order",
+        crossDomainEventService.saveEvent(
+            EventType.ORDER_CREATED,
+            SOURCE_DOMAIN,
+            List.of(DomainType.PAYMENT, DomainType.INVENTORY),
+            ENTITY_TYPE,
             order.getOrderId().toString(),
-            "OrderCreated",
-            KafkaTopics.ORDER_CREATED,
+            null,
             event,
-            correlationId
+            correlationId,
+            KafkaTopics.ORDER_CREATED
         );
     }
 
@@ -53,13 +65,16 @@ public class OutboxOrderEventPublisher implements OrderEventPublisher {
             order, previousStatus, reason, correlationId
         );
 
-        outboxEventService.saveEvent(
-            "Order",
+        crossDomainEventService.saveEvent(
+            EventType.ORDER_UPDATED,
+            SOURCE_DOMAIN,
+            List.of(DomainType.PAYMENT, DomainType.INVENTORY, DomainType.MATERIALIZED_VIEW),
+            ENTITY_TYPE,
             order.getOrderId().toString(),
-            "OrderUpdated",
-            KafkaTopics.ORDER_UPDATED,
+            null,
             event,
-            correlationId
+            correlationId,
+            KafkaTopics.ORDER_UPDATED
         );
     }
 
