@@ -23,6 +23,8 @@ import com.msa.commerce.orchestrator.domain.event.RetryableEvent;
 @EnableKafka
 public class KafkaConsumerConfig {
 
+    private static final String TRUSTED_PACKAGES = "com.msa.commerce.orchestrator.domain.event";
+
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
@@ -31,80 +33,66 @@ public class KafkaConsumerConfig {
 
     @Bean
     public ConsumerFactory<String, PaymentResultEvent> paymentResultConsumerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
+        Map<String, Object> configProps = createBaseConsumerConfig(groupId);
 
-        // Basic configuration
-        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-
-        // Consumer behavior
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-
-        // Isolation level
-        configProps.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
-
-        // JsonDeserializer configuration
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         configProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, PaymentResultEvent.class.getName());
-        configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
-        // Performance tuning
+        // Performance tuning for high-throughput consumer
         configProps.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
         configProps.put(ConsumerConfig.FETCH_MIN_BYTES_CONFIG, 1024);
         configProps.put(ConsumerConfig.FETCH_MAX_WAIT_MS_CONFIG, 500);
-
-        // Interceptor for logging
-        configProps.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-            KafkaLoggingInterceptor.class.getName());
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, PaymentResultEvent> paymentResultKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, PaymentResultEvent> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
-
-        factory.setConsumerFactory(paymentResultConsumerFactory());
-        factory.setConcurrency(3);
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-
-        return factory;
+        return createListenerContainerFactory(paymentResultConsumerFactory(), 3);
     }
 
     @Bean
     public ConsumerFactory<String, RetryableEvent<?>> retryEventConsumerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-
-        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-retry");
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
-        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-        configProps.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
-        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
-
-        // Interceptor for logging
-        configProps.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-            KafkaLoggingInterceptor.class.getName());
-
+        Map<String, Object> configProps = createBaseConsumerConfig(groupId + "-retry");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, RetryableEvent<?>> retryEventKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, RetryableEvent<?>> factory =
-            new ConcurrentKafkaListenerContainerFactory<>();
+        return createListenerContainerFactory(retryEventConsumerFactory(), 1);
+    }
 
-        factory.setConsumerFactory(retryEventConsumerFactory());
-        factory.setConcurrency(1);
+    private Map<String, Object> createBaseConsumerConfig(String consumerGroupId) {
+        Map<String, Object> configProps = new HashMap<>();
+
+        // Basic configuration
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupId);
+        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+
+        // Consumer behavior
+        configProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        configProps.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
+        configProps.put(ConsumerConfig.ISOLATION_LEVEL_CONFIG, "read_committed");
+
+        // JsonDeserializer configuration - restrict to specific packages for security
+        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, TRUSTED_PACKAGES);
+        configProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
+
+        // Interceptor for logging
+        configProps.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, KafkaLoggingInterceptor.class.getName());
+
+        return configProps;
+    }
+
+    private <T> ConcurrentKafkaListenerContainerFactory<String, T> createListenerContainerFactory(
+        ConsumerFactory<String, T> consumerFactory,
+        int concurrency
+    ) {
+        ConcurrentKafkaListenerContainerFactory<String, T> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        factory.setConcurrency(concurrency);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
-
         return factory;
     }
 

@@ -52,7 +52,7 @@ spring:
       auto-offset-reset: earliest
       enable-auto-commit: false
       properties:
-        spring.json.trusted.packages: "*"
+        spring.json.trusted.packages: "com.msa.commerce.orchestrator.domain.event"
         isolation.level: read_committed
         # Metrics and monitoring
         metric.reporters: org.apache.kafka.common.metrics.JmxReporter
@@ -60,6 +60,16 @@ spring:
       ack-mode: manual
       # Monitoring configuration
       log-container-config: true
+
+# Application custom settings
+app:
+  kafka:
+    relay:
+      fixed-delay-ms: 1000
+      batch-size: 100
+      publish-timeout-seconds: 5
+    retry:
+      nack-sleep-duration-seconds: 10
 
 # Actuator endpoints for monitoring
 management:
@@ -84,5 +94,7 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{eventId}] [%X{correlationId}] %msg%n"
   file:
     name: logs/order-orchestrator.log
-    max-size: 10MB
-    max-history: 30
+  logback:
+    rolling policy:
+      max-file-size: 10MB
+      max-history: 30
