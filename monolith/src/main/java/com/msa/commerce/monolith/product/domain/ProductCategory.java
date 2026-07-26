@@ -1,40 +1,58 @@
 package com.msa.commerce.monolith.product.domain;
 
+import java.time.LocalDateTime;
+
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+// product_categories 테이블 기반 도메인 모델. (기존 하드코딩 enum을 대체)
 @Getter
-public enum ProductCategory {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class ProductCategory {
 
-    ELECTRONICS(1L, "전자제품", "ELEC"),
-    CLOTHING(2L, "의류", "CLOT"),
-    BOOKS(3L, "도서", "BOOK"),
-    HOME_GARDEN(4L, "홈&가든", "HOME"),
-    SPORTS(5L, "스포츠", "SPOR"),
-    BEAUTY(6L, "뷰티", "BEAU"),
-    FOOD(7L, "식품", "FOOD"),
-    TOYS(8L, "장난감", "TOYS"),
-    AUTOMOTIVE(9L, "자동차", "AUTO"),
-    HEALTH(10L, "건강", "HEAL");
+    private Long id;
 
-    private final Long id;
+    private Long parentId;
 
-    private final String displayName;
+    private String name;
 
-    private final String code;
+    private String description;
 
-    ProductCategory(Long id, String displayName, String code) {
-        this.id = id;
-        this.displayName = displayName;
-        this.code = code;
+    private String slug;
+
+    private int displayOrder;
+
+    private boolean active;
+
+    private boolean featured;
+
+    private String imageUrl;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    public static ProductCategory reconstitute(Long id, Long parentId, String name, String description,
+        String slug, int displayOrder, boolean active, boolean featured, String imageUrl,
+        LocalDateTime createdAt, LocalDateTime updatedAt) {
+        ProductCategory category = new ProductCategory();
+        category.id = id;
+        category.parentId = parentId;
+        category.name = name;
+        category.description = description;
+        category.slug = slug;
+        category.displayOrder = displayOrder;
+        category.active = active;
+        category.featured = featured;
+        category.imageUrl = imageUrl;
+        category.createdAt = createdAt;
+        category.updatedAt = updatedAt;
+        return category;
     }
 
-    public static ProductCategory fromId(Long id) {
-        for (ProductCategory category : values()) {
-            if (category.id.equals(id)) {
-                return category;
-            }
-        }
-        throw new IllegalArgumentException("Invalid category id: " + id);
+    public boolean isRoot() {
+        return parentId == null;
     }
 
 }

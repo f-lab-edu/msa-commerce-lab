@@ -142,7 +142,7 @@ public class CommonPlugin implements Plugin<Project> {
                 // Adjust thresholds based on project maturity
                 boolean isMonolithModule = "monolith".equals(project.getName());
                 boolean isCommonModule = "common".equals(project.getName());
-                
+
                 rule.limit(limit -> {
                     limit.setCounter("LINE");
                     limit.setValue("COVEREDRATIO");

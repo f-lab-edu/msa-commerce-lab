@@ -1,13 +1,13 @@
 package com.msa.commerce.orchestrator.domain;
 
+import static org.assertj.core.api.Assertions.*;
+
+import java.math.BigDecimal;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.math.BigDecimal;
-
-import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("OrderItem 도메인 테스트")
 class OrderItemTest {
@@ -107,7 +107,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(null, "상품명", "SKU001", null, null, 1, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Product ID cannot be null");
+            .hasMessage("Product ID cannot be null");
     }
 
     @ParameterizedTest
@@ -118,7 +118,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, productName, "SKU001", null, null, 1, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Product name cannot be null or empty");
+            .hasMessage("Product name cannot be null or empty");
     }
 
     @Test
@@ -128,7 +128,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, null, "SKU001", null, null, 1, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Product name cannot be null or empty");
+            .hasMessage("Product name cannot be null or empty");
     }
 
     @ParameterizedTest
@@ -139,7 +139,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", productSku, null, null, 1, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Product SKU cannot be null or empty");
+            .hasMessage("Product SKU cannot be null or empty");
     }
 
     @Test
@@ -149,7 +149,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", null, null, null, 1, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Product SKU cannot be null or empty");
+            .hasMessage("Product SKU cannot be null or empty");
     }
 
     @ParameterizedTest
@@ -160,7 +160,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", "SKU001", null, null, quantity, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Quantity must be greater than 0");
+            .hasMessage("Quantity must be greater than 0");
     }
 
     @Test
@@ -170,7 +170,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", "SKU001", null, null, null, BigDecimal.TEN)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Quantity must be greater than 0");
+            .hasMessage("Quantity must be greater than 0");
     }
 
     @Test
@@ -180,7 +180,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", "SKU001", null, null, 1, new BigDecimal("-100"))
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Unit price cannot be null or negative");
+            .hasMessage("Unit price cannot be null or negative");
     }
 
     @Test
@@ -190,7 +190,7 @@ class OrderItemTest {
         assertThatThrownBy(() ->
             OrderItem.create(1L, "상품명", "SKU001", null, null, 1, null)
         ).isInstanceOf(IllegalArgumentException.class)
-         .hasMessage("Unit price cannot be null or negative");
+            .hasMessage("Unit price cannot be null or negative");
     }
 
     @ParameterizedTest
@@ -261,4 +261,5 @@ class OrderItemTest {
             new BigDecimal("10000.00")
         );
     }
+
 }

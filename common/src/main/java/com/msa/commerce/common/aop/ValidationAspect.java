@@ -12,7 +12,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
@@ -86,7 +85,7 @@ public class ValidationAspect {
     @Before("validateCommandPointcut()")
     public void validateMethodParameters(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        MethodSignature signature = (MethodSignature)joinPoint.getSignature();
         Method method = signature.getMethod();
         ValidateCommand annotation = method.getAnnotation(ValidateCommand.class);
 
@@ -131,15 +130,15 @@ public class ValidationAspect {
             // Custom validation for price range using reflection
             Method getMinPrice = command.getClass().getMethod("getMinPrice");
             Method getMaxPrice = command.getClass().getMethod("getMaxPrice");
-            
+
             Object minPrice = getMinPrice.invoke(command);
             Object maxPrice = getMaxPrice.invoke(command);
-            
-            if (minPrice != null && maxPrice != null && 
+
+            if (minPrice != null && maxPrice != null &&
                 minPrice instanceof BigDecimal && maxPrice instanceof BigDecimal) {
-                BigDecimal min = (BigDecimal) minPrice;
-                BigDecimal max = (BigDecimal) maxPrice;
-                
+                BigDecimal min = (BigDecimal)minPrice;
+                BigDecimal max = (BigDecimal)maxPrice;
+
                 if (min.compareTo(max) > 0) {
                     throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
                 }
@@ -157,14 +156,14 @@ public class ValidationAspect {
         if (errorPrefix != null && !errorPrefix.isEmpty()) {
             sb.append(errorPrefix).append(": ");
         }
-        
+
         violations.forEach(violation -> {
             if (sb.length() > 0 && !sb.toString().endsWith(": ")) {
                 sb.append(", ");
             }
             sb.append(violation.getMessage());
         });
-        
+
         return sb.toString();
     }
 

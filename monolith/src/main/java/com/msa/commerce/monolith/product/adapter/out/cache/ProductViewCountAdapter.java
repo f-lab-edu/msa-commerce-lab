@@ -16,11 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ProductViewCountAdapter implements ProductViewCountPort {
 
-    private final RedisTemplate<String, Object> redisTemplate;
-
     private static final String VIEW_COUNT_KEY_PREFIX = "product:view:";
 
     private static final long VIEW_COUNT_TTL_HOURS = 24;
+
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Override
     @Async
@@ -49,17 +49,17 @@ public class ProductViewCountAdapter implements ProductViewCountPort {
         try {
             String key = getViewCountKey(productId);
             Object value = redisTemplate.opsForValue().get(key);
-            
+
             if (value == null) {
                 return 0L;
             }
-            
+
             if (value instanceof Number) {
-                return ((Number) value).longValue();
+                return ((Number)value).longValue();
             }
-            
+
             return Long.parseLong(value.toString());
-            
+
         } catch (Exception e) {
             log.error("Failed to get view count for product {}", productId, e);
             return 0L;

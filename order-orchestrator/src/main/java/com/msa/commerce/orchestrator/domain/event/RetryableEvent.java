@@ -46,6 +46,29 @@ public class RetryableEvent<T extends DomainEvent> {
     @JsonProperty("payload")
     private T payload;
 
+    public static <T extends DomainEvent> RetryableEvent<T> create(
+        String originalTopic,
+        Integer originalPartition,
+        Long originalOffset,
+        Integer maxRetries,
+        T payload,
+        String errorMessage,
+        String stackTrace
+    ) {
+        return RetryableEvent.<T>builder()
+            .originalTopic(originalTopic)
+            .originalPartition(originalPartition)
+            .originalOffset(originalOffset)
+            .retryCount(1)
+            .maxRetries(maxRetries)
+            .lastAttemptAt(LocalDateTime.now())
+            .nextRetryAt(LocalDateTime.now().plusSeconds(10))
+            .errorMessage(errorMessage)
+            .errorStackTrace(stackTrace)
+            .payload(payload)
+            .build();
+    }
+
     public boolean canRetry() {
         return retryCount < maxRetries && LocalDateTime.now().isAfter(nextRetryAt);
     }
@@ -68,29 +91,6 @@ public class RetryableEvent<T extends DomainEvent> {
     private LocalDateTime calculateNextRetryTime(int retryCount) {
         long delaySeconds = (long)Math.pow(2, retryCount) * 10;
         return LocalDateTime.now().plusSeconds(delaySeconds);
-    }
-
-    public static <T extends DomainEvent> RetryableEvent<T> create(
-        String originalTopic,
-        Integer originalPartition,
-        Long originalOffset,
-        Integer maxRetries,
-        T payload,
-        String errorMessage,
-        String stackTrace
-    ) {
-        return RetryableEvent.<T>builder()
-            .originalTopic(originalTopic)
-            .originalPartition(originalPartition)
-            .originalOffset(originalOffset)
-            .retryCount(1)
-            .maxRetries(maxRetries)
-            .lastAttemptAt(LocalDateTime.now())
-            .nextRetryAt(LocalDateTime.now().plusSeconds(10))
-            .errorMessage(errorMessage)
-            .errorStackTrace(stackTrace)
-            .payload(payload)
-            .build();
     }
 
 }

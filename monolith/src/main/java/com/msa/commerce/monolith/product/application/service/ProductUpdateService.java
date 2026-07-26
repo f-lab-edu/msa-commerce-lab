@@ -38,10 +38,13 @@ public class ProductUpdateService implements ProductUpdateUseCase {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final ProductCategoryValidator productCategoryValidator;
+
     @Override
     @ValidateCommand(errorPrefix = "Product update validation failed")
     public ProductResponse updateProduct(ProductUpdateCommand command) {
         validateCommand(command);
+        productCategoryValidator.validateActiveCategory(command.getCategoryId());
         Product existingProduct = findAndValidateProduct(command.getProductId());
         validateProductUpdatable(existingProduct, command.getProductId());
         validateUniqueConstraints(command, existingProduct);
@@ -165,7 +168,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         log.debug("Invalidating cache for product ID: {}", productId);
         log.info("Cache invalidation completed for product ID: {}", productId);
     }
-    
+
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
         if (!violations.isEmpty()) {

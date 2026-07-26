@@ -1,9 +1,9 @@
 package com.msa.commerce.orchestrator;
 
+import static org.assertj.core.api.Assertions.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("OrderOrchestratorApplication 테스트")
 class OrderOrchestratorApplicationTest {
@@ -17,4 +17,5 @@ class OrderOrchestratorApplicationTest {
             OrderOrchestratorApplication.class.getDeclaredMethod("main", String[].class);
         });
     }
+
 }

@@ -22,6 +22,21 @@ class PaymentTest {
 
     private static final String PROVIDER = "MOCK_PG";
 
+    private static Payment requestPayment(BigDecimal amount, PaymentMethod method) {
+        return Payment.request(ORDER_ID, CUSTOMER_ID, amount, "KRW", method, PROVIDER, null);
+    }
+
+    @Test
+    @DisplayName("동일성은 paymentId 로 판단한다")
+    void equalsByPaymentId() {
+        Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+        Payment same = Payment.builder().paymentId(payment.getPaymentId()).build();
+        Payment other = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+
+        assertThat(payment).isEqualTo(same).isNotEqualTo(other);
+        assertThat(payment).hasSameHashCodeAs(same);
+    }
+
     @Nested
     @DisplayName("결제 요청 생성")
     class Request {
@@ -239,21 +254,6 @@ class PaymentTest {
                 .isInstanceOf(InvalidPaymentStateException.class);
         }
 
-    }
-
-    @Test
-    @DisplayName("동일성은 paymentId 로 판단한다")
-    void equalsByPaymentId() {
-        Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
-        Payment same = Payment.builder().paymentId(payment.getPaymentId()).build();
-        Payment other = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
-
-        assertThat(payment).isEqualTo(same).isNotEqualTo(other);
-        assertThat(payment).hasSameHashCodeAs(same);
-    }
-
-    private static Payment requestPayment(BigDecimal amount, PaymentMethod method) {
-        return Payment.request(ORDER_ID, CUSTOMER_ID, amount, "KRW", method, PROVIDER, null);
     }
 
 }

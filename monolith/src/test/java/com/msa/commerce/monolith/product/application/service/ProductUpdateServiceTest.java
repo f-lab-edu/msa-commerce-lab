@@ -49,6 +49,9 @@ class ProductUpdateServiceTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Mock
+    private ProductCategoryValidator productCategoryValidator;
+
     @InjectMocks
     private ProductUpdateService productUpdateService;
 

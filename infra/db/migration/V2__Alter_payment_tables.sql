@@ -4,7 +4,8 @@
 -- Description: order_id 를 UUID(CHAR(36))로 정렬하고, 주문당 활성 결제 1건 제약을 추가
 -- =====================================================
 
-USE db_payment;
+USE
+db_payment;
 
 -- ===================================================
 -- STEP 1: order_id 타입 정렬
@@ -12,7 +13,7 @@ USE db_payment;
 -- cross-domain 참조 컬럼도 같은 타입으로 맞춘다.
 -- ===================================================
 ALTER TABLE payments
-    MODIFY COLUMN order_id CHAR(36) NOT NULL COMMENT '주문 UUID (cross-domain reference)';
+    MODIFY COLUMN order_id CHAR (36) NOT NULL COMMENT '주문 UUID (cross-domain reference)';
 
 -- ===================================================
 -- STEP 2: 중복 결제 방지 제약

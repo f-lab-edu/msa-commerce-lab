@@ -36,16 +36,16 @@ import com.msa.commerce.orchestrator.domain.event.RetryableEvent;
 
 class RetryEventConsumerIntegrationTest extends KafkaIntegrationTestBase {
 
+    private final List<RetryableEvent<?>> receivedRetryEvents = new ArrayList<>();
+
+    private final List<FailedEvent> receivedDlqEvents = new ArrayList<>();
+
     @Autowired
     private KafkaTemplate<String, Object> objectKafkaTemplate;
 
     private KafkaMessageListenerContainer<String, RetryableEvent<?>> retryEventContainer;
 
     private KafkaMessageListenerContainer<String, FailedEvent> dlqContainer;
-
-    private final List<RetryableEvent<?>> receivedRetryEvents = new ArrayList<>();
-
-    private final List<FailedEvent> receivedDlqEvents = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
