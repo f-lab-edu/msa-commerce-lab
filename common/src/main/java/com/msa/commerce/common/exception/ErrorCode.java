@@ -22,6 +22,8 @@ public enum ErrorCode {
 
     USER_NOT_FOUND("U1001", "User not found"),
     USER_EMAIL_DUPLICATE("U1002", "Email already exists"),
+    USER_USERNAME_DUPLICATE("U1003", "Username already exists"),
+    USER_NO_CHANGES_PROVIDED("U1004", "No changes provided for update"),
 
     ORDER_NOT_FOUND("O1001", "Order not found"),
     ORDER_ALREADY_CANCELLED("O1002", "Order already cancelled"),
