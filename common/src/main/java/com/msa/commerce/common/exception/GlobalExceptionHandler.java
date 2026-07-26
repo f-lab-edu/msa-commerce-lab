@@ -241,6 +241,8 @@ public class GlobalExceptionHandler {
             return HttpStatus.BAD_REQUEST;
         } else if (ex instanceof NoChangesProvidedException) {
             return HttpStatus.BAD_REQUEST;
+        } else if (ex instanceof ExternalServiceException) {
+            return HttpStatus.SERVICE_UNAVAILABLE;
         }
         // 기본값
         return HttpStatus.BAD_REQUEST;

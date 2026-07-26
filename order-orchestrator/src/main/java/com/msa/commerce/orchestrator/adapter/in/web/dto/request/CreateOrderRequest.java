@@ -1,6 +1,5 @@
 package com.msa.commerce.orchestrator.adapter.in.web.dto.request;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +35,7 @@ public class CreateOrderRequest {
     @Valid
     private List<OrderItemRequest> orderItems;
 
+    // 상품명/SKU/단가는 클라이언트 입력을 신뢰하지 않고 Product Service 검증 결과에서 확정한다.
     @Getter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
     @AllArgsConstructor
@@ -45,12 +45,6 @@ public class CreateOrderRequest {
         @NotNull(message = "Product ID is required")
         private Long productId;
 
-        @NotBlank(message = "Product name is required")
-        private String productName;
-
-        @NotBlank(message = "Product SKU is required")
-        private String productSku;
-
         private Long productVariantId;
 
         private String variantName;
@@ -58,9 +52,6 @@ public class CreateOrderRequest {
         @NotNull(message = "Quantity is required")
         @Positive(message = "Quantity must be positive")
         private Integer quantity;
-
-        @NotNull(message = "Unit price is required")
-        private BigDecimal unitPrice;
 
     }
 

@@ -84,6 +84,11 @@ management:
     tags:
       application: ${spring.application.name}
 
+external:
+  product-service:
+    url: http://localhost:8080
+    timeout-millis: 3000
+
 logging:
   level:
     com.msa.commerce: DEBUG

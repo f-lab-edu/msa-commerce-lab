@@ -10,3 +10,7 @@ spring:
   kafka:
     bootstrap-servers: kafka:9092
 
+external:
+  product-service:
+    url: http://monolith:8080
+
