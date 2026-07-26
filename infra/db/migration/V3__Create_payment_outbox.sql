@@ -4,8 +4,7 @@
 -- Description: 취소 사유 컬럼 추가 및 Transactional Outbox 테이블 생성
 -- =====================================================
 
-USE
-db_payment;
+USE db_payment;
 
 -- ===================================================
 -- STEP 1: 취소 사유 컬럼
@@ -24,67 +23,33 @@ ALTER TABLE payments
 -- ===================================================
 CREATE TABLE IF NOT EXISTS payment_outbox_events
 (
-    id
-    BIGINT
-    AUTO_INCREMENT
-    PRIMARY
-    KEY,
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY,
 
     -- 소비자(order-orchestrator IdempotencyService)의 중복 처리 판단 키
-    event_id
-    CHAR
-(
-    36
-) NOT NULL UNIQUE,
-    event_type VARCHAR
-(
-    100
-) NOT NULL,
+    event_id          CHAR(36)                                   NOT NULL UNIQUE,
+    event_type        VARCHAR(100)                               NOT NULL,
 
     -- Kafka 메시지 키로 사용 (같은 주문의 이벤트 순서 보장)
-    aggregate_id CHAR
-(
-    36
-) NOT NULL,
-    topic VARCHAR
-(
-    100
-) NOT NULL,
-    payload JSON NOT NULL,
-    correlation_id CHAR
-(
-    36
-),
+    aggregate_id      CHAR(36)                                   NOT NULL,
+    topic             VARCHAR(100)                               NOT NULL,
+    payload           JSON                                       NOT NULL,
+    correlation_id    CHAR(36),
 
-    publishing_status ENUM
-(
-    'PENDING',
-    'PUBLISHED',
-    'FAILED'
-) NOT NULL DEFAULT 'PENDING',
-    retry_count INT NOT NULL DEFAULT 0,
-    max_retries INT NOT NULL DEFAULT 3,
-    error_message TEXT,
+    publishing_status ENUM ('PENDING', 'PUBLISHED', 'FAILED')    NOT NULL DEFAULT 'PENDING',
+    retry_count       INT                                        NOT NULL DEFAULT 0,
+    max_retries       INT                                        NOT NULL DEFAULT 3,
+    error_message     TEXT,
 
-    kafka_partition INT,
-    kafka_offset BIGINT,
+    kafka_partition   INT,
+    kafka_offset      BIGINT,
 
-    occurred_at TIMESTAMP NOT NULL,
-    published_at TIMESTAMP NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_payment_outbox_status
-(
-    publishing_status,
-    retry_count
-),
-    INDEX idx_payment_outbox_aggregate
-(
-    aggregate_id
-),
-    INDEX idx_payment_outbox_occurred_at
-(
-    occurred_at
-)
-    ) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4
-    COLLATE = utf8mb4_unicode_ci;
+    occurred_at       TIMESTAMP                                  NOT NULL,
+    published_at      TIMESTAMP                                  NULL,
+    created_at        TIMESTAMP                                  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX idx_payment_outbox_status (publishing_status, retry_count),
+    INDEX idx_payment_outbox_aggregate (aggregate_id),
+    INDEX idx_payment_outbox_occurred_at (occurred_at)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
