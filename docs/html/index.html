@@ -13,30 +13,42 @@
             color: #333;
             line-height: 1.6;
         }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { 
-            color: #2c3e50; 
-            margin-bottom: 30px; 
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
             text-align: center;
             border-bottom: 3px solid #3498db;
             padding-bottom: 15px;
         }
+
         .card {
             background: white;
             border-radius: 12px;
             padding: 28px;
             margin-bottom: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border-left: 4px solid #3498db;
         }
-        .card h2 { 
-            margin-top: 0; 
-            color: #34495e; 
+
+        .card h2 {
+            margin-top: 0;
+            color: #34495e;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .card p { margin-bottom: 16px; color: #666; }
+
+        .card p {
+            margin-bottom: 16px;
+            color: #666;
+        }
+
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -47,30 +59,35 @@
             transition: all 0.3s ease;
             font-weight: 500;
         }
-        .btn:hover { 
-            background-color: #2980b9; 
+
+        .btn:hover {
+            background-color: #2980b9;
             transform: translateY(-1px);
         }
-        .meta { 
-            font-size: 0.9em; 
-            color: #888; 
+
+        .meta {
+            font-size: 0.9em;
+            color: #888;
             background-color: #f8f9fa;
             padding: 8px 12px;
             border-radius: 4px;
             margin: 12px 0;
         }
+
         .feature-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 16px;
             margin: 16px 0;
         }
+
         .feature-item {
             background-color: #f8f9fa;
             padding: 12px;
             border-radius: 6px;
             border-left: 3px solid #27ae60;
         }
+
         .code-block {
             background-color: #2c3e50;
             color: #ecf0f1;
@@ -81,13 +98,15 @@
             margin: 16px 0;
             overflow-x: auto;
         }
-        .footer { 
-            text-align: center; 
-            padding-top: 40px; 
-            border-top: 1px solid #ddd; 
-            color: #888; 
-            font-size: 0.9em; 
+
+        .footer {
+            text-align: center;
+            padding-top: 40px;
+            border-top: 1px solid #ddd;
+            color: #888;
+            font-size: 0.9em;
         }
+
         .architecture-diagram {
             background-color: #f8f9fa;
             padding: 20px;
@@ -100,152 +119,152 @@
         }
     </style>
 </head>
-    <body>
-        <div class="container">
-            <h1>🚀 MSA Commerce Lab - API Documentation</h1>
+<body>
+<div class="container">
+    <h1>🚀 MSA Commerce Lab - API Documentation</h1>
 
-            <div class="card">
-                <h2>📋 Monolith API Documentation</h2>
-                <p>Comprehensive API specification for the MSA Commerce Lab monolithic service, covering product management, order processing, payment handling, and more.</p>
-                <div class="meta">
-                    <strong>Key Features:</strong> Redis Caching, Async Processing, Clean Architecture, Hexagonal Design
-                </div>
-                <div class="feature-list">
-                    <div class="feature-item">
-                        <strong>⚡ Performance:</strong> Sub-100ms response time with Redis caching
-                    </div>
-                    <div class="feature-item">
-                        <strong>🔄 Async Processing:</strong> Non-blocking view count tracking
-                    </div>
-                    <div class="feature-item">
-                        <strong>🛡️ Business Logic:</strong> Product status filtering and validation
-                    </div>
-                    <div class="feature-item">
-                        <strong>📊 Monitoring:</strong> Comprehensive error handling and logging
-                    </div>
-                </div>
-                <a href="../generated/html/monolith-docs.html" class="btn">📖 View API Documentation</a>
+    <div class="card">
+        <h2>📋 Monolith API Documentation</h2>
+        <p>Comprehensive API specification for the MSA Commerce Lab monolithic service, covering product management, order processing, payment handling, and more.</p>
+        <div class="meta">
+            <strong>Key Features:</strong> Redis Caching, Async Processing, Clean Architecture, Hexagonal Design
+        </div>
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>⚡ Performance:</strong> Sub-100ms response time with Redis caching
             </div>
+            <div class="feature-item">
+                <strong>🔄 Async Processing:</strong> Non-blocking view count tracking
+            </div>
+            <div class="feature-item">
+                <strong>🛡️ Business Logic:</strong> Product status filtering and validation
+            </div>
+            <div class="feature-item">
+                <strong>📊 Monitoring:</strong> Comprehensive error handling and logging
+            </div>
+        </div>
+        <a class="btn" href="../generated/html/monolith-docs.html">📖 View API Documentation</a>
+    </div>
 
-            <div class="card">
-                <h2>🏗️ Architecture Overview</h2>
-                <p>Built on hexagonal architecture principles to prepare for microservices transformation while maintaining clean separation of concerns.</p>
+    <div class="card">
+        <h2>🏗️ Architecture Overview</h2>
+        <p>Built on hexagonal architecture principles to prepare for microservices transformation while maintaining clean separation of concerns.</p>
 
-                <div class="architecture-diagram">
+        <div class="architecture-diagram">
             ┌─────────────────────────────────────────────────────────────┐<br>
-            │                    Web Layer (Adapter)                     │<br>
-            │  ProductController.java - REST API endpoints               │<br>
+            │ Web Layer (Adapter) │<br>
+            │ ProductController.java - REST API endpoints │<br>
             └─────────────────┬───────────────────────────────────────────┘<br>
-                              │<br>
+            │<br>
             ┌─────────────────▼───────────────────────────────────────────┐<br>
-            │                 Application Layer                          │<br>
-            │  ProductGetUseCase (Port) → ProductGetService             │<br>
-            │  • Business logic orchestration                           │<br>
-            │  • Cache coordination                                      │<br>
-            │  • Domain rule enforcement                                 │<br>
+            │ Application Layer │<br>
+            │ ProductGetUseCase (Port) → ProductGetService │<br>
+            │ • Business logic orchestration │<br>
+            │ • Cache coordination │<br>
+            │ • Domain rule enforcement │<br>
             └─────────────────┬───────────────────────────────────────────┘<br>
-                              │<br>
+            │<br>
             ┌─────────────────▼───────────────────────────────────────────┐<br>
-            │               Infrastructure Layer                         │<br>
-            │  • ProductRepository (JPA)                                │<br>
-            │  • ProductInventoryRepository                             │<br>
-            │  • ProductViewCountAdapter (Redis)                        │<br>
-            │  • Caching Configuration                                   │<br>
+            │ Infrastructure Layer │<br>
+            │ • ProductRepository (JPA) │<br>
+            │ • ProductInventoryRepository │<br>
+            │ • ProductViewCountAdapter (Redis) │<br>
+            │ • Caching Configuration │<br>
             └─────────────────────────────────────────────────────────────┘
-                </div>
+        </div>
 
-                <h3>Layer Responsibilities:</h3>
-                <ul>
-                    <li><strong>Inbound Adapters:</strong> REST Controllers handling HTTP requests</li>
-                    <li><strong>Application Layer:</strong> Use Cases & Services orchestrating business logic</li>
-                    <li><strong>Outbound Adapters:</strong> JPA Repositories, Redis Cache adapters, external integrations</li>
-                    <li><strong>Domain Layer:</strong> Core business entities and rules (Product, ProductStatus, etc.)</li>
-                </ul>
-            </div>
+        <h3>Layer Responsibilities:</h3>
+        <ul>
+            <li><strong>Inbound Adapters:</strong> REST Controllers handling HTTP requests</li>
+            <li><strong>Application Layer:</strong> Use Cases & Services orchestrating business logic</li>
+            <li><strong>Outbound Adapters:</strong> JPA Repositories, Redis Cache adapters, external integrations</li>
+            <li><strong>Domain Layer:</strong> Core business entities and rules (Product, ProductStatus, etc.)</li>
+        </ul>
+    </div>
 
-            <div class="card">
-                <h2>🔧 Development Workflow</h2>
-                <p>Step-by-step guide for updating API specifications and generating documentation.</p>
+    <div class="card">
+        <h2>🔧 Development Workflow</h2>
+        <p>Step-by-step guide for updating API specifications and generating documentation.</p>
 
-                <h3>1. Update API Specification</h3>
-                <div class="code-block">
+        <h3>1. Update API Specification</h3>
+        <div class="code-block">
             # Edit the source OpenAPI specification
             vim docs/api-specs/monolith-openapi.yml
 
             # Validate the specification
             redocly lint docs/api-specs/monolith-openapi.yml
-                </div>
+        </div>
 
-                <h3>2. Generate Documentation</h3>
-                <div class="code-block">
+        <h3>2. Generate Documentation</h3>
+        <div class="code-block">
             # Build all documentation artifacts
             ./scripts/build-api-docs.sh
 
             # Output files:
             # - docs/generated/bundled/monolith-bundle.yml
             # - docs/generated/html/monolith-docs.html
-                </div>
+        </div>
 
-                <h3>3. Git Workflow</h3>
-                <div class="code-block">
+        <h3>3. Git Workflow</h3>
+        <div class="code-block">
             # Only commit source files (generated files are ignored)
             git add docs/api-specs/monolith-openapi.yml
             git add scripts/build-api-docs.sh
             git commit -m "docs: Update API specification"
 
             # Generated files are automatically excluded via .gitignore
-                </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🎯 API Features</h2>
+        <p>Current implementation includes comprehensive product management capabilities:</p>
+
+        <h3>Available Endpoints:</h3>
+        <ul>
+            <li><strong>POST /api/v1/products</strong> - Create new product with inventory</li>
+            <li><strong>GET /api/v1/products/{id}</strong> - Retrieve product with caching & view tracking</li>
+            <li><strong>PUT /api/v1/products/{id}</strong> - Update existing product information</li>
+        </ul>
+
+        <h3>Advanced Features:</h3>
+        <ul>
+            <li><strong>Cache-First Retrieval:</strong> 1-hour TTL with Redis</li>
+            <li><strong>Async View Counting:</strong> Non-blocking performance tracking</li>
+            <li><strong>Product Status Management:</strong> DRAFT, ACTIVE, INACTIVE, ARCHIVED</li>
+            <li><strong>Inventory Integration:</strong> Stock tracking and management</li>
+            <li><strong>Business Rules:</strong> ARCHIVED product filtering, SKU validation</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>📚 Technical Stack</h2>
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>Backend:</strong> Spring Boot, JPA/Hibernate
             </div>
-
-            <div class="card">
-                <h2>🎯 API Features</h2>
-                <p>Current implementation includes comprehensive product management capabilities:</p>
-
-                <h3>Available Endpoints:</h3>
-                <ul>
-                    <li><strong>POST /api/v1/products</strong> - Create new product with inventory</li>
-                    <li><strong>GET /api/v1/products/{id}</strong> - Retrieve product with caching & view tracking</li>
-                    <li><strong>PUT /api/v1/products/{id}</strong> - Update existing product information</li>
-                </ul>
-
-                <h3>Advanced Features:</h3>
-                <ul>
-                    <li><strong>Cache-First Retrieval:</strong> 1-hour TTL with Redis</li>
-                    <li><strong>Async View Counting:</strong> Non-blocking performance tracking</li>
-                    <li><strong>Product Status Management:</strong> DRAFT, ACTIVE, INACTIVE, ARCHIVED</li>
-                    <li><strong>Inventory Integration:</strong> Stock tracking and management</li>
-                    <li><strong>Business Rules:</strong> ARCHIVED product filtering, SKU validation</li>
-                </ul>
+            <div class="feature-item">
+                <strong>Caching:</strong> Redis with Spring Cache
             </div>
-
-            <div class="card">
-                <h2>📚 Technical Stack</h2>
-                <div class="feature-list">
-                    <div class="feature-item">
-                        <strong>Backend:</strong> Spring Boot, JPA/Hibernate
-                    </div>
-                    <div class="feature-item">
-                        <strong>Caching:</strong> Redis with Spring Cache
-                    </div>
-                    <div class="feature-item">
-                        <strong>Documentation:</strong> OpenAPI 3.0.3, Redocly
-                    </div>
-                    <div class="feature-item">
-                        <strong>Architecture:</strong> Hexagonal/Clean Architecture
-                    </div>
-                    <div class="feature-item">
-                        <strong>Testing:</strong> JUnit 5, Mockito, TestContainers
-                    </div>
-                    <div class="feature-item">
-                        <strong>Build:</strong> Gradle with Kotlin DSL
-                    </div>
-                </div>
+            <div class="feature-item">
+                <strong>Documentation:</strong> OpenAPI 3.0.3, Redocly
             </div>
-
-            <div class="footer">
-                <p>MSA Commerce Lab | Built with Clean Architecture & Hexagonal Design</p>
-                <p>For support or questions, please refer to the project documentation or contact the development team.</p>
+            <div class="feature-item">
+                <strong>Architecture:</strong> Hexagonal/Clean Architecture
+            </div>
+            <div class="feature-item">
+                <strong>Testing:</strong> JUnit 5, Mockito, TestContainers
+            </div>
+            <div class="feature-item">
+                <strong>Build:</strong> Gradle with Kotlin DSL
             </div>
         </div>
-    </body>
+    </div>
+
+    <div class="footer">
+        <p>MSA Commerce Lab | Built with Clean Architecture & Hexagonal Design</p>
+        <p>For support or questions, please refer to the project documentation or contact the development team.</p>
+    </div>
+</div>
+</body>
 </html>

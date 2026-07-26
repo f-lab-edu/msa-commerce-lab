@@ -1,7 +1,6 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

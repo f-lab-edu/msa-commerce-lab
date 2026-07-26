@@ -1,6 +1,6 @@
 package com.msa.commerce.common.aop;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Set;
 
@@ -32,10 +32,10 @@ class CommandValidationExceptionTest {
             .build();
 
         Set<ConstraintViolation<TestCommand>> violations = validator.validate(invalidCommand);
-        
+
         // When
         @SuppressWarnings("unchecked")
-        Set<ConstraintViolation<Object>> objectViolations = (Set<ConstraintViolation<Object>>) (Set<?>) violations;
+        Set<ConstraintViolation<Object>> objectViolations = (Set<ConstraintViolation<Object>>)(Set<?>)violations;
         CommandValidationException exception = new CommandValidationException("TestCommand", objectViolations);
 
         // Then
@@ -56,7 +56,7 @@ class CommandValidationExceptionTest {
 
         Set<ConstraintViolation<TestCommand>> violations = validator.validate(invalidCommand);
         @SuppressWarnings("unchecked")
-        Set<ConstraintViolation<Object>> objectViolations = (Set<ConstraintViolation<Object>>) (Set<?>) violations;
+        Set<ConstraintViolation<Object>> objectViolations = (Set<ConstraintViolation<Object>>)(Set<?>)violations;
         CommandValidationException exception = new CommandValidationException("TestCommand", objectViolations);
 
         // When
@@ -74,7 +74,7 @@ class CommandValidationExceptionTest {
     void shouldCreateExceptionWithSimpleMessage() {
         // When
         CommandValidationException exception = new CommandValidationException(
-            "TestCommand", 
+            "TestCommand",
             "Simple validation error"
         );
 
@@ -87,10 +87,13 @@ class CommandValidationExceptionTest {
     @Getter
     @Builder
     static class TestCommand {
+
         @NotNull(message = "ID is required")
         private final Long id;
 
         @NotBlank(message = "Name is required")
         private final String name;
+
     }
+
 }

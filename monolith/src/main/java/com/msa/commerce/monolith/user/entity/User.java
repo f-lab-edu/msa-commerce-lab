@@ -123,7 +123,6 @@ public class User {
         this.status = UserStatus.DELETED;
     }
 
-
     public void loginNow() {
         this.lastLoginAt = LocalDateTime.now();
     }

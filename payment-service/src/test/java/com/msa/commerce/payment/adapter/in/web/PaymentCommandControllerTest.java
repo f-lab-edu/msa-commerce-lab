@@ -72,6 +72,21 @@ class PaymentCommandControllerTest {
             .build();
     }
 
+    private PaymentResponse response(PaymentStatus status) {
+        return PaymentResponse.builder()
+            .paymentId(PAYMENT_ID)
+            .orderId(ORDER_ID)
+            .customerId(1001L)
+            .amount(new BigDecimal("15000.0000"))
+            .currency("KRW")
+            .status(status)
+            .paymentMethod(PaymentMethod.CREDIT_CARD)
+            .paymentProvider("MOCK_PG")
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
+    }
+
     @Nested
     @DisplayName("결제 요청")
     class Process {
@@ -292,21 +307,6 @@ class PaymentCommandControllerTest {
                 .andExpect(status().isBadRequest());
         }
 
-    }
-
-    private PaymentResponse response(PaymentStatus status) {
-        return PaymentResponse.builder()
-            .paymentId(PAYMENT_ID)
-            .orderId(ORDER_ID)
-            .customerId(1001L)
-            .amount(new BigDecimal("15000.0000"))
-            .currency("KRW")
-            .status(status)
-            .paymentMethod(PaymentMethod.CREDIT_CARD)
-            .paymentProvider("MOCK_PG")
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
     }
 
 }

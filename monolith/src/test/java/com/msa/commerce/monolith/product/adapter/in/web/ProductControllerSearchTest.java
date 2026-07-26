@@ -20,6 +20,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.msa.commerce.common.monitoring.MetricsCollector;
+import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductCreateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductDeleteUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductGetUseCase;
@@ -27,7 +28,6 @@ import com.msa.commerce.monolith.product.application.port.in.ProductPageResponse
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchResponse;
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchUseCase;
-import com.msa.commerce.monolith.product.adapter.in.web.mapper.ProductMapper;
 import com.msa.commerce.monolith.product.application.port.in.ProductUpdateUseCase;
 import com.msa.commerce.monolith.product.application.port.in.ProductVerifyUseCase;
 import com.msa.commerce.monolith.product.domain.ProductStatus;

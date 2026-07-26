@@ -8,12 +8,6 @@ public record ProductEvent(
     EventType eventType
 ) {
 
-    public enum EventType {
-        PRODUCT_CREATED,
-        PRODUCT_UPDATED,
-        PRODUCT_DELETED
-    }
-
     public static ProductEvent productCreated(Product product) {
         return new ProductEvent(product, product.getId(), EventType.PRODUCT_CREATED);
     }
@@ -25,4 +19,11 @@ public record ProductEvent(
     public static ProductEvent productDeleted(Product product) {
         return new ProductEvent(product, product.getId(), EventType.PRODUCT_DELETED);
     }
+
+    public enum EventType {
+        PRODUCT_CREATED,
+        PRODUCT_UPDATED,
+        PRODUCT_DELETED
+    }
+
 }
