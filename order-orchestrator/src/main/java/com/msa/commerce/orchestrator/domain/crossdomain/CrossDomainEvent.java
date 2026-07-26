@@ -2,6 +2,7 @@ package com.msa.commerce.orchestrator.domain.crossdomain;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -93,6 +94,7 @@ public class CrossDomainEvent {
             entityId, eventData, kafkaTopic);
 
         return CrossDomainEvent.builder()
+            .eventUuid(UUID.randomUUID().toString())
             .eventType(eventType)
             .sourceDomain(sourceDomain)
             .targetDomains(targetDomains)
