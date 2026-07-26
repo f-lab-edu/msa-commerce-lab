@@ -27,11 +27,14 @@ public class ProductCreateService implements ProductCreateUseCase {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 
+    private final ProductCategoryValidator productCategoryValidator;
+
     @Override
     @ValidateCommand(errorPrefix = "Product creation validation failed")
     public ProductResponse createProduct(ProductCreateCommand command) {
         validateCommand(command);
         validateDuplicateSku(command.getSku());
+        productCategoryValidator.validateActiveCategory(command.getCategoryId());
         return executeProductCreation(command);
     }
 

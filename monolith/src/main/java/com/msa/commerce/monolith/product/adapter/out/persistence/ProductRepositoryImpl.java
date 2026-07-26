@@ -8,7 +8,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import com.msa.commerce.monolith.product.application.port.in.ProductSearchCommand;
@@ -87,10 +86,9 @@ public class ProductRepositoryImpl implements ProductRepository {
 
     @Override
     public Page<Product> searchProducts(ProductSearchCommand command) {
-        Specification<ProductJpaEntity> spec = ProductSpecification.withFilters(command);
         Pageable pageable = createPageable(command);
 
-        Page<ProductJpaEntity> jpaEntityPage = productJpaRepository.findAll(spec, pageable);
+        Page<ProductJpaEntity> jpaEntityPage = productJpaRepository.searchProducts(command, pageable);
 
         return jpaEntityPage.map(ProductJpaEntity::toDomainEntity);
     }

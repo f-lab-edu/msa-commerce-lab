@@ -41,6 +41,9 @@ class ProductCreateServiceTest {
     @Mock
     private ApplicationEventPublisher applicationEventPublisher;
 
+    @Mock
+    private ProductCategoryValidator productCategoryValidator;
+
     @InjectMocks
     private ProductCreateService productCreateService;
 
