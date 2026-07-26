@@ -3,6 +3,7 @@ package com.msa.commerce.monolith.user.domain;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.time.Month;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -106,7 +107,7 @@ class UserTest {
         @DisplayName("모든 프로필 필드를 갱신할 수 있다")
         void updateAllProfileFields() {
             User user = UserFixture.activeUser(1L);
-            LocalDate newBirthDate = LocalDate.of(2000, 12, 25);
+            LocalDate newBirthDate = LocalDate.of(2000, Month.DECEMBER, 25);
 
             user.updateProfile("New", "Name", "010-0000-0000", newBirthDate, Gender.FEMALE,
                 "https://example.com/new.png");

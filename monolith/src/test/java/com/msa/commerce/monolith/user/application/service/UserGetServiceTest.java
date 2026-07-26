@@ -24,6 +24,8 @@ import com.msa.commerce.monolith.user.fixture.UserFixture;
 @DisplayName("UserGetService 테스트")
 class UserGetServiceTest {
 
+    private static final String UNKNOWN_EMAIL = "none@example.com";
+
     @Mock
     private UserRepository userRepository;
 
@@ -41,7 +43,7 @@ class UserGetServiceTest {
         UserResponse response = userGetService.getUser(1L);
 
         assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getUsername()).isEqualTo("joel1");
+        assertThat(response.getUsername()).isEqualTo(UserFixture.usernameOf(1L));
         assertThat(response.getStatus()).isEqualTo(UserStatus.ACTIVE);
     }
 
@@ -70,22 +72,22 @@ class UserGetServiceTest {
     @Test
     @DisplayName("이메일로 사용자를 조회한다")
     void getUserByEmail() {
-        given(userRepository.findByEmail("joel1@example.com"))
+        given(userRepository.findByEmail(UserFixture.emailOf(1L)))
             .willReturn(Optional.of(UserFixture.activeUser(1L)));
 
-        UserResponse response = userGetService.getUserByEmail("joel1@example.com");
+        UserResponse response = userGetService.getUserByEmail(UserFixture.emailOf(1L));
 
-        assertThat(response.getEmail()).isEqualTo("joel1@example.com");
+        assertThat(response.getEmail()).isEqualTo(UserFixture.emailOf(1L));
     }
 
     @Test
     @DisplayName("이메일로 조회한 사용자가 없으면 ResourceNotFoundException 이 발생한다")
     void getUserByEmailNotFound() {
-        given(userRepository.findByEmail("none@example.com")).willReturn(Optional.empty());
+        given(userRepository.findByEmail(UNKNOWN_EMAIL)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> userGetService.getUserByEmail("none@example.com"))
+        assertThatThrownBy(() -> userGetService.getUserByEmail(UNKNOWN_EMAIL))
             .isInstanceOf(ResourceNotFoundException.class)
-            .hasMessageContaining("none@example.com");
+            .hasMessageContaining(UNKNOWN_EMAIL);
     }
 
 }

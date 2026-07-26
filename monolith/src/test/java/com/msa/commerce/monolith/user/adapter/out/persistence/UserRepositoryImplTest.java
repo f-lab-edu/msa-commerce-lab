@@ -33,9 +33,9 @@ class UserRepositoryImplTest {
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getUserUuid()).isNotBlank();
-        assertThat(saved.getUsername()).isEqualTo("joel");
-        assertThat(saved.getEmail()).isEqualTo("joel@example.com");
-        assertThat(saved.getPasswordHash()).isEqualTo("$2a$10$hashed");
+        assertThat(saved.getUsername()).isEqualTo(UserFixture.USERNAME);
+        assertThat(saved.getEmail()).isEqualTo(UserFixture.EMAIL);
+        assertThat(saved.getPasswordHash()).isEqualTo(UserFixture.PASSWORD_HASH);
         assertThat(saved.getDateOfBirth()).isEqualTo(UserFixture.DATE_OF_BIRTH);
         assertThat(saved.getGender()).isEqualTo(Gender.MALE);
         assertThat(saved.getStatus()).isEqualTo(UserStatus.ACTIVE);
@@ -50,8 +50,8 @@ class UserRepositoryImplTest {
         User saved = userRepository.save(UserFixture.newUser());
 
         assertThat(userRepository.findById(saved.getId())).isPresent();
-        assertThat(userRepository.findByEmail("joel@example.com")).isPresent();
-        assertThat(userRepository.findByUsername("joel")).isPresent();
+        assertThat(userRepository.findByEmail(UserFixture.EMAIL)).isPresent();
+        assertThat(userRepository.findByUsername(UserFixture.USERNAME)).isPresent();
         assertThat(userRepository.findById(999L)).isEmpty();
     }
 
@@ -96,7 +96,7 @@ class UserRepositoryImplTest {
         List<User> found = userRepository.findAllByIds(List.of(first.getId(), second.getId(), 999L));
 
         assertThat(found).hasSize(2);
-        assertThat(found).extracting(User::getUsername).containsExactlyInAnyOrder("joel", "second");
+        assertThat(found).extracting(User::getUsername).containsExactlyInAnyOrder(UserFixture.USERNAME, "second");
     }
 
     @Test
@@ -104,8 +104,8 @@ class UserRepositoryImplTest {
     void existsBy() {
         userRepository.save(UserFixture.newUser());
 
-        assertThat(userRepository.existsByUsername("joel")).isTrue();
-        assertThat(userRepository.existsByEmail("joel@example.com")).isTrue();
+        assertThat(userRepository.existsByUsername(UserFixture.USERNAME)).isTrue();
+        assertThat(userRepository.existsByEmail(UserFixture.EMAIL)).isTrue();
         assertThat(userRepository.existsByUsername("unknown")).isFalse();
         assertThat(userRepository.existsByEmail("unknown@example.com")).isFalse();
     }

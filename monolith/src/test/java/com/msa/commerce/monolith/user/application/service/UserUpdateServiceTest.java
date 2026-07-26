@@ -27,6 +27,8 @@ import com.msa.commerce.monolith.user.fixture.UserFixture;
 @DisplayName("UserUpdateService 테스트")
 class UserUpdateServiceTest {
 
+    private static final String CHANGED_FIRST_NAME = "Changed";
+
     @Mock
     private UserRepository userRepository;
 
@@ -45,10 +47,10 @@ class UserUpdateServiceTest {
 
         UserResponse response = userUpdateService.updateUser(UserUpdateCommand.builder()
             .userId(1L)
-            .firstName("Changed")
+            .firstName(CHANGED_FIRST_NAME)
             .build());
 
-        assertThat(response.getFirstName()).isEqualTo("Changed");
+        assertThat(response.getFirstName()).isEqualTo(CHANGED_FIRST_NAME);
         assertThat(response.getLastName()).isEqualTo("You");
         assertThat(response.getStatus()).isEqualTo(UserStatus.ACTIVE);
     }
@@ -71,7 +73,7 @@ class UserUpdateServiceTest {
 
         assertThatThrownBy(() -> userUpdateService.updateUser(UserUpdateCommand.builder()
             .userId(99L)
-            .firstName("Changed")
+            .firstName(CHANGED_FIRST_NAME)
             .build()))
             .isInstanceOf(ResourceNotFoundException.class);
     }
@@ -84,7 +86,7 @@ class UserUpdateServiceTest {
 
         assertThatThrownBy(() -> userUpdateService.updateUser(UserUpdateCommand.builder()
             .userId(1L)
-            .firstName("Changed")
+            .firstName(CHANGED_FIRST_NAME)
             .build()))
             .isInstanceOf(ResourceNotFoundException.class);
 

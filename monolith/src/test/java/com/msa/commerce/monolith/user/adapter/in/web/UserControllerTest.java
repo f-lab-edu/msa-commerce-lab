@@ -41,6 +41,12 @@ import com.msa.commerce.monolith.user.domain.UserStatus;
 @DisplayName("UserController 테스트")
 class UserControllerTest {
 
+    private static final String BASE_URL = "/api/v1/users";
+
+    private static final String USERNAME = "joel";
+
+    private static final String EMAIL = "joel@example.com";
+
     private MockMvc mockMvc;
 
     private ObjectMapper objectMapper;
@@ -78,8 +84,8 @@ class UserControllerTest {
         return UserResponse.builder()
             .id(1L)
             .userUuid("018f8c2e-0000-7000-8000-000000000001")
-            .username("joel")
-            .email("joel@example.com")
+            .username(USERNAME)
+            .email(EMAIL)
             .firstName("Jaeyoung")
             .lastName("You")
             .gender(Gender.MALE)
@@ -93,8 +99,8 @@ class UserControllerTest {
     @DisplayName("사용자 생성 API - 201 과 생성된 사용자를 반환한다")
     void createUser() throws Exception {
         UserCreateRequest request = UserCreateRequest.builder()
-            .username("joel")
-            .email("joel@example.com")
+            .username(USERNAME)
+            .email(EMAIL)
             .password("rawPassword123")
             .firstName("Jaeyoung")
             .lastName("You")
@@ -103,12 +109,12 @@ class UserControllerTest {
         given(userMapper.toCommand(any(UserCreateRequest.class))).willReturn(UserCreateCommand.builder().build());
         given(userCreateUseCase.createUser(any(UserCreateCommand.class))).willReturn(userResponse());
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post(BASE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.username").value("joel"))
+            .andExpect(jsonPath("$.username").value(USERNAME))
             .andExpect(jsonPath("$.status").value("ACTIVE"))
             .andExpect(jsonPath("$.password").doesNotExist())
             .andExpect(jsonPath("$.passwordHash").doesNotExist());
@@ -123,7 +129,7 @@ class UserControllerTest {
             .password("short")
             .build();
 
-        mockMvc.perform(post("/api/v1/users")
+        mockMvc.perform(post(BASE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
@@ -136,10 +142,10 @@ class UserControllerTest {
     void retrieveUser() throws Exception {
         given(userGetUseCase.getUser(1L)).willReturn(userResponse());
 
-        mockMvc.perform(get("/api/v1/users/1"))
+        mockMvc.perform(get(BASE_URL + "/1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1))
-            .andExpect(jsonPath("$.email").value("joel@example.com"));
+            .andExpect(jsonPath("$.email").value(EMAIL));
     }
 
     @Test
@@ -148,7 +154,7 @@ class UserControllerTest {
         given(userGetUseCase.getUser(99L)).willThrow(
             new ResourceNotFoundException("User not found with id: 99", ErrorCode.USER_NOT_FOUND.getCode()));
 
-        mockMvc.perform(get("/api/v1/users/99"))
+        mockMvc.perform(get(BASE_URL + "/99"))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value(ErrorCode.USER_NOT_FOUND.getCode()));
     }
@@ -156,11 +162,11 @@ class UserControllerTest {
     @Test
     @DisplayName("이메일 조회 API - 200 과 사용자를 반환한다")
     void retrieveUserByEmail() throws Exception {
-        given(userGetUseCase.getUserByEmail("joel@example.com")).willReturn(userResponse());
+        given(userGetUseCase.getUserByEmail(EMAIL)).willReturn(userResponse());
 
-        mockMvc.perform(get("/api/v1/users").param("email", "joel@example.com"))
+        mockMvc.perform(get(BASE_URL).param("email", EMAIL))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.email").value("joel@example.com"));
+            .andExpect(jsonPath("$.email").value(EMAIL));
     }
 
     @Test
@@ -174,7 +180,7 @@ class UserControllerTest {
             .willReturn(UserUpdateCommand.builder().userId(1L).build());
         given(userUpdateUseCase.updateUser(any(UserUpdateCommand.class))).willReturn(userResponse());
 
-        mockMvc.perform(put("/api/v1/users/1")
+        mockMvc.perform(put(BASE_URL + "/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -186,7 +192,7 @@ class UserControllerTest {
     void recordLogin() throws Exception {
         given(userLoginPolicyUseCase.recordLogin(1L)).willReturn(userResponse());
 
-        mockMvc.perform(post("/api/v1/users/1/login-record"))
+        mockMvc.perform(post(BASE_URL + "/1/login-record"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1));
     }
@@ -203,7 +209,7 @@ class UserControllerTest {
         given(userLoginPolicyUseCase.updateLoginPolicy(any(UserLoginPolicyCommand.class)))
             .willReturn(userResponse());
 
-        mockMvc.perform(patch("/api/v1/users/1/login-policy")
+        mockMvc.perform(patch(BASE_URL + "/1/login-policy")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk());
@@ -235,7 +241,7 @@ class UserControllerTest {
                 ))
                 .build());
 
-        mockMvc.perform(post("/api/v1/users/verify")
+        mockMvc.perform(post(BASE_URL + "/verify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isOk())
@@ -251,7 +257,7 @@ class UserControllerTest {
             .userIds(List.of())
             .build();
 
-        mockMvc.perform(post("/api/v1/users/verify")
+        mockMvc.perform(post(BASE_URL + "/verify")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isBadRequest());
