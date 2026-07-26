@@ -16,6 +16,10 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("PaymentJpaEntity / PaymentDomainMapper 변환 테스트")
 class PaymentJpaEntityTest {
 
+    private static final String CARD_LAST4_KEY = "cardLast4";
+
+    private static final String CARD_LAST4 = "1234";
+
     private final PaymentDomainMapper mapper = new PaymentDomainMapper();
 
     @Test
@@ -35,7 +39,7 @@ class PaymentJpaEntityTest {
         assertThat(restored.getPaymentProvider()).isEqualTo(payment.getPaymentProvider());
         assertThat(restored.getGatewayTransactionId()).isEqualTo("TXN-1");
         assertThat(restored.getApprovalNumber()).isEqualTo("0001");
-        assertThat(restored.getPaymentDetails()).containsEntry("cardLast4", "1234");
+        assertThat(restored.getPaymentDetails()).containsEntry(CARD_LAST4_KEY, CARD_LAST4);
         assertThat(restored.getAuthorizedAt()).isEqualTo(payment.getAuthorizedAt());
         assertThat(restored.getCapturedAt()).isEqualTo(payment.getCapturedAt());
         assertThat(restored.getCreatedAt()).isEqualTo(payment.getCreatedAt());
@@ -65,9 +69,9 @@ class PaymentJpaEntityTest {
         Payment payment = pendingPayment();
         PaymentJpaEntity entity = PaymentJpaEntity.from(payment);
 
-        entity.getPaymentDetails().put("cardLast4", "9999");
+        entity.getPaymentDetails().put(CARD_LAST4_KEY, "9999");
 
-        assertThat(payment.getPaymentDetails()).containsEntry("cardLast4", "1234");
+        assertThat(payment.getPaymentDetails()).containsEntry(CARD_LAST4_KEY, CARD_LAST4);
     }
 
     @Test
@@ -78,7 +82,7 @@ class PaymentJpaEntityTest {
 
     private Payment pendingPayment() {
         return Payment.request(UUID.randomUUID(), 1001L, new BigDecimal("15000.0000"), "KRW",
-            PaymentMethod.CREDIT_CARD, "MOCK_PG", Map.of("cardLast4", "1234"));
+            PaymentMethod.CREDIT_CARD, "MOCK_PG", Map.of(CARD_LAST4_KEY, CARD_LAST4));
     }
 
     private Payment capturedPayment() {

@@ -30,8 +30,9 @@ public class PaymentResultRecorder {
         return saved;
     }
 
+    // 이벤트 발행 없이 상태만 저장한다 (환불처럼 payment.result 를 내보내지 않는 경우)
     @Transactional
-    public Payment record(Payment payment) {
+    public Payment recordOnly(Payment payment) {
         return paymentRepository.save(payment);
     }
 

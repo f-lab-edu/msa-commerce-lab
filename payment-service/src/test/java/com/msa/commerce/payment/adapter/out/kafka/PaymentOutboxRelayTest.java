@@ -30,6 +30,12 @@ import com.msa.commerce.payment.domain.outbox.PublishingStatus;
 @DisplayName("PaymentOutboxRelay 테스트")
 class PaymentOutboxRelayTest {
 
+    private static final String TOPIC = "payment.result";
+
+    private static final String AGGREGATE_ID = "order-1";
+
+    private static final String BROKER_ERROR = "broker unavailable";
+
     private static final String PAYLOAD = "{\"orderId\":\"order-1\",\"paymentStatus\":\"SUCCESS\"}";
 
     @Mock
@@ -78,7 +84,7 @@ class PaymentOutboxRelayTest {
         relay.publishPendingEvents();
 
         ArgumentCaptor<Object> payloadCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(kafkaTemplate).send(eq("payment.result"), eq("order-1"), payloadCaptor.capture());
+        verify(kafkaTemplate).send(eq(TOPIC), eq(AGGREGATE_ID), payloadCaptor.capture());
         assertThat(payloadCaptor.getValue())
             .isInstanceOf(Map.class)
             .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.MAP)
@@ -90,25 +96,25 @@ class PaymentOutboxRelayTest {
     void keepsPendingOnFailure() {
         givenPending(pendingEvent());
         given(kafkaTemplate.send(anyString(), anyString(), any()))
-            .willReturn(CompletableFuture.failedFuture(new IllegalStateException("broker unavailable")));
+            .willReturn(CompletableFuture.failedFuture(new IllegalStateException(BROKER_ERROR)));
 
         relay.publishPendingEvents();
 
         OutboxEvent saved = captureSaved();
         assertThat(saved.getPublishingStatus()).isEqualTo(PublishingStatus.PENDING);
         assertThat(saved.getRetryCount()).isEqualTo(1);
-        assertThat(saved.getErrorMessage()).contains("broker unavailable");
+        assertThat(saved.getErrorMessage()).contains(BROKER_ERROR);
     }
 
     @Test
     @DisplayName("재시도 한도를 넘긴 이벤트는 FAILED 로 떨어진다")
     void marksFailedWhenRetriesExhausted() {
         OutboxEvent event = pendingEvent();
-        event.markAsFailed("broker unavailable");
-        event.markAsFailed("broker unavailable");
+        event.markAsFailed(BROKER_ERROR);
+        event.markAsFailed(BROKER_ERROR);
         givenPending(event);
         given(kafkaTemplate.send(anyString(), anyString(), any()))
-            .willReturn(CompletableFuture.failedFuture(new IllegalStateException("broker unavailable")));
+            .willReturn(CompletableFuture.failedFuture(new IllegalStateException(BROKER_ERROR)));
 
         relay.publishPendingEvents();
 
@@ -119,7 +125,7 @@ class PaymentOutboxRelayTest {
     @DisplayName("payload 가 깨져 있어도 다른 이벤트 처리를 막지 않는다")
     void isolatesFailurePerEvent() {
         OutboxEvent broken = OutboxEvent.pending("event-broken", "PAYMENT_RESULT", "order-2",
-            "payment.result", "not-json", "corr-2");
+            TOPIC, "not-json", "corr-2");
         givenPending(broken, pendingEvent());
         givenSendSucceeds();
 
@@ -135,8 +141,8 @@ class PaymentOutboxRelayTest {
 
     private void givenSendSucceeds() {
         SendResult<String, Object> sendResult = new SendResult<>(
-            new ProducerRecord<>("payment.result", "order-1", PAYLOAD),
-            new RecordMetadata(new TopicPartition("payment.result", 1), 42L, 0, 0L, 0, 0));
+            new ProducerRecord<>(TOPIC, AGGREGATE_ID, PAYLOAD),
+            new RecordMetadata(new TopicPartition(TOPIC, 1), 42L, 0, 0L, 0, 0));
 
         given(kafkaTemplate.send(anyString(), anyString(), any()))
             .willReturn(CompletableFuture.completedFuture(sendResult));
@@ -149,7 +155,7 @@ class PaymentOutboxRelayTest {
     }
 
     private OutboxEvent pendingEvent() {
-        return OutboxEvent.pending("event-1", "PAYMENT_RESULT", "order-1", "payment.result", PAYLOAD, "corr-1");
+        return OutboxEvent.pending("event-1", "PAYMENT_RESULT", AGGREGATE_ID, TOPIC, PAYLOAD, "corr-1");
     }
 
 }

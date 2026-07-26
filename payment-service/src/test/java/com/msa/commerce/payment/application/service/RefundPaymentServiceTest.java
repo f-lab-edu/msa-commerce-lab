@@ -29,6 +29,10 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("RefundPaymentService 단위 테스트")
 class RefundPaymentServiceTest {
 
+    private static final BigDecimal PARTIAL_AMOUNT = new BigDecimal("5000.0000");
+
+    private static final BigDecimal REMAINING_AMOUNT = new BigDecimal("10000.0000");
+
     private static final BigDecimal AMOUNT = new BigDecimal("15000.0000");
 
     private static final String REASON = "상품 불량";
@@ -73,11 +77,11 @@ class RefundPaymentServiceTest {
     void refundsPartially() {
         Payment payment = capturedPayment();
         givenFound(payment);
-        givenGatewayApproves(payment, new BigDecimal("5000.0000"));
+        givenGatewayApproves(payment, PARTIAL_AMOUNT);
         givenRecorded();
 
         var response = refundPaymentService.refund(new RefundPaymentCommand(
-            payment.getPaymentId(), new BigDecimal("5000.0000"), REASON, null));
+            payment.getPaymentId(), PARTIAL_AMOUNT, REASON, null));
 
         assertThat(response.status()).isEqualTo(PaymentStatus.PARTIAL_REFUNDED);
         assertThat(response.refundAmount()).isEqualByComparingTo("5000.0000");
@@ -88,13 +92,13 @@ class RefundPaymentServiceTest {
     @DisplayName("부분 환불을 반복해 전액에 도달하면 REFUNDED 가 된다")
     void accumulatesPartialRefunds() {
         Payment payment = capturedPayment();
-        payment.refund(new BigDecimal("10000.0000"), REASON);
+        payment.refund(REMAINING_AMOUNT, REASON);
         givenFound(payment);
-        givenGatewayApproves(payment, new BigDecimal("5000.0000"));
+        givenGatewayApproves(payment, PARTIAL_AMOUNT);
         givenRecorded();
 
         var response = refundPaymentService.refund(new RefundPaymentCommand(
-            payment.getPaymentId(), new BigDecimal("5000.0000"), REASON, null));
+            payment.getPaymentId(), PARTIAL_AMOUNT, REASON, null));
 
         assertThat(response.status()).isEqualTo(PaymentStatus.REFUNDED);
         assertThat(response.refundAmount()).isEqualByComparingTo(AMOUNT);
@@ -154,7 +158,7 @@ class RefundPaymentServiceTest {
 
         refundPaymentService.refund(new RefundPaymentCommand(payment.getPaymentId(), null, REASON, null));
 
-        then(paymentResultRecorder).should().record(payment);
+        then(paymentResultRecorder).should().recordOnly(payment);
         then(paymentResultRecorder).should(never()).recordAndPublish(any(), any());
     }
 
@@ -168,7 +172,7 @@ class RefundPaymentServiceTest {
     }
 
     private void givenRecorded() {
-        given(paymentResultRecorder.record(any(Payment.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(paymentResultRecorder.recordOnly(any(Payment.class))).willAnswer(invocation -> invocation.getArgument(0));
     }
 
     private Payment capturedPayment() {

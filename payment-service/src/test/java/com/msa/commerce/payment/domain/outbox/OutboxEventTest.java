@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 @DisplayName("OutboxEvent 도메인 테스트")
 class OutboxEventTest {
 
+    private static final String BROKER_ERROR = "broker unavailable";
+
     @Test
     @DisplayName("생성 시 PENDING 상태로 재시도 카운터가 초기화된다")
     void createsPendingEvent() {
@@ -38,11 +40,11 @@ class OutboxEventTest {
     void staysPendingUntilRetriesExhausted() {
         OutboxEvent event = pendingEvent();
 
-        event.markAsFailed("broker unavailable");
+        event.markAsFailed(BROKER_ERROR);
 
         assertThat(event.getPublishingStatus()).isEqualTo(PublishingStatus.PENDING);
         assertThat(event.getRetryCount()).isEqualTo(1);
-        assertThat(event.getErrorMessage()).isEqualTo("broker unavailable");
+        assertThat(event.getErrorMessage()).isEqualTo(BROKER_ERROR);
         assertThat(event.isExhausted()).isFalse();
     }
 
@@ -51,9 +53,9 @@ class OutboxEventTest {
     void becomesFailedWhenRetriesExhausted() {
         OutboxEvent event = pendingEvent();
 
-        event.markAsFailed("broker unavailable");
-        event.markAsFailed("broker unavailable");
-        event.markAsFailed("broker unavailable");
+        event.markAsFailed(BROKER_ERROR);
+        event.markAsFailed(BROKER_ERROR);
+        event.markAsFailed(BROKER_ERROR);
 
         assertThat(event.getPublishingStatus()).isEqualTo(PublishingStatus.FAILED);
         assertThat(event.getRetryCount()).isEqualTo(3);

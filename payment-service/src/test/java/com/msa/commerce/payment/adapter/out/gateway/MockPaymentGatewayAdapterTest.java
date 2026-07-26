@@ -16,6 +16,10 @@ import com.msa.commerce.payment.domain.PaymentMethod;
 @DisplayName("MockPaymentGatewayAdapter 테스트")
 class MockPaymentGatewayAdapterTest {
 
+    private static final String PROVIDER = "MOCK_PG";
+
+    private static final BigDecimal AMOUNT = new BigDecimal("15000.0000");
+
     private static final BigDecimal APPROVAL_LIMIT = new BigDecimal("100000.0000");
 
     private MockPaymentGatewayAdapter adapter;
@@ -23,19 +27,19 @@ class MockPaymentGatewayAdapterTest {
     @BeforeEach
     void setUp() {
         adapter = new MockPaymentGatewayAdapter(
-            new PaymentGatewayProperties("MOCK_PG", new PaymentGatewayProperties.Mock(APPROVAL_LIMIT), null));
+            new PaymentGatewayProperties(PROVIDER, new PaymentGatewayProperties.Mock(APPROVAL_LIMIT), null));
     }
 
     @Test
     @DisplayName("PG사 이름은 설정값을 그대로 노출한다")
     void providerName() {
-        assertThat(adapter.providerName()).isEqualTo("MOCK_PG");
+        assertThat(adapter.providerName()).isEqualTo(PROVIDER);
     }
 
     @Test
     @DisplayName("카드 결제는 승인과 매입이 한 번에 끝난다")
     void immediateSettlementMethodIsCaptured() {
-        PaymentGatewayResult result = adapter.authorize(payment(new BigDecimal("15000.0000"),
+        PaymentGatewayResult result = adapter.authorize(payment(AMOUNT,
             PaymentMethod.CREDIT_CARD));
 
         assertThat(result.outcome()).isEqualTo(PaymentGatewayResult.Outcome.CAPTURED);
@@ -49,7 +53,7 @@ class MockPaymentGatewayAdapterTest {
     @Test
     @DisplayName("가상계좌는 승인만 되고 매입은 나중이다")
     void deferredSettlementMethodIsAuthorized() {
-        PaymentGatewayResult result = adapter.authorize(payment(new BigDecimal("15000.0000"),
+        PaymentGatewayResult result = adapter.authorize(payment(AMOUNT,
             PaymentMethod.VIRTUAL_ACCOUNT));
 
         assertThat(result.outcome()).isEqualTo(PaymentGatewayResult.Outcome.AUTHORIZED);
@@ -83,7 +87,7 @@ class MockPaymentGatewayAdapterTest {
         MockPaymentGatewayAdapter defaultAdapter =
             new MockPaymentGatewayAdapter(new PaymentGatewayProperties(null, null, null));
 
-        assertThat(defaultAdapter.providerName()).isEqualTo("MOCK_PG");
+        assertThat(defaultAdapter.providerName()).isEqualTo(PROVIDER);
         assertThat(defaultAdapter.authorize(payment(new BigDecimal("9999999.0000"), PaymentMethod.CREDIT_CARD))
             .isApproved()).isTrue();
     }
@@ -91,7 +95,7 @@ class MockPaymentGatewayAdapterTest {
     @Test
     @DisplayName("취소 요청은 승인되고 취소 거래 ID 를 돌려준다")
     void cancelIsApproved() {
-        var result = adapter.cancel(payment(new BigDecimal("15000.0000"), PaymentMethod.CREDIT_CARD), "고객 변심");
+        var result = adapter.cancel(payment(AMOUNT, PaymentMethod.CREDIT_CARD), "고객 변심");
 
         assertThat(result.approved()).isTrue();
         assertThat(result.gatewayTransactionId()).startsWith("CNL-");
@@ -101,7 +105,7 @@ class MockPaymentGatewayAdapterTest {
     @Test
     @DisplayName("환불 요청은 승인되고 환불 거래 ID 를 돌려준다")
     void refundIsApproved() {
-        var result = adapter.refund(payment(new BigDecimal("15000.0000"), PaymentMethod.CREDIT_CARD),
+        var result = adapter.refund(payment(AMOUNT, PaymentMethod.CREDIT_CARD),
             new BigDecimal("5000.0000"), "상품 불량");
 
         assertThat(result.approved()).isTrue();
@@ -109,7 +113,7 @@ class MockPaymentGatewayAdapterTest {
     }
 
     private Payment payment(BigDecimal amount, PaymentMethod method) {
-        return Payment.request(UUID.randomUUID(), 1001L, amount, "KRW", method, "MOCK_PG", null);
+        return Payment.request(UUID.randomUUID(), 1001L, amount, "KRW", method, PROVIDER, null);
     }
 
 }

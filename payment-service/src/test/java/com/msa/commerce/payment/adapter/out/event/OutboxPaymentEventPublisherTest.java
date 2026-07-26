@@ -28,6 +28,8 @@ import com.msa.commerce.payment.domain.outbox.PublishingStatus;
 @DisplayName("OutboxPaymentEventPublisher 테스트")
 class OutboxPaymentEventPublisherTest {
 
+    private static final String CORRELATION_ID = "corr-1";
+
     @Mock
     private OutboxEventRepository outboxEventRepository;
 
@@ -48,13 +50,13 @@ class OutboxPaymentEventPublisherTest {
     void stagesEventInOutbox() throws Exception {
         Payment payment = capturedPayment();
 
-        publisher.publishPaymentResult(payment, "corr-1");
+        publisher.publishPaymentResult(payment, CORRELATION_ID);
 
         OutboxEvent staged = captureStagedEvent();
         assertThat(staged.getPublishingStatus()).isEqualTo(PublishingStatus.PENDING);
         assertThat(staged.getEventType()).isEqualTo(PaymentResultEvent.EVENT_TYPE);
         assertThat(staged.getTopic()).isEqualTo("payment.result");
-        assertThat(staged.getCorrelationId()).isEqualTo("corr-1");
+        assertThat(staged.getCorrelationId()).isEqualTo(CORRELATION_ID);
 
         // Kafka 키가 주문 ID 여야 같은 주문의 이벤트 순서가 보장된다
         assertThat(staged.getAggregateId()).isEqualTo(payment.getOrderId().toString());
@@ -65,7 +67,7 @@ class OutboxPaymentEventPublisherTest {
     void payloadIsSerializedEvent() throws Exception {
         Payment payment = capturedPayment();
 
-        publisher.publishPaymentResult(payment, "corr-1");
+        publisher.publishPaymentResult(payment, CORRELATION_ID);
 
         OutboxEvent staged = captureStagedEvent();
         var payload = objectMapper.readTree(staged.getPayload());

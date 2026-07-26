@@ -11,6 +11,8 @@ import com.msa.commerce.payment.domain.outbox.PublishingStatus;
 @DisplayName("OutboxEventJpaEntity 변환 테스트")
 class OutboxEventJpaEntityTest {
 
+    private static final String EVENT_ID = "event-1";
+
     @Test
     @DisplayName("도메인 → 엔티티 → 도메인 왕복 변환에서 값이 보존된다")
     void roundTripConversion() {
@@ -18,7 +20,7 @@ class OutboxEventJpaEntityTest {
 
         OutboxEvent restored = OutboxEventJpaEntity.from(event).toDomain();
 
-        assertThat(restored.getEventId()).isEqualTo("event-1");
+        assertThat(restored.getEventId()).isEqualTo(EVENT_ID);
         assertThat(restored.getEventType()).isEqualTo("PAYMENT_RESULT");
         assertThat(restored.getAggregateId()).isEqualTo("order-1");
         assertThat(restored.getTopic()).isEqualTo("payment.result");
@@ -40,7 +42,7 @@ class OutboxEventJpaEntityTest {
         event.markAsPublished(2, 100L);
         entity.updateFrom(event);
 
-        assertThat(entity.getEventId()).isEqualTo("event-1");
+        assertThat(entity.getEventId()).isEqualTo(EVENT_ID);
         assertThat(entity.getPayload()).isEqualTo("{}");
         assertThat(entity.getOccurredAt()).isEqualTo(event.getOccurredAt());
         assertThat(entity.getPublishingStatus()).isEqualTo(PublishingStatus.PUBLISHED);
@@ -63,7 +65,7 @@ class OutboxEventJpaEntityTest {
     }
 
     private OutboxEvent pendingEvent() {
-        return OutboxEvent.pending("event-1", "PAYMENT_RESULT", "order-1", "payment.result", "{}", "corr-1");
+        return OutboxEvent.pending(EVENT_ID, "PAYMENT_RESULT", "order-1", "payment.result", "{}", "corr-1");
     }
 
 }

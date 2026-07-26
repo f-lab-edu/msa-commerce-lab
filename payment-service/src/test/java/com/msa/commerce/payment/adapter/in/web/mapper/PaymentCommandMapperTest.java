@@ -16,6 +16,8 @@ import com.msa.commerce.payment.domain.PaymentMethod;
 @DisplayName("PaymentCommandMapper 테스트")
 class PaymentCommandMapperTest {
 
+    private static final BigDecimal AMOUNT = new BigDecimal("15000.0000");
+
     private final PaymentCommandMapper mapper = new PaymentCommandMapper();
 
     @Test
@@ -23,7 +25,7 @@ class PaymentCommandMapperTest {
     void mapsAllFields() {
         UUID orderId = UUID.randomUUID();
         ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, 1001L,
-            new BigDecimal("15000.0000"), "USD", PaymentMethod.DIGITAL_WALLET, Map.of("wallet", "TOSS"));
+            AMOUNT, "USD", PaymentMethod.DIGITAL_WALLET, Map.of("wallet", "TOSS"));
 
         ProcessPaymentCommand command = mapper.toProcessPaymentCommand(request, null);
 
@@ -39,7 +41,7 @@ class PaymentCommandMapperTest {
     @DisplayName("통화가 없으면 KRW 로 채운다")
     void defaultsCurrency() {
         ProcessPaymentRequest request = new ProcessPaymentRequest(UUID.randomUUID(), 1001L,
-            new BigDecimal("15000.0000"), null, PaymentMethod.CREDIT_CARD, null);
+            AMOUNT, null, PaymentMethod.CREDIT_CARD, null);
 
         assertThat(mapper.toProcessPaymentCommand(request, null).currency()).isEqualTo("KRW");
     }

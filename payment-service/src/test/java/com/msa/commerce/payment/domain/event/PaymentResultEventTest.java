@@ -23,12 +23,16 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("PaymentResultEvent 계약 테스트")
 class PaymentResultEventTest {
 
+    private static final String METADATA = "metadata";
+
+    private static final String CORRELATION_ID = "corr-1";
+
     /*
      * order-orchestrator 의 PaymentResultEvent 가 선언한 필드 전체.
      * 소비자는 FAIL_ON_UNKNOWN_PROPERTIES 기본값을 쓰므로 이 집합을 벗어나면 역직렬화가 깨진다.
      */
     private static final List<String> CONSUMER_FIELDS = List.of(
-        "metadata", "paymentId", "orderId", "customerId", "paymentStatus",
+        METADATA, "paymentId", "orderId", "customerId", "paymentStatus",
         "amount", "currency", "paymentMethod", "transactionId", "processedAt", "failureReason");
 
     private static final List<String> CONSUMER_METADATA_FIELDS = List.of(
@@ -41,10 +45,10 @@ class PaymentResultEventTest {
     @Test
     @DisplayName("직렬화 결과의 필드 집합이 소비자 계약과 정확히 일치한다")
     void serializedShapeMatchesConsumerContract() {
-        JsonNode json = objectMapper.valueToTree(PaymentResultEvent.from(capturedPayment(), "corr-1"));
+        JsonNode json = objectMapper.valueToTree(PaymentResultEvent.from(capturedPayment(), CORRELATION_ID));
 
         assertThat(fieldNames(json)).containsExactlyInAnyOrderElementsOf(CONSUMER_FIELDS);
-        assertThat(fieldNames(json.get("metadata")))
+        assertThat(fieldNames(json.get(METADATA)))
             .containsExactlyInAnyOrderElementsOf(CONSUMER_METADATA_FIELDS);
     }
 
@@ -55,10 +59,10 @@ class PaymentResultEventTest {
     @Test
     @DisplayName("타임스탬프는 ISO-8601 문자열로 직렬화된다")
     void serializesTimestampsAsIsoStrings() {
-        JsonNode json = objectMapper.valueToTree(PaymentResultEvent.from(capturedPayment(), "corr-1"));
+        JsonNode json = objectMapper.valueToTree(PaymentResultEvent.from(capturedPayment(), CORRELATION_ID));
 
         assertThat(json.get("processedAt").isTextual()).isTrue();
-        assertThat(json.get("metadata").get("timestamp").isTextual()).isTrue();
+        assertThat(json.get(METADATA).get("timestamp").isTextual()).isTrue();
     }
 
     @Test
@@ -66,7 +70,7 @@ class PaymentResultEventTest {
     void mapsCapturedToSuccess() {
         Payment payment = capturedPayment();
 
-        PaymentResultEvent event = PaymentResultEvent.from(payment, "corr-1");
+        PaymentResultEvent event = PaymentResultEvent.from(payment, CORRELATION_ID);
 
         assertThat(event.paymentStatus()).isEqualTo(PaymentEventStatus.SUCCESS);
         assertThat(event.paymentId()).isEqualTo(payment.getPaymentId());
@@ -75,7 +79,7 @@ class PaymentResultEventTest {
         assertThat(event.transactionId()).isEqualTo("TXN-1");
         assertThat(event.paymentMethod()).isEqualTo("CREDIT_CARD");
         assertThat(event.failureReason()).isNull();
-        assertThat(event.metadata().correlationId()).isEqualTo("corr-1");
+        assertThat(event.metadata().correlationId()).isEqualTo(CORRELATION_ID);
         assertThat(event.metadata().eventType()).isEqualTo(PaymentResultEvent.EVENT_TYPE);
     }
 

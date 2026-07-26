@@ -24,6 +24,8 @@ import com.msa.commerce.payment.domain.PaymentMethod;
 @DisplayName("RetryablePaymentGatewayAdapter 테스트")
 class RetryablePaymentGatewayAdapterTest {
 
+    private static final String TIMEOUT = "timeout";
+
     private static final Payment PAYMENT = Payment.request(UUID.randomUUID(), 1001L,
         new BigDecimal("15000.0000"), "KRW", PaymentMethod.CREDIT_CARD, "MOCK_PG", null);
 
@@ -52,8 +54,8 @@ class RetryablePaymentGatewayAdapterTest {
     void retriesUntilSuccess() {
         PaymentGatewayResult expected = PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001");
         given(delegate.authorize(PAYMENT))
-            .willThrow(new PaymentGatewayException("timeout"))
-            .willThrow(new PaymentGatewayException("timeout"))
+            .willThrow(new PaymentGatewayException(TIMEOUT))
+            .willThrow(new PaymentGatewayException(TIMEOUT))
             .willReturn(expected);
 
         assertThat(adapterWith(3).authorize(PAYMENT)).isEqualTo(expected);
@@ -64,12 +66,12 @@ class RetryablePaymentGatewayAdapterTest {
     @Test
     @DisplayName("최대 시도 횟수를 소진하면 예외를 던진다")
     void throwsAfterExhaustingAttempts() {
-        given(delegate.authorize(PAYMENT)).willThrow(new PaymentGatewayException("timeout"));
+        given(delegate.authorize(PAYMENT)).willThrow(new PaymentGatewayException(TIMEOUT));
 
         assertThatThrownBy(() -> adapterWith(3).authorize(PAYMENT))
             .isInstanceOf(PaymentGatewayException.class)
             .hasMessageContaining("after 3 attempts")
-            .hasRootCauseMessage("timeout");
+            .hasRootCauseMessage(TIMEOUT);
 
         then(delegate).should(times(3)).authorize(PAYMENT);
     }
@@ -90,7 +92,7 @@ class RetryablePaymentGatewayAdapterTest {
     void retriesCancel() {
         PaymentGatewayActionResult expected = PaymentGatewayActionResult.approved("CNL-1");
         given(delegate.cancel(eq(PAYMENT), anyString()))
-            .willThrow(new PaymentGatewayException("timeout"))
+            .willThrow(new PaymentGatewayException(TIMEOUT))
             .willReturn(expected);
 
         assertThat(adapterWith(2).cancel(PAYMENT, "고객 변심")).isEqualTo(expected);
@@ -104,7 +106,7 @@ class RetryablePaymentGatewayAdapterTest {
         BigDecimal amount = new BigDecimal("5000.0000");
         PaymentGatewayActionResult expected = PaymentGatewayActionResult.approved("RFD-1");
         given(delegate.refund(eq(PAYMENT), eq(amount), anyString()))
-            .willThrow(new PaymentGatewayException("timeout"))
+            .willThrow(new PaymentGatewayException(TIMEOUT))
             .willReturn(expected);
 
         assertThat(adapterWith(2).refund(PAYMENT, amount, "상품 불량")).isEqualTo(expected);

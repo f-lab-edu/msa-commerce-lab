@@ -33,6 +33,14 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("ProcessPaymentService 단위 테스트")
 class ProcessPaymentServiceTest {
 
+    private static final String PROVIDER = "MOCK_PG";
+
+    private static final String EXTERNAL_ID = "EXT-1";
+
+    private static final String TRANSACTION_ID = "TXN-1";
+
+    private static final String APPROVAL_NUMBER = "0001";
+
     private static final UUID ORDER_ID = UUID.randomUUID();
 
     private static final BigDecimal AMOUNT = new BigDecimal("15000.0000");
@@ -60,14 +68,14 @@ class ProcessPaymentServiceTest {
     @DisplayName("PG사가 즉시 매입하면 CAPTURED 로 저장된다")
     void capturedWhenGatewayCaptures() {
         givenNoActivePayment();
-        givenGatewayReturns(PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001"));
+        givenGatewayReturns(PaymentGatewayResult.captured(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER));
 
         var response = processPaymentService.process(command(PaymentMethod.CREDIT_CARD));
 
         assertThat(response.status()).isEqualTo(PaymentStatus.CAPTURED);
         assertThat(response.orderId()).isEqualTo(ORDER_ID);
-        assertThat(response.gatewayTransactionId()).isEqualTo("TXN-1");
-        assertThat(response.approvalNumber()).isEqualTo("0001");
+        assertThat(response.gatewayTransactionId()).isEqualTo(TRANSACTION_ID);
+        assertThat(response.approvalNumber()).isEqualTo(APPROVAL_NUMBER);
         assertThat(response.capturedAt()).isNotNull();
     }
 
@@ -75,7 +83,7 @@ class ProcessPaymentServiceTest {
     @DisplayName("PG사가 승인만 하면 AUTHORIZED 로 저장된다")
     void authorizedWhenGatewayAuthorizes() {
         givenNoActivePayment();
-        givenGatewayReturns(PaymentGatewayResult.authorized("EXT-1", "TXN-1", "0001"));
+        givenGatewayReturns(PaymentGatewayResult.authorized(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER));
 
         var response = processPaymentService.process(command(PaymentMethod.VIRTUAL_ACCOUNT));
 
@@ -102,7 +110,7 @@ class ProcessPaymentServiceTest {
     @DisplayName("PG사 통신이 끝내 실패해도 예외를 던지지 않고 FAILED 로 기록한다")
     void failedWhenGatewayThrows() {
         givenNoActivePayment();
-        given(paymentGatewayPort.providerName()).willReturn("MOCK_PG");
+        given(paymentGatewayPort.providerName()).willReturn(PROVIDER);
         given(paymentGatewayPort.authorize(any(Payment.class)))
             .willThrow(new PaymentGatewayException("connection reset"));
 
@@ -117,7 +125,7 @@ class ProcessPaymentServiceTest {
     @DisplayName("결과 확정은 correlationId 와 함께 이벤트까지 같이 기록한다")
     void publishesResultWithCorrelationId() {
         givenNoActivePayment();
-        givenGatewayReturns(PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001"));
+        givenGatewayReturns(PaymentGatewayResult.captured(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER));
 
         processPaymentService.process(command(PaymentMethod.CREDIT_CARD));
 
@@ -140,7 +148,7 @@ class ProcessPaymentServiceTest {
             statusesAtSave.add(payment.getStatus());
             return payment;
         });
-        givenGatewayReturns(PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001"));
+        givenGatewayReturns(PaymentGatewayResult.captured(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER));
 
         processPaymentService.process(command(PaymentMethod.CREDIT_CARD));
 
@@ -156,7 +164,7 @@ class ProcessPaymentServiceTest {
     @DisplayName("해당 주문에 진행 중인 결제가 있으면 거부한다")
     void rejectsDuplicatePayment() {
         Payment active = Payment.request(ORDER_ID, 1001L, AMOUNT, "KRW",
-            PaymentMethod.CREDIT_CARD, "MOCK_PG", null);
+            PaymentMethod.CREDIT_CARD, PROVIDER, null);
         given(paymentRepository.findActiveByOrderId(ORDER_ID)).willReturn(Optional.of(active));
 
         assertThatThrownBy(() -> processPaymentService.process(command(PaymentMethod.CREDIT_CARD)))
@@ -172,7 +180,7 @@ class ProcessPaymentServiceTest {
     @DisplayName("동시 요청으로 유니크 제약이 깨지면 중복 결제로 변환한다")
     void translatesConstraintViolationToDuplicate() {
         given(paymentRepository.findActiveByOrderId(ORDER_ID)).willReturn(Optional.empty());
-        given(paymentGatewayPort.providerName()).willReturn("MOCK_PG");
+        given(paymentGatewayPort.providerName()).willReturn(PROVIDER);
         given(paymentRepository.save(any(Payment.class)))
             .willThrow(new DataIntegrityViolationException("uk_payments_active_order"));
 
@@ -190,7 +198,7 @@ class ProcessPaymentServiceTest {
     }
 
     private void givenGatewayReturns(PaymentGatewayResult result) {
-        given(paymentGatewayPort.providerName()).willReturn("MOCK_PG");
+        given(paymentGatewayPort.providerName()).willReturn(PROVIDER);
         given(paymentGatewayPort.authorize(any(Payment.class))).willReturn(result);
     }
 

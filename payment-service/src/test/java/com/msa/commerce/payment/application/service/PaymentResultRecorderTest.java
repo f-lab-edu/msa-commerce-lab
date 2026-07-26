@@ -49,12 +49,12 @@ class PaymentResultRecorderTest {
     }
 
     @Test
-    @DisplayName("record 는 이벤트를 적재하지 않는다")
-    void recordDoesNotPublish() {
+    @DisplayName("recordOnly 는 이벤트를 적재하지 않는다")
+    void recordOnlyDoesNotPublish() {
         Payment payment = capturedPayment();
         given(paymentRepository.save(payment)).willReturn(payment);
 
-        assertThat(paymentResultRecorder.record(payment)).isSameAs(payment);
+        assertThat(paymentResultRecorder.recordOnly(payment)).isSameAs(payment);
 
         then(paymentEventPublisher).should(never()).publishPaymentResult(any(), any());
     }

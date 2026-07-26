@@ -52,7 +52,7 @@ public class RefundPaymentService implements RefundPaymentUseCase {
 
         payment.refund(requested, command.reason());
 
-        Payment refunded = paymentResultRecorder.record(payment);
+        Payment refunded = paymentResultRecorder.recordOnly(payment);
 
         log.info("Payment refunded: paymentId={}, orderId={}, amount={}, status={}",
             refunded.getPaymentId(), refunded.getOrderId(), requested, refunded.getStatus());

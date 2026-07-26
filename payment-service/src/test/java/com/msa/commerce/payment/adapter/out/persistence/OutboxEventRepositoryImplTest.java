@@ -24,6 +24,8 @@ import com.msa.commerce.payment.domain.outbox.PublishingStatus;
 @DisplayName("OutboxEventRepositoryImpl 단위 테스트")
 class OutboxEventRepositoryImplTest {
 
+    private static final String EVENT_ID = "event-1";
+
     @Mock
     private OutboxEventJpaRepository outboxEventJpaRepository;
 
@@ -34,13 +36,13 @@ class OutboxEventRepositoryImplTest {
     @DisplayName("새 이벤트는 엔티티를 새로 만들어 저장한다")
     void insertsNewEvent() {
         OutboxEvent event = pendingEvent();
-        given(outboxEventJpaRepository.findByEventId("event-1")).willReturn(Optional.empty());
+        given(outboxEventJpaRepository.findByEventId(EVENT_ID)).willReturn(Optional.empty());
         given(outboxEventJpaRepository.save(any(OutboxEventJpaEntity.class)))
             .willAnswer(invocation -> invocation.getArgument(0));
 
         OutboxEvent saved = outboxEventRepository.save(event);
 
-        assertThat(saved.getEventId()).isEqualTo("event-1");
+        assertThat(saved.getEventId()).isEqualTo(EVENT_ID);
         assertThat(saved.getPublishingStatus()).isEqualTo(PublishingStatus.PENDING);
     }
 
@@ -49,7 +51,7 @@ class OutboxEventRepositoryImplTest {
     void updatesExistingEvent() {
         OutboxEvent event = pendingEvent();
         OutboxEventJpaEntity existing = OutboxEventJpaEntity.from(event);
-        given(outboxEventJpaRepository.findByEventId("event-1")).willReturn(Optional.of(existing));
+        given(outboxEventJpaRepository.findByEventId(EVENT_ID)).willReturn(Optional.of(existing));
         given(outboxEventJpaRepository.save(any(OutboxEventJpaEntity.class)))
             .willAnswer(invocation -> invocation.getArgument(0));
 
@@ -79,17 +81,17 @@ class OutboxEventRepositoryImplTest {
     @Test
     @DisplayName("eventId 로 조회할 수 있다")
     void findsByEventId() {
-        given(outboxEventJpaRepository.findByEventId("event-1"))
+        given(outboxEventJpaRepository.findByEventId(EVENT_ID))
             .willReturn(Optional.of(OutboxEventJpaEntity.from(pendingEvent())));
 
-        assertThat(outboxEventRepository.findByEventId("event-1"))
+        assertThat(outboxEventRepository.findByEventId(EVENT_ID))
             .get()
             .extracting(OutboxEvent::getAggregateId)
             .isEqualTo("order-1");
     }
 
     private OutboxEvent pendingEvent() {
-        return OutboxEvent.pending("event-1", "PAYMENT_RESULT", "order-1", "payment.result", "{}", "corr-1");
+        return OutboxEvent.pending(EVENT_ID, "PAYMENT_RESULT", "order-1", "payment.result", "{}", "corr-1");
     }
 
 }

@@ -39,6 +39,20 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("PaymentCommandController 테스트")
 class PaymentCommandControllerTest {
 
+    private static final String PAYMENTS_URL = "/api/v1/payments";
+
+    private static final String CANCEL_URL = "/api/v1/payments/{paymentId}/cancel";
+
+    private static final String REFUND_URL = "/api/v1/payments/{paymentId}/refund";
+
+    private static final String JSON_STATUS = "$.status";
+
+    private static final String JSON_CODE = "$.code";
+
+    private static final String CANCEL_BODY = """
+        { "reason": "고객 변심" }
+        """;
+
     private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private static final UUID PAYMENT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
@@ -97,13 +111,13 @@ class PaymentCommandControllerTest {
             given(processPaymentUseCase.process(any(ProcessPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.CAPTURED));
 
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(PROCESS_BODY))
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "/api/v1/payments/" + PAYMENT_ID))
                 .andExpect(jsonPath("$.paymentId").value(PAYMENT_ID.toString()))
-                .andExpect(jsonPath("$.status").value("CAPTURED"));
+                .andExpect(jsonPath(JSON_STATUS).value("CAPTURED"));
         }
 
         @Test
@@ -112,7 +126,7 @@ class PaymentCommandControllerTest {
             given(processPaymentUseCase.process(any(ProcessPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.CAPTURED));
 
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(PROCESS_BODY))
                 .andExpect(status().isCreated());
@@ -126,7 +140,7 @@ class PaymentCommandControllerTest {
             given(processPaymentUseCase.process(any(ProcessPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.CAPTURED));
 
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .header("X-Correlation-Id", "corr-1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(PROCESS_BODY))
@@ -141,17 +155,17 @@ class PaymentCommandControllerTest {
             given(processPaymentUseCase.process(any(ProcessPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.FAILED));
 
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(PROCESS_BODY))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("FAILED"));
+                .andExpect(jsonPath(JSON_STATUS).value("FAILED"));
         }
 
         @Test
         @DisplayName("필수 값이 빠지면 400 을 반환한다")
         void rejectsMissingRequiredFields() throws Exception {
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {
@@ -166,7 +180,7 @@ class PaymentCommandControllerTest {
         @Test
         @DisplayName("금액이 0 이하면 400 을 반환한다")
         void rejectsNonPositiveAmount() throws Exception {
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {
@@ -185,11 +199,11 @@ class PaymentCommandControllerTest {
             given(processPaymentUseCase.process(any(ProcessPaymentCommand.class)))
                 .willThrow(new DuplicatePaymentException(ORDER_ID));
 
-            mockMvc.perform(post("/api/v1/payments")
+            mockMvc.perform(post(PAYMENTS_URL)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(PROCESS_BODY))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("PY1002"));
+                .andExpect(jsonPath(JSON_CODE).value("PY1002"));
         }
 
     }
@@ -204,13 +218,11 @@ class PaymentCommandControllerTest {
             given(cancelPaymentUseCase.cancel(any(CancelPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.CANCELLED));
 
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/cancel", PAYMENT_ID)
+            mockMvc.perform(post(CANCEL_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        { "reason": "고객 변심" }
-                        """))
+                    .content(CANCEL_BODY))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CANCELLED"));
+                .andExpect(jsonPath(JSON_STATUS).value("CANCELLED"));
 
             then(cancelPaymentUseCase).should().cancel(argThat(command ->
                 PAYMENT_ID.equals(command.paymentId()) && "고객 변심".equals(command.reason())));
@@ -219,7 +231,7 @@ class PaymentCommandControllerTest {
         @Test
         @DisplayName("취소 사유가 없으면 400 을 반환한다")
         void rejectsMissingReason() throws Exception {
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/cancel", PAYMENT_ID)
+            mockMvc.perform(post(CANCEL_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("{}"))
                 .andExpect(status().isBadRequest());
@@ -231,13 +243,11 @@ class PaymentCommandControllerTest {
             given(cancelPaymentUseCase.cancel(any(CancelPaymentCommand.class)))
                 .willThrow(new PaymentNotFoundException("Payment not found with ID: " + PAYMENT_ID));
 
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/cancel", PAYMENT_ID)
+            mockMvc.perform(post(CANCEL_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        { "reason": "고객 변심" }
-                        """))
+                    .content(CANCEL_BODY))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("PY1001"));
+                .andExpect(jsonPath(JSON_CODE).value("PY1001"));
         }
 
         @Test
@@ -246,13 +256,11 @@ class PaymentCommandControllerTest {
             given(cancelPaymentUseCase.cancel(any(CancelPaymentCommand.class)))
                 .willThrow(new InvalidPaymentStateException("Payment in CAPTURED cannot be cancelled"));
 
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/cancel", PAYMENT_ID)
+            mockMvc.perform(post(CANCEL_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
-                        { "reason": "고객 변심" }
-                        """))
+                    .content(CANCEL_BODY))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("PY1003"));
+                .andExpect(jsonPath(JSON_CODE).value("PY1003"));
         }
 
     }
@@ -267,13 +275,13 @@ class PaymentCommandControllerTest {
             given(refundPaymentUseCase.refund(any(RefundPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.REFUNDED));
 
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/refund", PAYMENT_ID)
+            mockMvc.perform(post(REFUND_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         { "reason": "상품 불량" }
                         """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REFUNDED"));
+                .andExpect(jsonPath(JSON_STATUS).value("REFUNDED"));
 
             then(refundPaymentUseCase).should().refund(argThat(command -> command.amount() == null));
         }
@@ -284,13 +292,13 @@ class PaymentCommandControllerTest {
             given(refundPaymentUseCase.refund(any(RefundPaymentCommand.class)))
                 .willReturn(response(PaymentStatus.PARTIAL_REFUNDED));
 
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/refund", PAYMENT_ID)
+            mockMvc.perform(post(REFUND_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         { "amount": 5000.0000, "reason": "일부 반품" }
                         """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PARTIAL_REFUNDED"));
+                .andExpect(jsonPath(JSON_STATUS).value("PARTIAL_REFUNDED"));
 
             then(refundPaymentUseCase).should().refund(argThat(command ->
                 command.amount().compareTo(new BigDecimal("5000.0000")) == 0));
@@ -299,7 +307,7 @@ class PaymentCommandControllerTest {
         @Test
         @DisplayName("환불 금액이 0 이하면 400 을 반환한다")
         void rejectsNonPositiveAmount() throws Exception {
-            mockMvc.perform(post("/api/v1/payments/{paymentId}/refund", PAYMENT_ID)
+            mockMvc.perform(post(REFUND_URL, PAYMENT_ID)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         { "amount": 0, "reason": "일부 반품" }
