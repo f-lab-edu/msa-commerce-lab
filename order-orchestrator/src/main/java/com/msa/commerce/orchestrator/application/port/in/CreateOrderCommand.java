@@ -33,17 +33,11 @@ public class CreateOrderCommand {
 
         private Long productId;
 
-        private String productName;
-
-        private String productSku;
-
         private Long productVariantId;
 
         private String variantName;
 
         private Integer quantity;
-
-        private java.math.BigDecimal unitPrice;
 
     }
 

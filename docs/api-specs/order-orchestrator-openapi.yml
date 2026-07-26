@@ -146,7 +146,6 @@ paths:
                   value:
                     timestamp: "2025-10-25T10:30:00"
                     status: 400
-                    error: "Bad Request"
                     message: "Cannot change order status from PENDING to PROCESSING"
                     path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
                 missingReason:
@@ -154,7 +153,6 @@ paths:
                   value:
                     timestamp: "2025-10-25T10:30:00"
                     status: 400
-                    error: "Bad Request"
                     message: "Reason is required"
                     path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
                     validationErrors:
@@ -170,7 +168,7 @@ paths:
               example:
                 timestamp: "2025-10-25T10:30:00"
                 status: 404
-                error: "Not Found"
+                code: "ORDER_NOT_FOUND"
                 message: "Order not found with ID: 550e8400-e29b-41d4-a716-446655440000"
                 path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000/status"
         '500':
@@ -316,7 +314,7 @@ paths:
               example:
                 timestamp: "2025-10-25T10:30:00"
                 status: 404
-                error: "Not Found"
+                code: "ORDER_NOT_FOUND"
                 message: "주문을 찾을 수 없습니다. orderId: 550e8400-e29b-41d4-a716-446655440000"
                 path: "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000"
         '500':
@@ -515,7 +513,6 @@ paths:
                   value:
                     timestamp: "2025-10-25T10:30:00"
                     status: 400
-                    error: "Bad Request"
                     message: "시작 일시는 종료 일시보다 이전이어야 합니다."
                     path: "/api/v1/orders"
                 missingEndDate:
@@ -523,7 +520,6 @@ paths:
                   value:
                     timestamp: "2025-10-25T10:30:00"
                     status: 400
-                    error: "Bad Request"
                     message: "시작 일시와 종료 일시는 필수입니다."
                     path: "/api/v1/orders"
         '500':
@@ -532,6 +528,86 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Order Command]
+      summary: Create Order
+      description: |
+        Creates a new order.
+
+        ### Product Verification
+        Product name, SKU and unit price are **never taken from the request body**.
+        The service calls `POST /api/v1/products/verify` on the Product Service and
+        persists the verified values, so a client cannot tamper with the order amount.
+
+        ### Business Rules
+        - Every requested product must be available; otherwise the order is rejected
+        - Initial order status is `PENDING`
+        - An `order.created` event is published through the transactional outbox
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              default:
+                summary: Two-item order
+                value:
+                  orderNumber: "ORD-20260726-0001"
+                  customerId: 1
+                  shippingAddress:
+                    zipCode: "06236"
+                    addressLine1: "서울특별시 강남구 테헤란로 123"
+                    addressLine2: "4층"
+                    recipientName: "홍길동"
+                    phoneNumber: "010-1234-5678"
+                  sourceChannel: "WEB"
+                  orderItems:
+                    - productId: 101
+                      quantity: 2
+                    - productId: 205
+                      productVariantId: 3
+                      variantName: "Black / L"
+                      quantity: 1
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          description: Validation failed, or one of the products is not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                productUnavailable:
+                  summary: Product Not Available
+                  value:
+                    timestamp: "2026-07-26T10:30:00"
+                    status: 400
+                    code: "PRODUCT_UNAVAILABLE"
+                    message: "Products are not available for order: productId=101(재고 부족)"
+                    path: "/api/v1/orders"
+        '503':
+          description: Product Service is unreachable, so the order cannot be verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                productServiceDown:
+                  summary: Product Service Unavailable
+                  value:
+                    timestamp: "2026-07-26T10:30:00"
+                    status: 503
+                    code: "PRODUCT_SERVICE_ERROR"
+                    message: "Failed to verify products"
+                    path: "/api/v1/orders"
 
 components:
   securitySchemes:
@@ -865,6 +941,77 @@ components:
           description: Is this the last page?
           example: false
 
+    CreateOrderRequest:
+      type: object
+      required:
+        - orderNumber
+        - customerId
+        - shippingAddress
+        - orderItems
+      properties:
+        orderNumber:
+          type: string
+          description: 주문 번호
+          example: "ORD-20260726-0001"
+        customerId:
+          type: integer
+          format: int64
+          description: 주문 고객 ID
+          example: 1
+        shippingAddress:
+          type: object
+          description: 배송지 정보 (JSON 컬럼으로 저장)
+          additionalProperties: true
+        sourceChannel:
+          type: string
+          description: 주문 유입 채널. 미지정 시 WEB
+          default: WEB
+          example: "WEB"
+        orderItems:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/CreateOrderItemRequest'
+
+    CreateOrderItemRequest:
+      type: object
+      description: |
+        상품명·SKU·단가는 요청에 포함하지 않는다.
+        Product Service 검증 응답에서 확정되므로 클라이언트가 지정할 수 없다.
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: integer
+          format: int64
+          example: 101
+        productVariantId:
+          type: integer
+          format: int64
+          nullable: true
+          description: 변형 상품 ID
+          example: 3
+        variantName:
+          type: string
+          nullable: true
+          example: "Black / L"
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+
+    CreateOrderResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          example: "0199a1f2-3c4d-7e8f-9a0b-1c2d3e4f5a6b"
+        message:
+          type: string
+          example: "Order created successfully"
+
     OrderStatusChangeRequest:
       type: object
       required:
@@ -913,23 +1060,31 @@ components:
       required:
         - timestamp
         - status
-        - error
         - message
         - path
       properties:
         timestamp:
           type: string
-          format: date-time
-          description: Error occurrence timestamp
+          description: |
+            Error occurrence timestamp. Serialized from LocalDateTime,
+            so it carries no timezone offset and is not RFC 3339 date-time.
           example: "2025-10-25T10:30:00"
         status:
           type: integer
           description: HTTP status code
           example: 404
-        error:
+        code:
           type: string
-          description: HTTP status text
-          example: "Not Found"
+          nullable: true
+          description: |
+            Business error code. Null for framework-level validation failures
+            that do not originate from a domain exception.
+          example: "ORDER_NOT_FOUND"
+        debugInfo:
+          type: string
+          nullable: true
+          description: Exception class name. Populated only in non-production profiles.
+          example: "OrderNotFoundException"
         message:
           type: string
           description: Error message
