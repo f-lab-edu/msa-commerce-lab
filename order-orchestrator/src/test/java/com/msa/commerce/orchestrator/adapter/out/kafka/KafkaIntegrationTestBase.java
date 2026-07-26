@@ -24,6 +24,8 @@ public abstract class KafkaIntegrationTestBase {
             .withDatabaseName("test_order_db")
             .withUsername("test")
             .withPassword("test")
+            // 기본 my.cnf의 innodb_log_file_size가 MySQL 9에서 제거되어 기동에 실패하므로 오버라이드
+            .withConfigurationOverride("testcontainers/mysql-conf")
             .withReuse(true);
 
     @DynamicPropertySource
@@ -32,6 +34,8 @@ public abstract class KafkaIntegrationTestBase {
         registry.add("spring.datasource.url", MYSQL_CONTAINER::getJdbcUrl);
         registry.add("spring.datasource.username", MYSQL_CONTAINER::getUsername);
         registry.add("spring.datasource.password", MYSQL_CONTAINER::getPassword);
+        // 컨테이너는 빈 DB로 시작하므로 validate 대신 엔티티 기준으로 스키마를 생성한다
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
     }
 
 }

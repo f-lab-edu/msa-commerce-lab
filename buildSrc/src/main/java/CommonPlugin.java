@@ -38,6 +38,12 @@ public class CommonPlugin implements Plugin<Project> {
         project.getPluginManager().apply(Plugins.SPRING_DEPENDENCY_MANAGEMENT.getId());
         project.getPluginManager().apply(JacocoPlugin.class);
         project.getPluginManager().apply(QueryDslPlugin.class);
+        overrideBomVersions(project);
+    }
+
+    private void overrideBomVersions(Project project) {
+        project.getExtensions().getExtraProperties()
+            .set("testcontainers.version", Version.TESTCONTAINERS.getVersion());
     }
 
     private void configureJava(Project project) {

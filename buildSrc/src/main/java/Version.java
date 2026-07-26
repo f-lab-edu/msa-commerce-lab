@@ -4,6 +4,8 @@ public enum Version {
     SONARQUBE("6.2.0.5505"),
     FLYWAY("10.21.0"),
     QUERYDSL_PLUGIN("1.0.10"),
+    // Spring Boot 3.5.4 BOM의 1.21.3은 Docker Engine 29와 비호환 (docker-java /info 400)
+    TESTCONTAINERS("1.21.4"),
     JAVA_VERSION("21");
 
     private final String version;
