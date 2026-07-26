@@ -45,6 +45,7 @@ public class User {
 
     private LocalDateTime lastLoginAt;
 
+    // createdAt/updatedAt 은 JPA Auditing 이 채운다. 도메인에서는 조회 전용이다.
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -67,8 +68,6 @@ public class User {
         this.emailVerified = false;
         this.phoneVerified = false;
         this.profileImageUrl = profileImageUrl;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public static User reconstitute(Long id, String userUuid, String username, String email, String passwordHash,
@@ -105,7 +104,6 @@ public class User {
         updateFieldIfNotNull(dateOfBirth, value -> this.dateOfBirth = value);
         updateFieldIfNotNull(gender, value -> this.gender = value);
         updateFieldIfNotNull(profileImageUrl, value -> this.profileImageUrl = value);
-        this.updatedAt = LocalDateTime.now();
     }
 
     // Auth Service 가 관리하는 로그인 정책(계정 상태, 인증 여부)을 부분 갱신한다.
@@ -113,12 +111,11 @@ public class User {
         updateFieldIfNotNull(status, value -> this.status = value);
         updateFieldIfNotNull(emailVerified, value -> this.emailVerified = value);
         updateFieldIfNotNull(phoneVerified, value -> this.phoneVerified = value);
-        this.updatedAt = LocalDateTime.now();
     }
 
+    // lastLoginAt 은 감사 정보가 아니라 로그인 정책이 관리하는 업무 필드라 도메인에서 직접 채운다.
     public void recordLogin() {
         this.lastLoginAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
 
     public boolean isActive() {

@@ -87,17 +87,17 @@ public class UserJpaEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // 준영속 엔티티를 merge 할 때는 @PrePersist 가 동작하지 않으므로 생성 시각을 유지해야 한다.
     public static UserJpaEntity fromDomainEntity(User user) {
         UserJpaEntity jpaEntity = fromDomainEntityForCreation(user);
         jpaEntity.id = user.getId();
+        jpaEntity.createdAt = user.getCreatedAt();
         return jpaEntity;
     }
 
-    // JPA Auditing 활성화 여부와 무관하게 NOT NULL 인 생성/수정 시각이 채워지도록 도메인의 값을 그대로 싣는다.
+    // 생성/수정 시각은 JPA Auditing 이 채운다.
     public static UserJpaEntity fromDomainEntityForCreation(User user) {
         UserJpaEntity jpaEntity = new UserJpaEntity();
-        jpaEntity.createdAt = user.getCreatedAt();
-        jpaEntity.updatedAt = user.getUpdatedAt();
         jpaEntity.userUuid = user.getUserUuid();
         jpaEntity.username = user.getUsername();
         jpaEntity.email = user.getEmail();
@@ -130,7 +130,6 @@ public class UserJpaEntity {
         this.phoneVerified = user.getPhoneVerified();
         this.profileImageUrl = user.getProfileImageUrl();
         this.lastLoginAt = user.getLastLoginAt();
-        this.updatedAt = user.getUpdatedAt();
     }
 
     public User toDomainEntity() {
