@@ -34,7 +34,10 @@ public record ProcessPaymentCommand(
     @NotNull(message = "Payment method is required")
     PaymentMethod paymentMethod,
 
-    Map<String, Object> paymentDetails
+    Map<String, Object> paymentDetails,
+
+    // 사가 전 구간을 추적하기 위한 값. 없으면 이벤트 발행 시점에 새로 만든다.
+    String correlationId
 ) {
 
 }

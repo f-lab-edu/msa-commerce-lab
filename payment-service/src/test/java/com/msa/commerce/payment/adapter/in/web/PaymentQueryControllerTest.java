@@ -29,6 +29,8 @@ import com.msa.commerce.payment.domain.PaymentStatus;
 @DisplayName("PaymentQueryController 테스트")
 class PaymentQueryControllerTest {
 
+    private static final String PAYMENT_URL = "/api/v1/payments/{paymentId}";
+
     private static final UUID ORDER_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
     private static final UUID PAYMENT_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
@@ -51,7 +53,7 @@ class PaymentQueryControllerTest {
     void getPayment() throws Exception {
         given(getPaymentUseCase.getByPaymentId(PAYMENT_ID)).willReturn(response(PaymentStatus.CAPTURED));
 
-        mockMvc.perform(get("/api/v1/payments/{paymentId}", PAYMENT_ID))
+        mockMvc.perform(get(PAYMENT_URL, PAYMENT_ID))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.paymentId").value(PAYMENT_ID.toString()))
             .andExpect(jsonPath("$.orderId").value(ORDER_ID.toString()))
@@ -65,7 +67,7 @@ class PaymentQueryControllerTest {
         given(getPaymentUseCase.getByPaymentId(PAYMENT_ID))
             .willThrow(new PaymentNotFoundException("Payment not found with ID: " + PAYMENT_ID));
 
-        mockMvc.perform(get("/api/v1/payments/{paymentId}", PAYMENT_ID))
+        mockMvc.perform(get(PAYMENT_URL, PAYMENT_ID))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("PY1001"));
     }
@@ -73,7 +75,7 @@ class PaymentQueryControllerTest {
     @Test
     @DisplayName("결제 ID 형식이 잘못되면 400 을 반환한다")
     void getPaymentWithMalformedId() throws Exception {
-        mockMvc.perform(get("/api/v1/payments/{paymentId}", "not-a-uuid"))
+        mockMvc.perform(get(PAYMENT_URL, "not-a-uuid"))
             .andExpect(status().isBadRequest());
     }
 

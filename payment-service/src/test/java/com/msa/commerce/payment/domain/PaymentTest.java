@@ -14,6 +14,24 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Payment 도메인 테스트")
 class PaymentTest {
 
+    private static final String CARD_LAST4_KEY = "cardLast4";
+
+    private static final String EXTERNAL_ID = "EXT-1";
+
+    private static final String TRANSACTION_ID = "TXN-1";
+
+    private static final String APPROVAL_NUMBER = "0001";
+
+    private static final BigDecimal PARTIAL_AMOUNT = new BigDecimal("5000.0000");
+
+    private static final BigDecimal REMAINING_AMOUNT = new BigDecimal("10000.0000");
+
+    private static final String CANCEL_REASON = "고객 변심";
+
+    private static final String REFUND_REASON = "상품 불량";
+
+    private static final String PARTIAL_REFUND_REASON = "일부 반품";
+
     private static final UUID ORDER_ID = UUID.randomUUID();
 
     private static final Long CUSTOMER_ID = 1001L;
@@ -78,13 +96,13 @@ class PaymentTest {
         @DisplayName("paymentDetails 는 방어적으로 복사되어 외부 변경에 영향받지 않는다")
         void copiesPaymentDetails() {
             Map<String, Object> details = new LinkedHashMap<>();
-            details.put("cardLast4", "1234");
+            details.put(CARD_LAST4_KEY, "1234");
 
             Payment payment = Payment.request(ORDER_ID, CUSTOMER_ID, AMOUNT, "KRW",
                 PaymentMethod.CREDIT_CARD, PROVIDER, details);
-            details.put("cardLast4", "9999");
+            details.put(CARD_LAST4_KEY, "9999");
 
-            assertThat(payment.getPaymentDetails()).containsEntry("cardLast4", "1234");
+            assertThat(payment.getPaymentDetails()).containsEntry(CARD_LAST4_KEY, "1234");
         }
 
         @Test
@@ -170,12 +188,12 @@ class PaymentTest {
         void authorize() {
             Payment payment = requestPayment(AMOUNT, PaymentMethod.VIRTUAL_ACCOUNT);
 
-            payment.authorize("EXT-1", "TXN-1", "0001");
+            payment.authorize(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
 
             assertThat(payment.getStatus()).isEqualTo(PaymentStatus.AUTHORIZED);
-            assertThat(payment.getExternalPaymentId()).isEqualTo("EXT-1");
-            assertThat(payment.getGatewayTransactionId()).isEqualTo("TXN-1");
-            assertThat(payment.getApprovalNumber()).isEqualTo("0001");
+            assertThat(payment.getExternalPaymentId()).isEqualTo(EXTERNAL_ID);
+            assertThat(payment.getGatewayTransactionId()).isEqualTo(TRANSACTION_ID);
+            assertThat(payment.getApprovalNumber()).isEqualTo(APPROVAL_NUMBER);
             assertThat(payment.getAuthorizedAt()).isNotNull();
             assertThat(payment.getCapturedAt()).isNull();
             assertThat(payment.isSettled()).isFalse();
@@ -186,7 +204,7 @@ class PaymentTest {
         void captureFromPendingAlsoRecordsAuthorizedAt() {
             Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
 
-            payment.capture("EXT-1", "TXN-1", "0001");
+            payment.capture(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
 
             assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CAPTURED);
             assertThat(payment.getAuthorizedAt()).isNotNull();
@@ -198,15 +216,15 @@ class PaymentTest {
         @DisplayName("승인 후 매입하면 최초 승인 시각이 보존된다")
         void captureAfterAuthorizeKeepsAuthorizedAt() {
             Payment payment = requestPayment(AMOUNT, PaymentMethod.VIRTUAL_ACCOUNT);
-            payment.authorize("EXT-1", "TXN-1", "0001");
+            payment.authorize(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
             var authorizedAt = payment.getAuthorizedAt();
 
             payment.capture(null, null, null);
 
             assertThat(payment.getAuthorizedAt()).isEqualTo(authorizedAt);
-            assertThat(payment.getExternalPaymentId()).isEqualTo("EXT-1");
-            assertThat(payment.getGatewayTransactionId()).isEqualTo("TXN-1");
-            assertThat(payment.getApprovalNumber()).isEqualTo("0001");
+            assertThat(payment.getExternalPaymentId()).isEqualTo(EXTERNAL_ID);
+            assertThat(payment.getGatewayTransactionId()).isEqualTo(TRANSACTION_ID);
+            assertThat(payment.getApprovalNumber()).isEqualTo(APPROVAL_NUMBER);
         }
 
         @Test
@@ -236,7 +254,7 @@ class PaymentTest {
         @DisplayName("이미 매입된 결제는 다시 실패 처리할 수 없다")
         void rejectsInvalidTransition() {
             Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
-            payment.capture("EXT-1", "TXN-1", "0001");
+            payment.capture(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
 
             assertThatThrownBy(() -> payment.fail("X", "Y"))
                 .isInstanceOf(InvalidPaymentStateException.class)
@@ -250,8 +268,135 @@ class PaymentTest {
             Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
             payment.fail("DECLINED", "카드 오류");
 
-            assertThatThrownBy(() -> payment.authorize("EXT-1", "TXN-1", "0001"))
+            assertThatThrownBy(() -> payment.authorize(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER))
                 .isInstanceOf(InvalidPaymentStateException.class);
+        }
+
+    }
+
+    @Nested
+    @DisplayName("취소")
+    class Cancel {
+
+        @Test
+        @DisplayName("승인 상태에서 취소하면 CANCELLED 가 되고 사유가 남는다")
+        void cancelAuthorized() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.VIRTUAL_ACCOUNT);
+            payment.authorize(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
+
+            payment.cancel(CANCEL_REASON);
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+            assertThat(payment.getCancelReason()).isEqualTo(CANCEL_REASON);
+            assertThat(payment.getCancelledAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("PENDING 상태에서도 취소할 수 있다")
+        void cancelPending() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+
+            payment.cancel("주문 취소");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        }
+
+        @Test
+        @DisplayName("이미 매입된 결제는 취소 대신 환불해야 한다")
+        void rejectsCancelAfterCapture() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+            payment.capture(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
+
+            assertThatThrownBy(() -> payment.cancel(CANCEL_REASON))
+                .isInstanceOf(InvalidPaymentStateException.class)
+                .hasMessageContaining("refund it instead");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("환불")
+    class Refund {
+
+        @Test
+        @DisplayName("전액 환불하면 REFUNDED 가 된다")
+        void fullRefund() {
+            Payment payment = capturedPayment();
+
+            payment.refund(AMOUNT, REFUND_REASON);
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo(AMOUNT);
+            assertThat(payment.getRefundReason()).isEqualTo(REFUND_REASON);
+            assertThat(payment.getRefundedAt()).isNotNull();
+            assertThat(payment.refundableAmount()).isEqualByComparingTo("0");
+        }
+
+        @Test
+        @DisplayName("부분 환불하면 PARTIAL_REFUNDED 가 되고 잔여 금액이 남는다")
+        void partialRefund() {
+            Payment payment = capturedPayment();
+
+            payment.refund(PARTIAL_AMOUNT, PARTIAL_REFUND_REASON);
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PARTIAL_REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo("5000.0000");
+            assertThat(payment.refundableAmount()).isEqualByComparingTo("10000.0000");
+        }
+
+        @Test
+        @DisplayName("부분 환불을 누적해 전액에 도달하면 REFUNDED 가 된다")
+        void accumulatesPartialRefunds() {
+            Payment payment = capturedPayment();
+
+            payment.refund(PARTIAL_AMOUNT, PARTIAL_REFUND_REASON);
+            payment.refund(REMAINING_AMOUNT, "잔여 반품");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo(AMOUNT);
+        }
+
+        @Test
+        @DisplayName("잔여 금액을 넘는 환불은 거부한다")
+        void rejectsOverRefund() {
+            Payment payment = capturedPayment();
+            payment.refund(REMAINING_AMOUNT, PARTIAL_REFUND_REASON);
+
+            assertThatThrownBy(() -> payment.refund(REMAINING_AMOUNT, "추가 반품"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exceeds the refundable amount");
+        }
+
+        @Test
+        @DisplayName("0 이하 금액은 환불할 수 없다")
+        void rejectsNonPositiveRefund() {
+            Payment payment = capturedPayment();
+
+            assertThatThrownBy(() -> payment.refund(BigDecimal.ZERO, "잘못된 요청"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("greater than 0");
+        }
+
+        @Test
+        @DisplayName("매입되지 않은 결제는 환불할 수 없다")
+        void rejectsRefundBeforeCapture() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+
+            assertThatThrownBy(() -> payment.refund(AMOUNT, REFUND_REASON))
+                .isInstanceOf(InvalidPaymentStateException.class)
+                .hasMessageContaining("cannot be refunded");
+        }
+
+        @Test
+        @DisplayName("환불 전에는 결제 금액 전액이 환불 가능하다")
+        void refundableAmountStartsAtFullAmount() {
+            assertThat(capturedPayment().refundableAmount()).isEqualByComparingTo(AMOUNT);
+        }
+
+        private Payment capturedPayment() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+            payment.capture(EXTERNAL_ID, TRANSACTION_ID, APPROVAL_NUMBER);
+            return payment;
         }
 
     }

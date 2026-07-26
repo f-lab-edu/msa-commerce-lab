@@ -1,9 +1,11 @@
 package com.msa.commerce.payment.adapter.out.gateway;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
+import com.msa.commerce.payment.application.port.out.PaymentGatewayActionResult;
 import com.msa.commerce.payment.application.port.out.PaymentGatewayPort;
 import com.msa.commerce.payment.application.port.out.PaymentGatewayResult;
 import com.msa.commerce.payment.domain.Payment;
@@ -46,6 +48,21 @@ public class MockPaymentGatewayAdapter implements PaymentGatewayPort {
         return payment.getPaymentMethod().requiresDeferredSettlement()
             ? PaymentGatewayResult.authorized(externalPaymentId, transactionId, approvalNumber)
             : PaymentGatewayResult.captured(externalPaymentId, transactionId, approvalNumber);
+    }
+
+    @Override
+    public PaymentGatewayActionResult cancel(Payment payment, String reason) {
+        log.info("Mock gateway cancelled payment: paymentId={}, reason={}", payment.getPaymentId(), reason);
+
+        return PaymentGatewayActionResult.approved("CNL-" + UUID.randomUUID());
+    }
+
+    @Override
+    public PaymentGatewayActionResult refund(Payment payment, BigDecimal amount, String reason) {
+        log.info("Mock gateway refunded payment: paymentId={}, amount={}, reason={}",
+            payment.getPaymentId(), amount, reason);
+
+        return PaymentGatewayActionResult.approved("RFD-" + UUID.randomUUID());
     }
 
     private String generateApprovalNumber(Payment payment) {

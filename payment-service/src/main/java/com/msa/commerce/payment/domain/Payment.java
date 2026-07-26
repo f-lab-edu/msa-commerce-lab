@@ -56,6 +56,8 @@ public class Payment {
 
     private String failureReason;
 
+    private String cancelReason;
+
     private Long parentPaymentId;
 
     private BigDecimal refundAmount;
@@ -84,7 +86,8 @@ public class Payment {
     public Payment(Long id, UUID paymentId, UUID orderId, Long customerId, BigDecimal amount, String currency,
         PaymentStatus status, PaymentMethod paymentMethod, String paymentProvider, String externalPaymentId,
         String gatewayTransactionId, String approvalNumber, String failureCode, String failureReason,
-        Long parentPaymentId, BigDecimal refundAmount, String refundReason, Map<String, Object> paymentDetails,
+        String cancelReason, Long parentPaymentId, BigDecimal refundAmount, String refundReason,
+        Map<String, Object> paymentDetails,
         LocalDateTime authorizedAt, LocalDateTime capturedAt, LocalDateTime cancelledAt, LocalDateTime failedAt,
         LocalDateTime refundedAt, Long version, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -101,6 +104,7 @@ public class Payment {
         this.approvalNumber = approvalNumber;
         this.failureCode = failureCode;
         this.failureReason = failureReason;
+        this.cancelReason = cancelReason;
         this.parentPaymentId = parentPaymentId;
         this.refundAmount = refundAmount;
         this.refundReason = refundReason;
@@ -191,8 +195,40 @@ public class Payment {
         this.failedAt = this.updatedAt;
     }
 
+    public void cancel(String reason) {
+        if (!status.canBeCancelled()) {
+            throw new InvalidPaymentStateException(
+                "Payment in " + status + " cannot be cancelled; refund it instead");
+        }
+        transitionTo(PaymentStatus.CANCELLED);
+
+        this.cancelReason = reason;
+        this.cancelledAt = this.updatedAt;
+    }
+
+    // 부분 환불을 누적한다. 누적액이 결제 금액에 도달하면 전액 환불로 확정된다.
+    public void refund(BigDecimal amount, String reason) {
+        if (!status.canBeRefunded()) {
+            throw new InvalidPaymentStateException("Payment in " + status + " cannot be refunded");
+        }
+        validateRefundAmount(amount);
+
+        BigDecimal accumulated = refundedSoFar().add(amount);
+        transitionTo(accumulated.compareTo(this.amount) == 0
+            ? PaymentStatus.REFUNDED
+            : PaymentStatus.PARTIAL_REFUNDED);
+
+        this.refundAmount = accumulated;
+        this.refundReason = reason;
+        this.refundedAt = this.updatedAt;
+    }
+
     public void expire() {
         transitionTo(PaymentStatus.EXPIRED);
+    }
+
+    public BigDecimal refundableAmount() {
+        return amount.subtract(refundedSoFar());
     }
 
     public Map<String, Object> getPaymentDetails() {
@@ -201,6 +237,20 @@ public class Payment {
 
     public boolean isSettled() {
         return status == PaymentStatus.CAPTURED || status == PaymentStatus.PARTIAL_CAPTURED;
+    }
+
+    private BigDecimal refundedSoFar() {
+        return refundAmount != null ? refundAmount : BigDecimal.ZERO;
+    }
+
+    private void validateRefundAmount(BigDecimal requested) {
+        if (requested == null || requested.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Refund amount must be greater than 0");
+        }
+        if (requested.compareTo(refundableAmount()) > 0) {
+            throw new IllegalArgumentException(
+                "Refund amount exceeds the refundable amount of " + refundableAmount());
+        }
     }
 
     private void transitionTo(PaymentStatus target) {
