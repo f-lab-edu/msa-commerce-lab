@@ -79,6 +79,9 @@ public class PaymentJpaEntity {
     @Column(name = "failure_reason", columnDefinition = "TEXT")
     private String failureReason;
 
+    @Column(name = "cancel_reason", columnDefinition = "TEXT")
+    private String cancelReason;
+
     @Column(name = "parent_payment_id")
     private Long parentPaymentId;
 
@@ -145,6 +148,7 @@ public class PaymentJpaEntity {
         this.approvalNumber = payment.getApprovalNumber();
         this.failureCode = payment.getFailureCode();
         this.failureReason = payment.getFailureReason();
+        this.cancelReason = payment.getCancelReason();
         this.refundAmount = payment.getRefundAmount();
         this.refundReason = payment.getRefundReason();
         this.paymentDetails = new LinkedHashMap<>(payment.getPaymentDetails());

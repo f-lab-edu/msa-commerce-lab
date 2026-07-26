@@ -241,6 +241,133 @@ class PaymentTest {
 
     }
 
+    @Nested
+    @DisplayName("취소")
+    class Cancel {
+
+        @Test
+        @DisplayName("승인 상태에서 취소하면 CANCELLED 가 되고 사유가 남는다")
+        void cancelAuthorized() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.VIRTUAL_ACCOUNT);
+            payment.authorize("EXT-1", "TXN-1", "0001");
+
+            payment.cancel("고객 변심");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+            assertThat(payment.getCancelReason()).isEqualTo("고객 변심");
+            assertThat(payment.getCancelledAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("PENDING 상태에서도 취소할 수 있다")
+        void cancelPending() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+
+            payment.cancel("주문 취소");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.CANCELLED);
+        }
+
+        @Test
+        @DisplayName("이미 매입된 결제는 취소 대신 환불해야 한다")
+        void rejectsCancelAfterCapture() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+            payment.capture("EXT-1", "TXN-1", "0001");
+
+            assertThatThrownBy(() -> payment.cancel("고객 변심"))
+                .isInstanceOf(InvalidPaymentStateException.class)
+                .hasMessageContaining("refund it instead");
+        }
+
+    }
+
+    @Nested
+    @DisplayName("환불")
+    class Refund {
+
+        @Test
+        @DisplayName("전액 환불하면 REFUNDED 가 된다")
+        void fullRefund() {
+            Payment payment = capturedPayment();
+
+            payment.refund(AMOUNT, "상품 불량");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo(AMOUNT);
+            assertThat(payment.getRefundReason()).isEqualTo("상품 불량");
+            assertThat(payment.getRefundedAt()).isNotNull();
+            assertThat(payment.refundableAmount()).isEqualByComparingTo("0");
+        }
+
+        @Test
+        @DisplayName("부분 환불하면 PARTIAL_REFUNDED 가 되고 잔여 금액이 남는다")
+        void partialRefund() {
+            Payment payment = capturedPayment();
+
+            payment.refund(new BigDecimal("5000.0000"), "일부 반품");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.PARTIAL_REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo("5000.0000");
+            assertThat(payment.refundableAmount()).isEqualByComparingTo("10000.0000");
+        }
+
+        @Test
+        @DisplayName("부분 환불을 누적해 전액에 도달하면 REFUNDED 가 된다")
+        void accumulatesPartialRefunds() {
+            Payment payment = capturedPayment();
+
+            payment.refund(new BigDecimal("5000.0000"), "일부 반품");
+            payment.refund(new BigDecimal("10000.0000"), "잔여 반품");
+
+            assertThat(payment.getStatus()).isEqualTo(PaymentStatus.REFUNDED);
+            assertThat(payment.getRefundAmount()).isEqualByComparingTo(AMOUNT);
+        }
+
+        @Test
+        @DisplayName("잔여 금액을 넘는 환불은 거부한다")
+        void rejectsOverRefund() {
+            Payment payment = capturedPayment();
+            payment.refund(new BigDecimal("10000.0000"), "일부 반품");
+
+            assertThatThrownBy(() -> payment.refund(new BigDecimal("10000.0000"), "추가 반품"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exceeds the refundable amount");
+        }
+
+        @Test
+        @DisplayName("0 이하 금액은 환불할 수 없다")
+        void rejectsNonPositiveRefund() {
+            Payment payment = capturedPayment();
+
+            assertThatThrownBy(() -> payment.refund(BigDecimal.ZERO, "잘못된 요청"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("greater than 0");
+        }
+
+        @Test
+        @DisplayName("매입되지 않은 결제는 환불할 수 없다")
+        void rejectsRefundBeforeCapture() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+
+            assertThatThrownBy(() -> payment.refund(AMOUNT, "상품 불량"))
+                .isInstanceOf(InvalidPaymentStateException.class)
+                .hasMessageContaining("cannot be refunded");
+        }
+
+        @Test
+        @DisplayName("환불 전에는 결제 금액 전액이 환불 가능하다")
+        void refundableAmountStartsAtFullAmount() {
+            assertThat(capturedPayment().refundableAmount()).isEqualByComparingTo(AMOUNT);
+        }
+
+        private Payment capturedPayment() {
+            Payment payment = requestPayment(AMOUNT, PaymentMethod.CREDIT_CARD);
+            payment.capture("EXT-1", "TXN-1", "0001");
+            return payment;
+        }
+
+    }
+
     @Test
     @DisplayName("동일성은 paymentId 로 판단한다")
     void equalsByPaymentId() {

@@ -23,10 +23,14 @@ public record PaymentResponse(
     String approvalNumber,
     String failureCode,
     String failureReason,
+    String cancelReason,
+    BigDecimal refundAmount,
+    String refundReason,
     LocalDateTime authorizedAt,
     LocalDateTime capturedAt,
     LocalDateTime cancelledAt,
     LocalDateTime failedAt,
+    LocalDateTime refundedAt,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {

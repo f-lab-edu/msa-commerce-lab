@@ -19,6 +19,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 10
+        compression.type: snappy
+        # order-orchestrator 소비자가 고정 타입으로 역직렬화하므로 타입 헤더를 보내지 않는다
+        spring.json.add.type.headers: false
+
 # Payment gateway settings
 payment:
   gateway:
@@ -26,6 +41,19 @@ payment:
     mock:
       # 이 금액을 초과하면 한도 초과로 거절한다
       approval-limit: 10000000.0000
+    retry:
+      # PG 통신 실패에만 적용된다. 거절은 재시도하지 않는다.
+      max-attempts: 3
+      initial-delay-millis: 200
+      multiplier: 2.0
+
+# Application custom settings
+app:
+  kafka:
+    relay:
+      fixed-delay-ms: 1000
+      batch-size: 100
+      publish-timeout-seconds: 5
 
 # Actuator endpoints for monitoring
 management:
@@ -43,3 +71,5 @@ management:
 logging:
   level:
     com.msa.commerce: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka: INFO

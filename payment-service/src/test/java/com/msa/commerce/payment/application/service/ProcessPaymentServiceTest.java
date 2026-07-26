@@ -37,18 +37,23 @@ class ProcessPaymentServiceTest {
 
     private static final BigDecimal AMOUNT = new BigDecimal("15000.0000");
 
+    private static final String CORRELATION_ID = "corr-1";
+
     @Mock
     private PaymentRepository paymentRepository;
 
     @Mock
     private PaymentGatewayPort paymentGatewayPort;
 
+    @Mock
+    private PaymentResultRecorder paymentResultRecorder;
+
     private ProcessPaymentService processPaymentService;
 
     @BeforeEach
     void setUp() {
         processPaymentService = new ProcessPaymentService(
-            paymentRepository, paymentGatewayPort, new PaymentResponseMapper());
+            paymentRepository, paymentGatewayPort, paymentResultRecorder, new PaymentResponseMapper());
     }
 
     @Test
@@ -94,7 +99,7 @@ class ProcessPaymentServiceTest {
     }
 
     @Test
-    @DisplayName("PG사 통신이 실패해도 예외를 던지지 않고 FAILED 로 기록한다")
+    @DisplayName("PG사 통신이 끝내 실패해도 예외를 던지지 않고 FAILED 로 기록한다")
     void failedWhenGatewayThrows() {
         givenNoActivePayment();
         given(paymentGatewayPort.providerName()).willReturn("MOCK_PG");
@@ -109,6 +114,17 @@ class ProcessPaymentServiceTest {
     }
 
     @Test
+    @DisplayName("결과 확정은 correlationId 와 함께 이벤트까지 같이 기록한다")
+    void publishesResultWithCorrelationId() {
+        givenNoActivePayment();
+        givenGatewayReturns(PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001"));
+
+        processPaymentService.process(command(PaymentMethod.CREDIT_CARD));
+
+        then(paymentResultRecorder).should().recordAndPublish(any(Payment.class), eq(CORRELATION_ID));
+    }
+
+    @Test
     @DisplayName("PENDING 상태로 먼저 저장한 뒤 PG 를 호출한다")
     void persistsPendingBeforeCallingGateway() {
         // Payment 는 가변 객체라 ArgumentCaptor 로는 호출 시점 상태를 볼 수 없다
@@ -119,16 +135,21 @@ class ProcessPaymentServiceTest {
             statusesAtSave.add(payment.getStatus());
             return payment;
         });
+        given(paymentResultRecorder.recordAndPublish(any(Payment.class), any())).willAnswer(invocation -> {
+            Payment payment = invocation.getArgument(0);
+            statusesAtSave.add(payment.getStatus());
+            return payment;
+        });
         givenGatewayReturns(PaymentGatewayResult.captured("EXT-1", "TXN-1", "0001"));
 
         processPaymentService.process(command(PaymentMethod.CREDIT_CARD));
 
         assertThat(statusesAtSave).containsExactly(PaymentStatus.PENDING, PaymentStatus.CAPTURED);
 
-        InOrder inOrder = inOrder(paymentRepository, paymentGatewayPort);
+        InOrder inOrder = inOrder(paymentRepository, paymentGatewayPort, paymentResultRecorder);
         inOrder.verify(paymentRepository).save(any(Payment.class));
         inOrder.verify(paymentGatewayPort).authorize(any(Payment.class));
-        inOrder.verify(paymentRepository).save(any(Payment.class));
+        inOrder.verify(paymentResultRecorder).recordAndPublish(any(Payment.class), any());
     }
 
     @Test
@@ -144,6 +165,7 @@ class ProcessPaymentServiceTest {
 
         verify(paymentRepository, never()).save(any());
         verify(paymentGatewayPort, never()).authorize(any());
+        verify(paymentResultRecorder, never()).recordAndPublish(any(), any());
     }
 
     @Test
@@ -163,6 +185,8 @@ class ProcessPaymentServiceTest {
     private void givenNoActivePayment() {
         given(paymentRepository.findActiveByOrderId(ORDER_ID)).willReturn(Optional.empty());
         given(paymentRepository.save(any(Payment.class))).willAnswer(invocation -> invocation.getArgument(0));
+        given(paymentResultRecorder.recordAndPublish(any(Payment.class), any()))
+            .willAnswer(invocation -> invocation.getArgument(0));
     }
 
     private void givenGatewayReturns(PaymentGatewayResult result) {
@@ -171,7 +195,7 @@ class ProcessPaymentServiceTest {
     }
 
     private ProcessPaymentCommand command(PaymentMethod method) {
-        return new ProcessPaymentCommand(ORDER_ID, 1001L, AMOUNT, "KRW", method, null);
+        return new ProcessPaymentCommand(ORDER_ID, 1001L, AMOUNT, "KRW", method, null, CORRELATION_ID);
     }
 
 }

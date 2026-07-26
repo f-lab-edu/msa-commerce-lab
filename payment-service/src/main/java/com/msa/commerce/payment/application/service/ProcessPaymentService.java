@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 /*
  * PG 호출이 DB 트랜잭션 안에 들어가면 커넥션을 외부 응답 시간만큼 붙잡고,
  * 승인 성공 후 롤백되면 결제 기록만 사라지는 사고가 난다.
- * 그래서 클래스 레벨 @Transactional 없이 "PENDING 저장 → PG 호출 → 결과 저장" 을
- * 각각 별개의 트랜잭션(PaymentRepositoryImpl)으로 끊는다.
+ * 그래서 클래스 레벨 @Transactional 없이 "PENDING 저장 → PG 호출 → 결과 저장+이벤트 적재" 로 나누고,
+ * 커밋이 필요한 구간만 PaymentResultRecorder 에 위임한다.
  */
 @Slf4j
 @Service
@@ -33,6 +33,8 @@ public class ProcessPaymentService implements ProcessPaymentUseCase {
     private final PaymentRepository paymentRepository;
 
     private final PaymentGatewayPort paymentGatewayPort;
+
+    private final PaymentResultRecorder paymentResultRecorder;
 
     private final PaymentResponseMapper paymentResponseMapper;
 
@@ -46,7 +48,7 @@ public class ProcessPaymentService implements ProcessPaymentUseCase {
 
         applyGatewayOutcome(pending);
 
-        Payment settled = paymentRepository.save(pending);
+        Payment settled = paymentResultRecorder.recordAndPublish(pending, command.correlationId());
 
         log.info("Payment processed: paymentId={}, orderId={}, status={}",
             settled.getPaymentId(), settled.getOrderId(), settled.getStatus());

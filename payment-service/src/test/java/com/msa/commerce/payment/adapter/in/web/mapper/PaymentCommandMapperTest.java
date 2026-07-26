@@ -25,7 +25,7 @@ class PaymentCommandMapperTest {
         ProcessPaymentRequest request = new ProcessPaymentRequest(orderId, 1001L,
             new BigDecimal("15000.0000"), "USD", PaymentMethod.DIGITAL_WALLET, Map.of("wallet", "TOSS"));
 
-        ProcessPaymentCommand command = mapper.toProcessPaymentCommand(request);
+        ProcessPaymentCommand command = mapper.toProcessPaymentCommand(request, null);
 
         assertThat(command.orderId()).isEqualTo(orderId);
         assertThat(command.customerId()).isEqualTo(1001L);
@@ -41,7 +41,7 @@ class PaymentCommandMapperTest {
         ProcessPaymentRequest request = new ProcessPaymentRequest(UUID.randomUUID(), 1001L,
             new BigDecimal("15000.0000"), null, PaymentMethod.CREDIT_CARD, null);
 
-        assertThat(mapper.toProcessPaymentCommand(request).currency()).isEqualTo("KRW");
+        assertThat(mapper.toProcessPaymentCommand(request, null).currency()).isEqualTo("KRW");
     }
 
 }

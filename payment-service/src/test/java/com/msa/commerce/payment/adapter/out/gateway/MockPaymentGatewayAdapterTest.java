@@ -23,7 +23,7 @@ class MockPaymentGatewayAdapterTest {
     @BeforeEach
     void setUp() {
         adapter = new MockPaymentGatewayAdapter(
-            new PaymentGatewayProperties("MOCK_PG", new PaymentGatewayProperties.Mock(APPROVAL_LIMIT)));
+            new PaymentGatewayProperties("MOCK_PG", new PaymentGatewayProperties.Mock(APPROVAL_LIMIT), null));
     }
 
     @Test
@@ -81,11 +81,31 @@ class MockPaymentGatewayAdapterTest {
     @DisplayName("설정을 생략하면 기본 PG사 이름과 기본 한도가 적용된다")
     void appliesDefaultsWhenPropertiesAreMissing() {
         MockPaymentGatewayAdapter defaultAdapter =
-            new MockPaymentGatewayAdapter(new PaymentGatewayProperties(null, null));
+            new MockPaymentGatewayAdapter(new PaymentGatewayProperties(null, null, null));
 
         assertThat(defaultAdapter.providerName()).isEqualTo("MOCK_PG");
         assertThat(defaultAdapter.authorize(payment(new BigDecimal("9999999.0000"), PaymentMethod.CREDIT_CARD))
             .isApproved()).isTrue();
+    }
+
+    @Test
+    @DisplayName("취소 요청은 승인되고 취소 거래 ID 를 돌려준다")
+    void cancelIsApproved() {
+        var result = adapter.cancel(payment(new BigDecimal("15000.0000"), PaymentMethod.CREDIT_CARD), "고객 변심");
+
+        assertThat(result.approved()).isTrue();
+        assertThat(result.gatewayTransactionId()).startsWith("CNL-");
+        assertThat(result.failureCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("환불 요청은 승인되고 환불 거래 ID 를 돌려준다")
+    void refundIsApproved() {
+        var result = adapter.refund(payment(new BigDecimal("15000.0000"), PaymentMethod.CREDIT_CARD),
+            new BigDecimal("5000.0000"), "상품 불량");
+
+        assertThat(result.approved()).isTrue();
+        assertThat(result.gatewayTransactionId()).startsWith("RFD-");
     }
 
     private Payment payment(BigDecimal amount, PaymentMethod method) {

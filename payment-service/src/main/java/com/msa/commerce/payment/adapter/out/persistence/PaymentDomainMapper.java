@@ -27,6 +27,7 @@ public class PaymentDomainMapper {
             .approvalNumber(entity.getApprovalNumber())
             .failureCode(entity.getFailureCode())
             .failureReason(entity.getFailureReason())
+            .cancelReason(entity.getCancelReason())
             .parentPaymentId(entity.getParentPaymentId())
             .refundAmount(entity.getRefundAmount())
             .refundReason(entity.getRefundReason())
