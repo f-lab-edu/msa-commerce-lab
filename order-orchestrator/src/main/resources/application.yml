@@ -31,6 +31,70 @@ spring:
       time-to-live: 3600000
       cache-null-values: false
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        linger.ms: 10
+        compression.type: snappy
+        # Metrics and monitoring
+        metric.reporters: org.apache.kafka.common.metrics.JmxReporter
+    consumer:
+      group-id: order-orchestrator-consumer-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: "com.msa.commerce.orchestrator.domain.event"
+        isolation.level: read_committed
+        # Metrics and monitoring
+        metric.reporters: org.apache.kafka.common.metrics.JmxReporter
+    listener:
+      ack-mode: manual
+      # Monitoring configuration
+      log-container-config: true
+
+# Application custom settings
+app:
+  kafka:
+    relay:
+      fixed-delay-ms: 1000
+      batch-size: 100
+      publish-timeout-seconds: 5
+    retry:
+      nack-sleep-duration-seconds: 10
+
+# Actuator endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 logging:
   level:
     com.msa.commerce: DEBUG
+    org.apache.kafka: INFO
+    org.springframework.kafka: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [%X{eventId}] [%X{correlationId}] %msg%n"
+  file:
+    name: logs/order-orchestrator.log
+  logback:
+    rolling policy:
+      max-file-size: 10MB
+      max-history: 30

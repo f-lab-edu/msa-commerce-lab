@@ -2,6 +2,7 @@ package com.msa.commerce.orchestrator.adapter.in.web;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,9 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.msa.commerce.orchestrator.adapter.in.web.dto.request.CancelOrderRequest;
+import com.msa.commerce.orchestrator.adapter.in.web.dto.request.CreateOrderRequest;
+import com.msa.commerce.orchestrator.adapter.in.web.dto.response.CreateOrderResponse;
 import com.msa.commerce.orchestrator.adapter.in.web.mapper.OrderCommandMapper;
 import com.msa.commerce.orchestrator.application.port.in.CancelOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.ConfirmOrderUseCase;
+import com.msa.commerce.orchestrator.application.port.in.CreateOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.PayOrderUseCase;
 import com.msa.commerce.orchestrator.application.port.in.response.OrderResponse;
 
@@ -26,6 +30,8 @@ import lombok.RequiredArgsConstructor;
 @Validated
 public class OrderCommandController {
 
+    private final CreateOrderUseCase createOrderUseCase;
+
     private final ConfirmOrderUseCase confirmOrderUseCase;
 
     private final PayOrderUseCase payOrderUseCase;
@@ -33,6 +39,15 @@ public class OrderCommandController {
     private final CancelOrderUseCase cancelOrderUseCase;
 
     private final OrderCommandMapper orderCommandMapper;
+
+    @PostMapping
+    public ResponseEntity<CreateOrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(CreateOrderResponse.builder()
+                .orderId(createOrderUseCase.createOrder(orderCommandMapper.toCreateOrderCommand(request)))
+                .message("Order created successfully")
+                .build());
+    }
 
     @PostMapping("/{orderId}/confirm")
     public ResponseEntity<OrderResponse> confirmOrder(@PathVariable UUID orderId) {
