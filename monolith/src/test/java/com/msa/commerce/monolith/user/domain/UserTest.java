@@ -28,7 +28,8 @@ class UserTest {
             assertThat(user.getEmailVerified()).isFalse();
             assertThat(user.getPhoneVerified()).isFalse();
             assertThat(user.getLastLoginAt()).isNull();
-            assertThat(user.getCreatedAt()).isNotNull();
+            // 생성/수정 시각은 JPA Auditing 이 영속화 시점에 채운다.
+            assertThat(user.getCreatedAt()).isNull();
         }
 
         @Test

@@ -58,7 +58,7 @@ class UserCreateServiceTest {
     @Test
     @DisplayName("사용자를 생성하면 ACTIVE 상태로 저장되고 응답이 반환된다")
     void createUser() {
-        given(passwordEncryptor.encrypt(RAW_PASSWORD)).willReturn(UserFixture.PASSWORD_HASH);
+        given(passwordEncryptor.encrypt(RAW_PASSWORD)).willReturn(UserFixture.BCRYPT_HASH);
         given(userRepository.existsByUsername(UserFixture.USERNAME)).willReturn(false);
         given(userRepository.existsByEmail(UserFixture.EMAIL)).willReturn(false);
         given(userRepository.save(any(User.class))).willReturn(UserFixture.activeUser(1L));
@@ -74,7 +74,7 @@ class UserCreateServiceTest {
     @Test
     @DisplayName("평문 비밀번호는 해싱되어 저장된다")
     void createUserEncryptsPassword() {
-        given(passwordEncryptor.encrypt(RAW_PASSWORD)).willReturn(UserFixture.PASSWORD_HASH);
+        given(passwordEncryptor.encrypt(RAW_PASSWORD)).willReturn(UserFixture.BCRYPT_HASH);
         given(userRepository.existsByUsername(anyString())).willReturn(false);
         given(userRepository.existsByEmail(anyString())).willReturn(false);
         given(userRepository.save(any(User.class))).willReturn(UserFixture.activeUser(1L));
@@ -83,14 +83,14 @@ class UserCreateServiceTest {
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository).save(captor.capture());
-        assertThat(captor.getValue().getPasswordHash()).isEqualTo(UserFixture.PASSWORD_HASH);
+        assertThat(captor.getValue().getPasswordHash()).isEqualTo(UserFixture.BCRYPT_HASH);
         assertThat(captor.getValue().getPasswordHash()).isNotEqualTo(RAW_PASSWORD);
     }
 
     @Test
     @DisplayName("응답에는 비밀번호 관련 정보가 포함되지 않는다")
     void responseDoesNotExposePassword() {
-        given(passwordEncryptor.encrypt(anyString())).willReturn(UserFixture.PASSWORD_HASH);
+        given(passwordEncryptor.encrypt(anyString())).willReturn(UserFixture.BCRYPT_HASH);
         given(userRepository.existsByUsername(anyString())).willReturn(false);
         given(userRepository.existsByEmail(anyString())).willReturn(false);
         given(userRepository.save(any(User.class))).willReturn(UserFixture.activeUser(1L));

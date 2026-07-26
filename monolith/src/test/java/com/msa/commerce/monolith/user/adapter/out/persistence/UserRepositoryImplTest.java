@@ -35,7 +35,7 @@ class UserRepositoryImplTest {
         assertThat(saved.getUserUuid()).isNotBlank();
         assertThat(saved.getUsername()).isEqualTo(UserFixture.USERNAME);
         assertThat(saved.getEmail()).isEqualTo(UserFixture.EMAIL);
-        assertThat(saved.getPasswordHash()).isEqualTo(UserFixture.PASSWORD_HASH);
+        assertThat(saved.getPasswordHash()).isEqualTo(UserFixture.BCRYPT_HASH);
         assertThat(saved.getDateOfBirth()).isEqualTo(UserFixture.DATE_OF_BIRTH);
         assertThat(saved.getGender()).isEqualTo(Gender.MALE);
         assertThat(saved.getStatus()).isEqualTo(UserStatus.ACTIVE);

@@ -14,7 +14,7 @@ public final class UserFixture {
 
     public static final String EMAIL = "joel@example.com";
 
-    public static final String PASSWORD_HASH = "$2a$10$hashed";
+    public static final String BCRYPT_HASH = "$2a$10$hashed";
 
     public static final String FIRST_NAME = "Jaeyoung";
 
@@ -34,7 +34,7 @@ public final class UserFixture {
         return User.builder()
             .username(USERNAME)
             .email(EMAIL)
-            .passwordHash(PASSWORD_HASH)
+            .passwordHash(BCRYPT_HASH)
             .firstName(FIRST_NAME)
             .lastName(LAST_NAME)
             .phoneNumber(PHONE_NUMBER)
@@ -64,7 +64,7 @@ public final class UserFixture {
             "018f8c2e-0000-7000-8000-00000000000" + id,
             usernameOf(id),
             emailOf(id),
-            PASSWORD_HASH,
+            BCRYPT_HASH,
             FIRST_NAME,
             LAST_NAME,
             PHONE_NUMBER,
