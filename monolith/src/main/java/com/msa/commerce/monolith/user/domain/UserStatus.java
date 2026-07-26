@@ -1,4 +1,4 @@
-package com.msa.commerce.monolith.user;
+package com.msa.commerce.monolith.user.domain;
 
 public enum UserStatus {
 
