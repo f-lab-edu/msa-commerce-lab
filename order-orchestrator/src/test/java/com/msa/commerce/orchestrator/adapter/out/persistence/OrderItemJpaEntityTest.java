@@ -1,12 +1,13 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.OrderItem;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.msa.commerce.orchestrator.domain.OrderItem;
 
 @DisplayName("OrderItemJpaEntity 테스트")
 class OrderItemJpaEntityTest {
@@ -74,4 +75,5 @@ class OrderItemJpaEntityTest {
             new BigDecimal("10000.00")
         );
     }
+
 }

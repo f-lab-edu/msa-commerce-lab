@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.msa.commerce.common.monitoring.MetricsCollector;
 
-@TestConfiguration  
+@TestConfiguration
 @EnableJpaAuditing
 public class TestBeansConfiguration {
 
@@ -23,4 +23,5 @@ public class TestBeansConfiguration {
     public MetricsCollector metricsCollector(ObjectMapper objectMapper) {
         return new MetricsCollector(objectMapper);
     }
+
 }

@@ -23,6 +23,10 @@ import lombok.Getter;
 @Getter
 public class Notification {
 
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "notification_id")
+    private final List<ValidationError> errors = new ArrayList<>();
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,10 +36,6 @@ public class Notification {
 
     @Column(name = "is_valid", nullable = false)
     private Boolean isValid;
-
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "notification_id")
-    private final List<ValidationError> errors = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

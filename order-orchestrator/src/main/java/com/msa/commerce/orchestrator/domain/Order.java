@@ -132,6 +132,19 @@ public class Order {
         );
     }
 
+    private static void validateCreationParameters(String orderNumber, Long customerId,
+        Map<String, Object> shippingAddress) {
+        if (orderNumber == null || orderNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("Order number cannot be null or empty");
+        }
+        if (customerId == null) {
+            throw new IllegalArgumentException("Customer ID cannot be null");
+        }
+        if (shippingAddress == null || shippingAddress.isEmpty()) {
+            throw new IllegalArgumentException("Shipping address cannot be null or empty");
+        }
+    }
+
     public void addOrderItem(OrderItem orderItem) {
         if (orderItem == null) {
             throw new IllegalArgumentException("Order item cannot be null");
@@ -242,19 +255,6 @@ public class Order {
         return orderItems.stream()
             .mapToInt(OrderItem::getQuantity)
             .sum();
-    }
-
-    private static void validateCreationParameters(String orderNumber, Long customerId,
-        Map<String, Object> shippingAddress) {
-        if (orderNumber == null || orderNumber.trim().isEmpty()) {
-            throw new IllegalArgumentException("Order number cannot be null or empty");
-        }
-        if (customerId == null) {
-            throw new IllegalArgumentException("Customer ID cannot be null");
-        }
-        if (shippingAddress == null || shippingAddress.isEmpty()) {
-            throw new IllegalArgumentException("Shipping address cannot be null or empty");
-        }
     }
 
     public Map<String, Object> getShippingAddress() {

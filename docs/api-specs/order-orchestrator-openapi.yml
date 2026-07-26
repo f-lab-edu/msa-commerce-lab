@@ -33,7 +33,7 @@ servers:
     description: Production environment
 
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 tags:
   - name: Order Query
@@ -50,7 +50,7 @@ tags:
 paths:
   /api/v1/orders/{orderId}/status:
     patch:
-      tags: [Order Command]
+      tags: [ Order Command ]
       summary: Change Order Status
       description: |
         주문 상태를 변경합니다.
@@ -182,7 +182,7 @@ paths:
 
   /api/v1/orders/{orderId}:
     get:
-      tags: [Order Query]
+      tags: [ Order Query ]
       summary: Get Order by ID
       description: |
         Retrieves detailed information about a specific order by its ID.
@@ -328,7 +328,7 @@ paths:
 
   /api/v1/orders:
     get:
-      tags: [Order Query]
+      tags: [ Order Query ]
       summary: Get Orders with Filtering
       description: |
         Retrieves a paginated list of orders with optional filtering.

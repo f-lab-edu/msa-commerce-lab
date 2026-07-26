@@ -23,6 +23,11 @@ public enum PaymentStatus {
 
     EXPIRED;
 
+    // 주문당 중복 결제를 막기 위한 판단 기준: 아직 살아 있는 결제인가
+    public static Set<PaymentStatus> activeStatuses() {
+        return EnumSet.of(PENDING, AUTHORIZED, CAPTURED, PARTIAL_CAPTURED);
+    }
+
     public Set<PaymentStatus> allowedTransitions() {
         return switch (this) {
             case PENDING -> EnumSet.of(AUTHORIZED, CAPTURED, CANCELLED, FAILED, EXPIRED);
@@ -40,11 +45,6 @@ public enum PaymentStatus {
 
     public boolean isTerminal() {
         return allowedTransitions().isEmpty();
-    }
-
-    // 주문당 중복 결제를 막기 위한 판단 기준: 아직 살아 있는 결제인가
-    public static Set<PaymentStatus> activeStatuses() {
-        return EnumSet.of(PENDING, AUTHORIZED, CAPTURED, PARTIAL_CAPTURED);
     }
 
     public boolean isActive() {

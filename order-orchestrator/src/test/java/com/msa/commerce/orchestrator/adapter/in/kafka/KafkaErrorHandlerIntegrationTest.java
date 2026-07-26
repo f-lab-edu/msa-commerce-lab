@@ -39,6 +39,8 @@ import com.msa.commerce.orchestrator.domain.event.RetryableEvent;
 
 class KafkaErrorHandlerIntegrationTest extends KafkaIntegrationTestBase {
 
+    private final List<RetryableEvent<?>> receivedRetryEvents = new ArrayList<>();
+
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
@@ -46,8 +48,6 @@ class KafkaErrorHandlerIntegrationTest extends KafkaIntegrationTestBase {
     private ProcessPaymentResultUseCase processPaymentResultUseCase;
 
     private KafkaMessageListenerContainer<String, RetryableEvent<?>> retryEventContainer;
-
-    private final List<RetryableEvent<?>> receivedRetryEvents = new ArrayList<>();
 
     @BeforeEach
     void setUp() {
