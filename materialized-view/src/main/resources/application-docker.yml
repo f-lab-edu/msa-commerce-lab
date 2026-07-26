@@ -4,7 +4,7 @@ spring:
     activate:
       on-profile: docker
   datasource:
-    url: jdbc:mysql://mysql:3306/materialized_view_db
+    url: jdbc:mysql://mysql:3306/db_materialized_view
     username: root
     password: root
   data:
