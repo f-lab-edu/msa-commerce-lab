@@ -63,6 +63,7 @@ class UserCreateServiceTest {
 
         UserResponse response = userCreateService.createUser(command());
 
+        assertThat(response).isNotNull();
         assertThat(response.getId()).isEqualTo(1L);
         assertThat(response.getStatus()).isEqualTo(UserStatus.ACTIVE);
         assertThat(response.getUserUuid()).isNotBlank();
@@ -94,8 +95,9 @@ class UserCreateServiceTest {
 
         UserResponse response = userCreateService.createUser(command());
 
-        assertThat(response).extracting("username", "email").doesNotContainNull();
-        assertThat(response.getClass().getDeclaredFields())
+        assertThat(response).isNotNull()
+            .extracting("username", "email").doesNotContainNull();
+        assertThat(UserResponse.class.getDeclaredFields())
             .noneMatch(field -> field.getName().toLowerCase().contains("password"));
     }
 
