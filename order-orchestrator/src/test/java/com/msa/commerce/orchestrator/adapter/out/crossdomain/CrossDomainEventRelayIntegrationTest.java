@@ -24,6 +24,7 @@ import org.springframework.kafka.test.utils.ContainerTestUtils;
 
 import com.msa.commerce.orchestrator.adapter.out.kafka.KafkaIntegrationTestBase;
 import com.msa.commerce.orchestrator.adapter.out.kafka.KafkaTopics;
+import com.msa.commerce.orchestrator.adapter.out.persistence.CrossDomainEventJpaRepository;
 import com.msa.commerce.orchestrator.application.port.out.CrossDomainEventRepository;
 import com.msa.commerce.orchestrator.application.port.out.OrderEventPublisher;
 import com.msa.commerce.orchestrator.domain.Order;
@@ -40,6 +41,9 @@ class CrossDomainEventRelayIntegrationTest extends KafkaIntegrationTestBase {
     private CrossDomainEventRepository crossDomainEventRepository;
 
     @Autowired
+    private CrossDomainEventJpaRepository crossDomainEventJpaRepository;
+
+    @Autowired
     private CrossDomainEventRelay crossDomainEventRelay;
 
     private KafkaMessageListenerContainer<String, OrderCreatedEvent> container;
@@ -48,6 +52,7 @@ class CrossDomainEventRelayIntegrationTest extends KafkaIntegrationTestBase {
 
     @BeforeEach
     void setUp() {
+        crossDomainEventJpaRepository.deleteAll();
         setupConsumer();
     }
 
@@ -74,7 +79,7 @@ class CrossDomainEventRelayIntegrationTest extends KafkaIntegrationTestBase {
             .atMost(5, TimeUnit.SECONDS)
             .untilAsserted(() -> assertThat(receivedEvent).isNotNull());
 
-        assertThat(receivedEvent.getOrderId()).isEqualTo(order.getOrderId().toString());
+        assertThat(receivedEvent.getOrderId()).isEqualTo(order.getOrderId());
         assertThat(receivedEvent.getOrderNumber()).isEqualTo(order.getOrderNumber());
         assertThat(receivedEvent.getTotalAmount()).isEqualByComparingTo(order.getTotalAmount());
 
@@ -143,6 +148,8 @@ class CrossDomainEventRelayIntegrationTest extends KafkaIntegrationTestBase {
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, OrderCreatedEvent.class.getName());
+        // 릴레이는 Map으로 재직렬화해 발행하므로 타입 헤더 대신 기본 타입으로 역직렬화한다
+        consumerProps.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         DefaultKafkaConsumerFactory<String, OrderCreatedEvent> consumerFactory =
             new DefaultKafkaConsumerFactory<>(consumerProps);
