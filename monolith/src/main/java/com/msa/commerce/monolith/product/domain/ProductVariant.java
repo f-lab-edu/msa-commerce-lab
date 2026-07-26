@@ -66,6 +66,18 @@ public class ProductVariant {
         return variant;
     }
 
+    private static void validateVariant(Long productId, String variantSku, String name) {
+        if (productId == null) {
+            throw new IllegalArgumentException("Product ID is required.");
+        }
+        if (variantSku == null || variantSku.isBlank()) {
+            throw new IllegalArgumentException("Variant SKU is required.");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("Variant name is required.");
+        }
+    }
+
     public BigDecimal effectivePrice(BigDecimal basePrice) {
         return basePrice.add(priceAdjustment);
     }
@@ -87,18 +99,6 @@ public class ProductVariant {
 
     public boolean isOrderable() {
         return status == ProductVariantStatus.ACTIVE;
-    }
-
-    private static void validateVariant(Long productId, String variantSku, String name) {
-        if (productId == null) {
-            throw new IllegalArgumentException("Product ID is required.");
-        }
-        if (variantSku == null || variantSku.isBlank()) {
-            throw new IllegalArgumentException("Variant SKU is required.");
-        }
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Variant name is required.");
-        }
     }
 
 }

@@ -11,6 +11,11 @@ import org.junit.jupiter.api.Test;
 @DisplayName("InventorySnapshot 도메인 테스트")
 class InventorySnapshotTest {
 
+    private InventorySnapshot snapshot(int available, int reserved) {
+        return InventorySnapshot.reconstitute(1L, 1L, null, "MAIN", available, reserved, 10,
+            LocalDateTime.now(), 1L);
+    }
+
     @Nested
     @DisplayName("생성")
     class Create {
@@ -171,11 +176,6 @@ class InventorySnapshotTest {
             assertThat(snapshot(11, 0).stockStatus()).isEqualTo(StockStatus.IN_STOCK);
         }
 
-    }
-
-    private InventorySnapshot snapshot(int available, int reserved) {
-        return InventorySnapshot.reconstitute(1L, 1L, null, "MAIN", available, reserved, 10,
-            LocalDateTime.now(), 1L);
     }
 
 }

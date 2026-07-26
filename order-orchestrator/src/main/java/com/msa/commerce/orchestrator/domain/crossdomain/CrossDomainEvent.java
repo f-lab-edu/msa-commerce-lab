@@ -110,6 +110,21 @@ public class CrossDomainEvent {
             .build();
     }
 
+    private static void validateCreationParameters(EventType eventType, DomainType sourceDomain,
+        List<DomainType> targetDomains, EntityType entityType, String entityId, String eventData,
+        String kafkaTopic) {
+
+        CrossDomainEventValidator.builder()
+            .requireNonNull(eventType, "Event type")
+            .requireNonNull(sourceDomain, "Source domain")
+            .requireNonEmpty(targetDomains, "Target domains")
+            .requireNonNull(entityType, "Entity type")
+            .requireNonEmpty(entityId, "Entity ID")
+            .requireNonEmpty(eventData, "Event data")
+            .requireNonEmpty(kafkaTopic, "Kafka topic")
+            .validate();
+    }
+
     public void markAsPublished(Integer partition, Long offset) {
         this.publishingStatus = PublishingStatus.PUBLISHED;
         this.kafkaPartition = partition;
@@ -129,21 +144,6 @@ public class CrossDomainEvent {
     public boolean canRetry() {
         return this.publishingStatus == PublishingStatus.PENDING
             && this.retryCount < this.maxRetries;
-    }
-
-    private static void validateCreationParameters(EventType eventType, DomainType sourceDomain,
-        List<DomainType> targetDomains, EntityType entityType, String entityId, String eventData,
-        String kafkaTopic) {
-
-        CrossDomainEventValidator.builder()
-            .requireNonNull(eventType, "Event type")
-            .requireNonNull(sourceDomain, "Source domain")
-            .requireNonEmpty(targetDomains, "Target domains")
-            .requireNonNull(entityType, "Entity type")
-            .requireNonEmpty(entityId, "Entity ID")
-            .requireNonEmpty(eventData, "Event data")
-            .requireNonEmpty(kafkaTopic, "Kafka topic")
-            .validate();
     }
 
 }

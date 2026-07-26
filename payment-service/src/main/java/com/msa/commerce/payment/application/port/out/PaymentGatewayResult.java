@@ -9,18 +9,6 @@ public record PaymentGatewayResult(
     String failureReason
 ) {
 
-    public enum Outcome {
-
-        // 승인만 완료 (매입은 별도) — 가상계좌/계좌이체처럼 정산이 지연되는 수단
-        AUTHORIZED,
-
-        // 승인과 매입이 한 번에 끝난 경우
-        CAPTURED,
-
-        // PG사가 거절 (한도 초과, 카드 오류 등) — 재시도해도 결과가 같다
-        DECLINED
-    }
-
     public static PaymentGatewayResult authorized(String externalPaymentId, String gatewayTransactionId,
         String approvalNumber) {
         return new PaymentGatewayResult(Outcome.AUTHORIZED, externalPaymentId, gatewayTransactionId, approvalNumber,
@@ -39,6 +27,18 @@ public record PaymentGatewayResult(
 
     public boolean isApproved() {
         return outcome != Outcome.DECLINED;
+    }
+
+    public enum Outcome {
+
+        // 승인만 완료 (매입은 별도) — 가상계좌/계좌이체처럼 정산이 지연되는 수단
+        AUTHORIZED,
+
+        // 승인과 매입이 한 번에 끝난 경우
+        CAPTURED,
+
+        // PG사가 거절 (한도 초과, 카드 오류 등) — 재시도해도 결과가 같다
+        DECLINED
     }
 
 }

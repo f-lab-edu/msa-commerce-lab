@@ -1,16 +1,17 @@
 package com.msa.commerce.orchestrator.adapter.out.persistence;
 
-import com.msa.commerce.orchestrator.domain.Order;
-import com.msa.commerce.orchestrator.domain.OrderItem;
-import com.msa.commerce.orchestrator.domain.OrderStatus;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import com.msa.commerce.orchestrator.domain.Order;
+import com.msa.commerce.orchestrator.domain.OrderItem;
+import com.msa.commerce.orchestrator.domain.OrderStatus;
 
 @DisplayName("OrderJpaEntity 테스트")
 class OrderJpaEntityTest {
@@ -79,4 +80,5 @@ class OrderJpaEntityTest {
             "WEB"
         );
     }
+
 }

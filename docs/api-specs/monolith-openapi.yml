@@ -22,7 +22,7 @@ servers:
 
   # Security configuration (for future expansion)
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 tags:
   - name: Product
@@ -34,7 +34,7 @@ tags:
 paths:
   /api/v1/products:
     post:
-      tags: [Product]
+      tags: [ Product ]
       summary: Create Product
       description: |
         Creates a new product.
@@ -198,7 +198,7 @@ paths:
 
   /api/v1/products/{id}:
     get:
-      tags: [Product]
+      tags: [ Product ]
       summary: Get Product by ID
       description: |
         Retrieves product information by ID with caching and view count tracking.
@@ -403,7 +403,7 @@ paths:
                     status: 500
 
     put:
-      tags: [Product]
+      tags: [ Product ]
       summary: Update Product
       description: |
         Updates existing product information.
@@ -947,7 +947,7 @@ components:
           type: string
           maxLength: 20
           description: Visibility status
-          enum: [PUBLIC, PRIVATE, HIDDEN]
+          enum: [ PUBLIC, PRIVATE, HIDDEN ]
           default: "PUBLIC"
           example: "PUBLIC"
         taxClass:
@@ -1077,7 +1077,7 @@ components:
           example: 3590000
         visibility:
           type: string
-          enum: [PUBLIC, PRIVATE, HIDDEN]
+          enum: [ PUBLIC, PRIVATE, HIDDEN ]
           description: Product visibility status
           example: "PUBLIC"
         isFeatured:
@@ -1279,7 +1279,7 @@ components:
 
     ProductStatus:
       type: string
-      enum: [DRAFT, ACTIVE, INACTIVE, ARCHIVED]
+      enum: [ DRAFT, ACTIVE, INACTIVE, ARCHIVED ]
       description: |
         Product status:
         - DRAFT: Product is being created/edited

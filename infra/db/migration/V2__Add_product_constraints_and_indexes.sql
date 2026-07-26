@@ -2,7 +2,8 @@
 -- V2: Product 주문 수량 제약조건 및 검색 최적화 인덱스 추가 (#73)
 -- ============================================================================
 
-USE db_platform;
+USE
+db_platform;
 
 ALTER TABLE products
     ADD CONSTRAINT chk_products_min_order_qty

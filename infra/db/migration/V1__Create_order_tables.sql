@@ -4,16 +4,20 @@
 -- Description: Migrate orders table from V0 schema to UUID-based PK
 -- =====================================================
 
-USE db_order;
+USE
+db_order;
 
 -- 테이블명 상수 정의 (SonarQube 문자열 중복 이슈 해결)
-SET @table_orders = 'orders';
-SET @table_order_items = 'order_items';
+SET
+@table_orders = 'orders';
+SET
+@table_order_items = 'order_items';
 
 -- ===================================================
 -- STEP 1: order_items 테이블 FK 제약조건 제거 (존재하는 경우)
 -- ===================================================
-SET @fk_exists = (
+SET
+@fk_exists = (
     SELECT COUNT(*)
     FROM information_schema.TABLE_CONSTRAINTS
     WHERE CONSTRAINT_SCHEMA = 'db_order'
@@ -22,7 +26,8 @@ SET @fk_exists = (
       AND CONSTRAINT_TYPE = 'FOREIGN KEY'
 );
 
-SET @drop_fk_sql = IF(@fk_exists > 0,
+SET
+@drop_fk_sql = IF(@fk_exists > 0,
     CONCAT('ALTER TABLE ', @table_order_items, ' DROP FOREIGN KEY order_items_ibfk_1'),
     'SELECT "FK constraint does not exist, skipping..." AS info'
 );
@@ -47,28 +52,32 @@ ALTER TABLE orders DROP INDEX order_number;
 ALTER TABLE orders DROP PRIMARY KEY;
 
 -- 인덱스 제거 (조건부 처리 - 프로시저 방식)
-DELIMITER //
+DELIMITER
+//
 CREATE PROCEDURE drop_index_if_exists(
-    IN p_table_name VARCHAR(64),
-    IN p_index_name VARCHAR(64)
+    IN p_table_name VARCHAR (64),
+    IN p_index_name VARCHAR (64)
 )
 BEGIN
-    DECLARE v_count INT;
+    DECLARE
+v_count INT;
 
-    SELECT COUNT(*)
-    INTO v_count
-    FROM information_schema.STATISTICS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME = p_table_name
-      AND INDEX_NAME = p_index_name;
+SELECT COUNT(*)
+INTO v_count
+FROM information_schema.STATISTICS
+WHERE TABLE_SCHEMA = DATABASE()
+  AND TABLE_NAME = p_table_name
+  AND INDEX_NAME = p_index_name;
 
-    IF v_count > 0 THEN
+IF
+v_count > 0 THEN
         SET @drop_sql = CONCAT('ALTER TABLE ', p_table_name, ' DROP INDEX ', p_index_name);
-        PREPARE stmt FROM @drop_sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END//
+PREPARE stmt FROM @drop_sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+END IF;
+END
+//
 DELIMITER ;
 
 -- 인덱스 제거 실행
@@ -79,8 +88,9 @@ CALL drop_index_if_exists(@table_orders, 'idx_orders_date');
 
 -- 2-2. 컬럼 변경
 ALTER TABLE orders
-    -- id 컬럼 제거
-    DROP COLUMN id,
+-- id 컬럼 제거
+DROP
+COLUMN id,
 
     -- 컬럼명 변경: order_uuid -> order_id (PK로 사용)
     CHANGE COLUMN order_uuid order_id CHAR(36) NOT NULL COMMENT '주문 UUID',
@@ -99,7 +109,8 @@ ALTER TABLE orders
     MODIFY COLUMN delivered_at DATETIME(6) NULL COMMENT '배송 완료 일시',
     MODIFY COLUMN cancelled_at DATETIME(6) NULL COMMENT '주문 취소 일시',
     MODIFY COLUMN created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '생성 일시',
-    MODIFY COLUMN updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시';
+    MODIFY COLUMN updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON
+UPDATE CURRENT_TIMESTAMP(6) COMMENT '수정 일시';
 
 -- 2-3. order_id를 PK로 설정
 ALTER TABLE orders
@@ -125,7 +136,9 @@ ALTER TABLE order_items
     ADD COLUMN order_item_id VARCHAR(36) NULL COMMENT '주문 항목 UUID' AFTER id;
 
 -- 3-2. 기존 데이터에 대한 order_item_id UUID 생성
-UPDATE order_items SET order_item_id = UUID() WHERE order_item_id IS NULL;
+UPDATE order_items
+SET order_item_id = UUID()
+WHERE order_item_id IS NULL;
 
 -- 3-3. 기존 PK 및 인덱스 제거
 -- AUTO_INCREMENT 속성 제거 (PK 제거 전 필수)
@@ -140,8 +153,9 @@ CALL drop_index_if_exists(@table_order_items, 'idx_order_items_product_id');
 
 -- 3-4. 컬럼 변경
 ALTER TABLE order_items
-    -- id 컬럼 제거
-    DROP COLUMN id,
+-- id 컬럼 제거
+DROP
+COLUMN id,
 
     -- order_id FK 타입 변경 (BIGINT → CHAR(36))
     MODIFY COLUMN order_id CHAR(36) NOT NULL COMMENT '주문 UUID',
@@ -165,9 +179,9 @@ ALTER TABLE order_items
 -- 3-7. FK 제약조건 재생성
 ALTER TABLE order_items
     ADD CONSTRAINT fk_order_items_order_id
-        FOREIGN KEY (order_id) REFERENCES orders(order_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE;
+        FOREIGN KEY (order_id) REFERENCES orders (order_id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
 
 -- ===================================================
 -- CLEANUP: 임시 프로시저 제거

@@ -26,7 +26,6 @@ import com.msa.commerce.monolith.product.domain.Product;
 import com.msa.commerce.monolith.product.domain.ProductStatus;
 import com.msa.commerce.monolith.product.domain.ProductType;
 import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
-import com.msa.commerce.monolith.product.domain.ProductType;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ProductCreateService 테스트")

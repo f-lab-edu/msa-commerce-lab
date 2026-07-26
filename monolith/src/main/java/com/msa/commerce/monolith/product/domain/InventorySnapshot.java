@@ -61,6 +61,18 @@ public class InventorySnapshot {
         return snapshot;
     }
 
+    private static void requirePositive(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Quantity must be positive.");
+        }
+    }
+
+    private static void requireProductId(Long productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("Product ID is required.");
+        }
+    }
+
     public void stockIn(int quantity) {
         requirePositive(quantity);
         applyAvailableChange(quantity);
@@ -133,18 +145,6 @@ public class InventorySnapshot {
         if (reservedQuantity < quantity) {
             throw new InsufficientStockException(
                 "Insufficient reserved stock: reserved=%d, requested=%d".formatted(reservedQuantity, quantity));
-        }
-    }
-
-    private static void requirePositive(int quantity) {
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("Quantity must be positive.");
-        }
-    }
-
-    private static void requireProductId(Long productId) {
-        if (productId == null) {
-            throw new IllegalArgumentException("Product ID is required.");
         }
     }
 

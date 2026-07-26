@@ -40,7 +40,7 @@ spring:
   
   # Disable Kafka for tests
   kafka:
-    bootstrap-servers: 
+    bootstrap-servers:
   
   # Disable web security for tests
   security:

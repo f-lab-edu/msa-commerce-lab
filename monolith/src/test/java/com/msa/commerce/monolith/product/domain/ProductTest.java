@@ -10,8 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.msa.commerce.monolith.product.fixture.ProductCommandFixture;
-
 @DisplayName("Product 도메인 테스트")
 class ProductTest {
 

@@ -31,4 +31,5 @@ public class TestBeansConfiguration {
     public JPAQueryFactory jpaQueryFactory(EntityManager entityManager) {
         return new JPAQueryFactory(entityManager);
     }
+
 }

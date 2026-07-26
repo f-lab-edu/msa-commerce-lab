@@ -168,7 +168,7 @@ public class ProductUpdateService implements ProductUpdateUseCase {
         log.debug("Invalidating cache for product ID: {}", productId);
         log.info("Cache invalidation completed for product ID: {}", productId);
     }
-    
+
     private void validateCommand(ProductUpdateCommand command) {
         Set<ConstraintViolation<ProductUpdateCommand>> violations = validator.validate(command);
         if (!violations.isEmpty()) {

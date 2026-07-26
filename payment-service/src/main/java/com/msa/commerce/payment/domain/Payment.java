@@ -136,6 +136,31 @@ public class Payment {
         return payment;
     }
 
+    private static void validateRequest(UUID orderId, Long customerId, BigDecimal amount, String currency,
+        PaymentMethod paymentMethod, String paymentProvider) {
+        if (orderId == null) {
+            throw new IllegalArgumentException("Order ID is required");
+        }
+        if (customerId == null) {
+            throw new IllegalArgumentException("Customer ID is required");
+        }
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Payment amount must be greater than 0");
+        }
+        if (amount.compareTo(MAX_AMOUNT) > 0) {
+            throw new IllegalArgumentException("Payment amount cannot exceed " + MAX_AMOUNT);
+        }
+        if (currency != null && currency.length() != CURRENCY_LENGTH) {
+            throw new IllegalArgumentException("Currency must be a 3-letter ISO 4217 code");
+        }
+        if (paymentMethod == null) {
+            throw new IllegalArgumentException("Payment method is required");
+        }
+        if (paymentProvider == null || paymentProvider.isBlank()) {
+            throw new IllegalArgumentException("Payment provider is required");
+        }
+    }
+
     public void authorize(String externalPaymentId, String gatewayTransactionId, String approvalNumber) {
         transitionTo(PaymentStatus.AUTHORIZED);
 
@@ -184,31 +209,6 @@ public class Payment {
         }
         this.status = target;
         this.updatedAt = LocalDateTime.now();
-    }
-
-    private static void validateRequest(UUID orderId, Long customerId, BigDecimal amount, String currency,
-        PaymentMethod paymentMethod, String paymentProvider) {
-        if (orderId == null) {
-            throw new IllegalArgumentException("Order ID is required");
-        }
-        if (customerId == null) {
-            throw new IllegalArgumentException("Customer ID is required");
-        }
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Payment amount must be greater than 0");
-        }
-        if (amount.compareTo(MAX_AMOUNT) > 0) {
-            throw new IllegalArgumentException("Payment amount cannot exceed " + MAX_AMOUNT);
-        }
-        if (currency != null && currency.length() != CURRENCY_LENGTH) {
-            throw new IllegalArgumentException("Currency must be a 3-letter ISO 4217 code");
-        }
-        if (paymentMethod == null) {
-            throw new IllegalArgumentException("Payment method is required");
-        }
-        if (paymentProvider == null || paymentProvider.isBlank()) {
-            throw new IllegalArgumentException("Payment provider is required");
-        }
     }
 
 }
