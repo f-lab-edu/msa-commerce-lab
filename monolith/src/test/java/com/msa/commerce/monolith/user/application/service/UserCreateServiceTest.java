@@ -63,10 +63,10 @@ class UserCreateServiceTest {
 
         UserResponse response = userCreateService.createUser(command());
 
-        assertThat(response).isNotNull();
-        assertThat(response.getId()).isEqualTo(1L);
-        assertThat(response.getStatus()).isEqualTo(UserStatus.ACTIVE);
-        assertThat(response.getUserUuid()).isNotBlank();
+        assertThat(response).isNotNull()
+            .extracting(UserResponse::getId, UserResponse::getStatus)
+            .containsExactly(1L, UserStatus.ACTIVE);
+        assertThat(response).extracting(UserResponse::getUserUuid).asString().isNotBlank();
     }
 
     @Test
