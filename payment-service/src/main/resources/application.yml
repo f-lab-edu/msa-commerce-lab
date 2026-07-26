@@ -19,6 +19,27 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+# Payment gateway settings
+payment:
+  gateway:
+    provider-name: MOCK_PG
+    mock:
+      # 이 금액을 초과하면 한도 초과로 거절한다
+      approval-limit: 10000000.0000
+
+# Actuator endpoints for monitoring
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 logging:
   level:
     com.msa.commerce: DEBUG

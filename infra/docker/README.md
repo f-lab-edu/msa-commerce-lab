@@ -49,14 +49,14 @@ docker-compose -f infra/docker/ecommerce.local.yml up -d
 
 ### Kafka KRaft 설정
 
-| 구성요소                | 설정값                                    |
-|---------------------|----------------------------------------|
-| **Kafka Container** | msa-ecommerce-kafka                    |
-| **총 컨테이너 수**        | 3개 (MySQL, Redis, Kafka)               |
-| **Kafka 설정**        | KAFKA_PROCESS_ROLES: broker,controller |
-| **메타데이터 저장**        | 자체 로그 디렉토리 (/tmp/kraft-combined-logs)  |
-| **시작 의존성**          | 없음 (독립적 시작)                            |
-| **포트**              | 9092 (클라이언트), 9101 (JMX)               |
+| 구성요소            | 설정값                                        |
+|---------------------|-----------------------------------------------|
+| **Kafka Container** | msa-ecommerce-kafka                           |
+| **총 컨테이너 수**  | 3개 (MySQL, Redis, Kafka)                     |
+| **Kafka 설정**      | KAFKA_PROCESS_ROLES: broker,controller        |
+| **메타데이터 저장** | 자체 로그 디렉토리 (/tmp/kraft-combined-logs) |
+| **시작 의존성**     | 없음 (독립적 시작)                            |
+| **포트**            | 9092 (클라이언트), 9101 (JMX)                 |
 
 ## 📋 사용법
 

@@ -81,25 +81,6 @@ public class OrderItem {
         );
     }
 
-    public void updateQuantity(Integer newQuantity) {
-        validateQuantity(newQuantity);
-        this.quantity = newQuantity;
-        this.totalPrice = calculateTotalPrice();
-    }
-
-    public void updateUnitPrice(BigDecimal newUnitPrice) {
-        validateUnitPrice(newUnitPrice);
-        this.unitPrice = newUnitPrice;
-        this.totalPrice = calculateTotalPrice();
-    }
-
-    private BigDecimal calculateTotalPrice() {
-        if (quantity == null || unitPrice == null) {
-            return BigDecimal.ZERO;
-        }
-        return unitPrice.multiply(BigDecimal.valueOf(quantity));
-    }
-
     private static void validateCreationParameters(Long productId, String productName,
         String productSku, Integer quantity,
         BigDecimal unitPrice) {
@@ -126,6 +107,25 @@ public class OrderItem {
         if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Unit price cannot be null or negative");
         }
+    }
+
+    public void updateQuantity(Integer newQuantity) {
+        validateQuantity(newQuantity);
+        this.quantity = newQuantity;
+        this.totalPrice = calculateTotalPrice();
+    }
+
+    public void updateUnitPrice(BigDecimal newUnitPrice) {
+        validateUnitPrice(newUnitPrice);
+        this.unitPrice = newUnitPrice;
+        this.totalPrice = calculateTotalPrice();
+    }
+
+    private BigDecimal calculateTotalPrice() {
+        if (quantity == null || unitPrice == null) {
+            return BigDecimal.ZERO;
+        }
+        return unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 
 }

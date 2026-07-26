@@ -9,6 +9,7 @@ public enum Dependency {
     SPRING_BOOT_STARTER_VALIDATION("org.springframework.boot", "spring-boot-starter-validation", Version.SPRING_BOOT),
     SPRING_BOOT_STARTER_TEST("org.springframework.boot", "spring-boot-starter-test", Version.SPRING_BOOT),
     SPRING_BOOT_STARTER_ACTUATOR("org.springframework.boot", "spring-boot-starter-actuator", Version.SPRING_BOOT),
+    SPRING_BOOT_STARTER_AOP("org.springframework.boot", "spring-boot-starter-aop", Version.SPRING_BOOT),
 
     // Database
     MYSQL_CONNECTOR("mysql", "mysql-connector-java", "8.0.33"),

@@ -25,6 +25,39 @@ import com.msa.commerce.monolith.product.application.port.in.ProductVerifyComman
 )
 public interface ProductMapper {
 
+    private static String generateSkuFromName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "PROD-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }
+
+        String[] words = name.trim().split("\\s+");
+        String firstPart = words[0];
+
+        String cleanName = firstPart.toUpperCase()
+            .replaceAll("[^A-Z0-9가-힣]", "");
+
+        if (cleanName.length() > 4) {
+            cleanName = cleanName.substring(0, 4);
+        }
+
+        if (cleanName.isEmpty()) {
+            cleanName = "PROD";
+        }
+
+        return cleanName + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    private static String generateSlugFromName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return "product-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        }
+
+        return name.toLowerCase()
+            .replaceAll("[^a-z0-9가-힣\\s]", "")
+            .trim()
+            .replaceAll("\\s+", "-");
+    }
+
     @Mapping(target = "sku", ignore = true)
     @Mapping(target = "slug", ignore = true)
     @Mapping(target = "isFeatured", ignore = true)
@@ -58,7 +91,7 @@ public interface ProductMapper {
     @Mapping(target = "primaryImageUrl", ignore = true)
     @ValidateResult
     ProductUpdateCommand toUpdateCommand(Long productId, ProductUpdateRequest request);
-    
+
     @ValidateResult
     ProductVerifyCommand toVerifyCommand(ProductVerifyRequest request);
 
@@ -80,37 +113,5 @@ public interface ProductMapper {
         }
     }
 
-    private static String generateSkuFromName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return "PROD-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        }
-
-        String[] words = name.trim().split("\\s+");
-        String firstPart = words[0];
-
-        String cleanName = firstPart.toUpperCase()
-            .replaceAll("[^A-Z0-9가-힣]", "");
-
-        if (cleanName.length() > 4) {
-            cleanName = cleanName.substring(0, 4);
-        }
-
-        if (cleanName.isEmpty()) {
-            cleanName = "PROD";
-        }
-
-        return cleanName + "-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-    }
-
-    private static String generateSlugFromName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return "product-" + java.util.UUID.randomUUID().toString().substring(0, 8);
-        }
-
-        return name.toLowerCase()
-            .replaceAll("[^a-z0-9가-힣\\s]", "")
-            .trim()
-            .replaceAll("\\s+", "-");
-    }
 }
 

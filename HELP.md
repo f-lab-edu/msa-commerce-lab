@@ -44,8 +44,7 @@ These additional references should also help you:
 
 ### Testcontainers support
 
-This project
-uses [Testcontainers at development time](https://docs.spring.io/spring-boot/3.5.4/reference/features/dev-services.html#features.dev-services.testcontainers).
+This project uses [Testcontainers at development time](https://docs.spring.io/spring-boot/3.5.4/reference/features/dev-services.html#features.dev-services.testcontainers).
 
 Testcontainers has been configured to use the following Docker images:
 

@@ -39,6 +39,10 @@ public final class BuildDependencies {
         return Dependency.SPRING_BOOT_STARTER_ACTUATOR.getCoordinateWithSpringBootVersion();
     }
 
+    public static String getSpringBootStarterAop() {
+        return Dependency.SPRING_BOOT_STARTER_AOP.getCoordinateWithSpringBootVersion();
+    }
+
     public static String getMicrometerPrometheus() {
         return Dependency.MICROMETER_PROMETHEUS.getCoordinate();
     }

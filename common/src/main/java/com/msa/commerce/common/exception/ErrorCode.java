@@ -28,6 +28,11 @@ public enum ErrorCode {
     ORDER_NOT_FOUND("O1001", "Order not found"),
     ORDER_ALREADY_CANCELLED("O1002", "Order already cancelled"),
 
+    PAYMENT_NOT_FOUND("PY1001", "Payment not found"),
+    PAYMENT_ALREADY_IN_PROGRESS("PY1002", "An active payment already exists for the order"),
+    PAYMENT_INVALID_STATUS_TRANSITION("PY1003", "Invalid payment status transition"),
+    PAYMENT_GATEWAY_ERROR("PY1004", "Payment gateway communication failed"),
+
     INTERNAL_SERVER_ERROR("S1001", "Internal server error"),
     EXTERNAL_SERVICE_ERROR("S1002", "External service error");
 
